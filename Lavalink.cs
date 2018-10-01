@@ -51,8 +51,8 @@ namespace Victoria
         public int NodesCount => Nodes.Count;
 
         /// <summary>
-        /// Return the first LavaNode if any.
+        /// Return the default LavaNode if any.
         /// </summary>
-        public LavaNode SingleNode => Nodes.FirstOrDefault().Value;
+        public LavaNode DefaultNode => Nodes.FirstOrDefault()?.Value;
     }
 }
