@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <NoWarn>1591, 1571</NoWarn>
+        <LangVersion>latest</LangVersion>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Version>2.1</Version>
+        <Title>Victoria</Title>
+        <Authors>Yucked</Authors>
+        <Description>.NET Wrapper For Lavalink.</Description>
+        <Copyright>2018 Yucked. All rights reserved.</Copyright>
+        <PackageReleaseNotes>Updated XML Documentation. Detailed Logging.</PackageReleaseNotes>
+        <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
+        <PackageProjectUrl>https://github.com/Yucked/Bot.NET/tree/master/Victoria</PackageProjectUrl>
+        <PackageIconUrl>https://cdn.discordapp.com/attachments/491355652191682582/493181196222726144/ElizabethandRichard.png</PackageIconUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DocumentationFile>bin\Debug\netstandard2.0\Victoria.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DocumentationFile>bin\Release\netstandard2.0\Victoria.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00991"/>
+        <PackageReference Include="PureWebSockets" Version="2.1.1"/>
+    </ItemGroup>
+
+</Project>
