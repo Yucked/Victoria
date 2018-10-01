@@ -54,25 +54,25 @@
  
  - Get the LavaNode & Connect to VoiceChannel Or Get an Existing LavaPlayer And Play Some Track.
  ```cs
- // Get Node
+ // Get Node by Endpoint or get the first node.
  var node = Lavalink.GetNode(new Endpoint {
    Port = 80,
    Host = "127.0.0.1"
- });
+ }) ?? Lavalink.DefaultNode;
  
  // Join 
 var player = await node.JoinAsync(VOICE_CHANNEL);
-player.Queue.TryAdd(guildId, new LinkedList<LavaTrack>());
+
+// Use build in queue or make your own (No Support)
+player.Queue.TryAdd(GUILD_ID, new LinkedList<LavaTrack>());
  ....
  
  // Existing
  var player = node.GetPlayer(GUILD_ID);
  
  
- var search = await LavaNode.SearchYouTubeAsync(query);
+ var search = await node.SearchYouTubeAsync(QUERY);
  var track = search.Tracks.FirstOrDefault();
  
  player.Play(track);
  ```
- 
- **Full Example:** https://github.com/Yucked/Bot.NET/tree/master/Galaxy
