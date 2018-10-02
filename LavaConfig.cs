@@ -7,27 +7,27 @@ namespace Victoria
         /// <summary>
         /// Number Of Tries For Reconnects.
         /// </summary>
-        public int MaxTries { internal get; set; }
+        public int MaxTries { get; set; }
 
         /// <summary>
         /// Lavalink Authorization.
         /// </summary>
-        public string Authorization { internal get; set; }
+        public string Authorization { get; set; }
 
         /// <summary>
         /// Rest Hostname And Port.
         /// </summary>
-        public Endpoint Rest { internal get; set; }
+        public Endpoint Rest { get; set; }
 
         /// <summary>
         /// Websocket Hostname And Port.
         /// </summary>
-        public Endpoint Socket { internal get; set; }
+        public Endpoint Socket { get; set; }
 
         /// <summary>
         /// Get Severity of Log
         /// </summary>
-        public LogSeverity Severity { internal get; set; }
+        public LogSeverity Severity { get; set; }
 
 
         internal static LavaConfig Default => new LavaConfig
