@@ -22,7 +22,7 @@ namespace Victoria
             if (Nodes.ContainsKey(config.Socket))
                 return Nodes[config.Socket];
             config = config.Equals(default(LavaConfig)) ? LavaConfig.Default : config;
-            var node = new LavaNode(client, config);            
+            var node = new LavaNode(client, config);
             Nodes.TryAdd(config.Socket, node);
             try
             {
@@ -53,6 +53,6 @@ namespace Victoria
         /// <summary>
         /// Return the default LavaNode if any.
         /// </summary>
-        public LavaNode DefaultNode => Nodes.FirstOrDefault()?.Value;
+        public LavaNode DefaultNode => Nodes.FirstOrDefault().Value;
     }
 }
