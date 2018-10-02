@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://cdn.discordapp.com/attachments/491355652191682582/491355700589756426/la-kru-portrait1104color.png" width="25%"/>
+  <img src="https://scontent-ort2-2.cdninstagram.com/vp/1557da3249dfe1b5bba30b70e6272201/5C45E12A/t51.2885-15/e35/41401088_300535220537995_8483483865107589107_n.jpg" width="25%"/>
   <h2> V I C T O R I A </h2>
   </p>
   
