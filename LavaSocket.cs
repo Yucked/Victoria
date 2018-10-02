@@ -15,7 +15,7 @@ namespace Victoria
         private int MaxTries;
         private bool IsDisposed;
         private Endpoint Socket;
-        internal event Action<LogSeverity, string> Log;
+        internal event Action<LogSeverity, string, Exception> Log;
         internal PureWebSocket PureSocket { get; set; }
         internal bool IsConnected => !Volatile.Read(ref IsDisposed);
 
@@ -63,7 +63,7 @@ namespace Victoria
         internal void SendPayload(LavaPayload load)
         {
             PureSocket.Send(JsonConvert.SerializeObject(load));
-            Log?.Invoke(LogSeverity.Verbose, $"Sent {load.Operation} payload.");
+            Log?.Invoke(LogSeverity.Verbose, $"Sent {load.Operation} payload.", null);
         }
 
         private void OnSocketClosed(WebSocketCloseStatus reason)
@@ -71,7 +71,7 @@ namespace Victoria
             if (Tries >= MaxTries && MaxTries != 0) return;
             if (IsConnected && reason != WebSocketCloseStatus.EndpointUnavailable && (int) reason != -1)
             {
-                Log?.Invoke(LogSeverity.Warning, "Websocket connection broken. Re-establishing connection...");
+                Log?.Invoke(LogSeverity.Warning, "Websocket connection broken. Re-establishing connection...", null);
                 try
                 {
                     Interlocked.Increment(ref Tries);
@@ -85,12 +85,12 @@ namespace Victoria
             else if (reason != WebSocketCloseStatus.EndpointUnavailable && (int) reason != -1)
             {
                 Interlocked.Increment(ref Tries);
-                Log?.Invoke(LogSeverity.Warning, "Connection has been closed.");
+                Log?.Invoke(LogSeverity.Warning, "Connection has been closed.", null);
             }
             else
             {
                 Interlocked.Increment(ref Tries);
-                Log?.Invoke(LogSeverity.Critical, "Lavalink is unreachable.");
+                Log?.Invoke(LogSeverity.Critical, "Lavalink is unreachable.", null);
             }
         }
 
@@ -98,10 +98,10 @@ namespace Victoria
         {
             Tries = 0;
             Volatile.Write(ref IsDisposed, false);
-            Log?.Invoke(LogSeverity.Verbose, "Websocket connection opened.");
+            Log?.Invoke(LogSeverity.Verbose, "Websocket connection opened.", null);
         }
 
         private void OnSocketError(Exception ex)
-            => Log?.Invoke(LogSeverity.Error, $"{ex.Message}\n{ex.StackTrace}");
+            => Log?.Invoke(LogSeverity.Error, $"{ex.Message}\n{ex.StackTrace}", ex);
     }
 }

@@ -34,7 +34,7 @@ namespace Victoria
         /// <summary>
         /// Lavalink Log.
         /// </summary>
-        public event Action<string> Log;
+        public event Action<LavaLog> Log;
 
         /// <summary>
         /// Check if the node is connected to Lavalink.
@@ -89,7 +89,8 @@ namespace Victoria
 
         internal async Task StartAsync()
         {
-            InvokeLog(LogSeverity.Verbose, $"Initializing node {Config.Socket.Host}:{Config.Socket.Port} connection...");
+            InvokeLog(LogSeverity.Verbose,
+                $"Initializing node {Config.Socket.Host}:{Config.Socket.Port} connection...");
             var shards = await GetShardsAsync();
             LavaSocket.Connect(Config, BaseClient.CurrentUser.Id, shards);
             LavaSocket.PureSocket.OnMessage += OnMessage;
@@ -177,7 +178,8 @@ namespace Victoria
         /// <param name="uri">URL</param>
         public Task<LavaResult> GetTracksAsync(Uri uri)
         {
-            var url = new Uri($"http://{Config.Rest.Host}:{Config.Rest.Port}/loadtracks?identifier={WebUtility.UrlEncode($"{uri}")}");
+            var url = new Uri(
+                $"http://{Config.Rest.Host}:{Config.Rest.Port}/loadtracks?identifier={WebUtility.UrlEncode($"{uri}")}");
             InvokeLog(LogSeverity.Verbose, $"GET {url}");
             return ResolveTracksAsync(url);
         }
@@ -309,10 +311,10 @@ namespace Victoria
             }
         }
 
-        private void InvokeLog(LogSeverity severity, string message)
+        private void InvokeLog(LogSeverity severity, string message = null, Exception exc = null)
         {
             if (severity <= Config.Severity)
-                Log?.Invoke(message);
+                Log?.Invoke(new LavaLog(severity, message, exc));
         }
 
         private async Task<int> GetShardsAsync()
@@ -399,7 +401,7 @@ namespace Victoria
                 Players.TryRemove(guild.Id, out _);
             }
 
-            InvokeLog(LogSeverity.Info, $"Disconnected from shard #{client.ShardId}. {exc.StackTrace}");
+            InvokeLog(LogSeverity.Error, $"Disconnected from shard #{client.ShardId}.", exc);
         }
 
         private async Task OnSocketDisconnected(Exception exc)
@@ -407,7 +409,7 @@ namespace Victoria
             foreach (var connection in Players)
                 await connection.Value.DisconnectAsync();
             Players.Clear();
-            InvokeLog(LogSeverity.Info, $"Disconnected from Discord. {exc.StackTrace}");
+            InvokeLog(LogSeverity.Error, "Disconnected from Discord.", exc);
         }
     }
 }
