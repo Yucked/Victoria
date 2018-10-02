@@ -27,8 +27,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00991"/>
-        <PackageReference Include="PureWebSockets" Version="2.1.1"/>
+        <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00998" />
+        <PackageReference Include="PureWebSockets" Version="2.1.1" />
     </ItemGroup>
 
 </Project>
