@@ -1,58 +1,17 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Discord;
 using Victoria.Objects;
 using Victoria.Payloads;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 namespace Victoria
 {
     public sealed class LavaPlayer
     {
-        /// <summary>
-        /// Connected Voice Channel.
-        /// </summary>
-        public IVoiceChannel VoiceChannel { get; internal set; }
-
-        /// <summary>
-        /// Guild That Belongs To The Voice Channel.
-        /// </summary>
-        public IGuild Guild => VoiceChannel.Guild;
-
-        /// <summary>
-        /// Text Channel That Handles Updates.
-        /// </summary>
-        public IMessageChannel TextChannel { get; }
-
-        /// <summary>
-        /// Current Track Position.
-        /// </summary>
-        public TimeSpan Position { get; internal set; }
-
-        /// <summary>
-        /// Track That Is Currently Playing.
-        /// </summary>
-        public LavaTrack CurrentTrack { get; internal set; }
-
-        /// <summary>
-        /// Last Time This LavaPlayer Was Updated.
-        /// </summary>
-        public DateTimeOffset LastUpdate { get; internal set; }
-
-        /// <summary>
-        /// If This LavaPlayer Is Connected Or Not.
-        /// </summary>
-        public bool IsConnected => !Volatile.Read(ref IsDisposed);
-
-        /// <summary>
-        /// Default Queue That Stores Your Tracks.
-        /// </summary>
-        public ConcurrentDictionary<ulong, LinkedList<LavaTrack>> Queue { get; }
-
         internal bool IsDisposed;
-        private LavaSocket LavaSocket { get; }
 
         internal LavaPlayer()
         {
@@ -67,6 +26,48 @@ namespace Victoria
             Queue = new ConcurrentDictionary<ulong, LinkedList<LavaTrack>>();
         }
 
+        /// <summary>
+        ///     Connected Voice Channel.
+        /// </summary>
+        public IVoiceChannel VoiceChannel { get; internal set; }
+
+        /// <summary>
+        ///     Guild That Belongs To The Voice Channel.
+        /// </summary>
+        public IGuild Guild => VoiceChannel.Guild;
+
+        /// <summary>
+        ///     Text Channel That Handles Updates.
+        /// </summary>
+        public IMessageChannel TextChannel { get; }
+
+        /// <summary>
+        ///     Current Track Position.
+        /// </summary>
+        public TimeSpan Position { get; internal set; }
+
+        /// <summary>
+        ///     Track That Is Currently Playing.
+        /// </summary>
+        public LavaTrack CurrentTrack { get; internal set; }
+
+        /// <summary>
+        ///     Last Time This LavaPlayer Was Updated.
+        /// </summary>
+        public DateTimeOffset LastUpdate { get; internal set; }
+
+        /// <summary>
+        ///     If This LavaPlayer Is Connected Or Not.
+        /// </summary>
+        public bool IsConnected => !Volatile.Read(ref IsDisposed);
+
+        /// <summary>
+        ///     Default Queue That Stores Your Tracks.
+        /// </summary>
+        public ConcurrentDictionary<ulong, LinkedList<LavaTrack>> Queue { get; }
+
+        private LavaSocket LavaSocket { get; }
+
         internal async Task DisconnectAsync()
         {
             if (!IsConnected)
@@ -77,9 +78,11 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Plays The Specified Track.
+        ///     Plays The Specified Track.
         /// </summary>
-        /// <param name="track"><see cref="LavaTrack"/></param>
+        /// <param name="track">
+        ///     <see cref="LavaTrack" />
+        /// </param>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
         public void Play(LavaTrack track)
         {
@@ -90,13 +93,20 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Plays The Specified Track But With A Specified Start And Stop Time.
+        ///     Plays The Specified Track But With A Specified Start And Stop Time.
         /// </summary>
-        /// <param name="track"><see cref="LavaTrack"/></param>
+        /// <param name="track">
+        ///     <see cref="LavaTrack" />
+        /// </param>
         /// <param name="start">When Track Should Start Playing.</param>
         /// <param name="stop">When Track Should Stop Playing.</param>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
-        /// <exception cref="ArgumentException">Throws If <param name="start"/> and <param name="stop"/> Aren't Set Properly.</exception>
+        /// <exception cref="ArgumentException">Throws If
+        ///     <param name="start" />
+        ///     and
+        ///     <param name="stop" />
+        ///     Aren't Set Properly.
+        /// </exception>
         public void PlayPartial(LavaTrack track, TimeSpan start, TimeSpan stop)
         {
             if (!IsConnected)
@@ -113,7 +123,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Stop Playing Current Track A.K.A Skip.
+        ///     Stop Playing Current Track A.K.A Skip.
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws If Track Isn't Connected.</exception>
         public void Stop()
@@ -125,7 +135,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Pauses The Current Track.
+        ///     Pauses The Current Track.
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
         public void Pause()
@@ -136,7 +146,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Resumes The Current Track.
+        ///     Resumes The Current Track.
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
         public void Resume()
@@ -147,7 +157,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Seeks The Current Track To Specified Time.
+        ///     Seeks The Current Track To Specified Time.
         /// </summary>
         /// <param name="position">Where To Skip To.</param>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
@@ -159,7 +169,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Set The Current LavaPlayer's Volume.
+        ///     Set The Current LavaPlayer's Volume.
         /// </summary>
         /// <param name="volume"></param>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
@@ -176,16 +186,22 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Add A Track To The Default <see cref="Queue"/>.
+        ///     Add A Track To The Default <see cref="Queue" />.
         /// </summary>
-        /// <param name="track"><see cref="LavaTrack"/></param>
+        /// <param name="track">
+        ///     <see cref="LavaTrack" />
+        /// </param>
         public void Enqueue(LavaTrack track)
-            => Queue[Guild.Id]?.AddLast(track);
+        {
+            Queue[Guild.Id]?.AddLast(track);
+        }
 
         /// <summary>
-        /// Enqueues Bunch of Tracks.
+        ///     Enqueues Bunch of Tracks.
         /// </summary>
-        /// <param name="tracks"><see cref="LavaTrack"/></param>
+        /// <param name="tracks">
+        ///     <see cref="LavaTrack" />
+        /// </param>
         public void Enqueue(params LavaTrack[] tracks)
         {
             foreach (var track in tracks)
@@ -193,14 +209,18 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Removes A Track From The Default <see cref="Queue"/>.
+        ///     Removes A Track From The Default <see cref="Queue" />.
         /// </summary>
-        /// <param name="track"><see cref="LavaTrack"/></param>
+        /// <param name="track">
+        ///     <see cref="LavaTrack" />
+        /// </param>
         public void Dequeue(LavaTrack track)
-            => Queue[Guild.Id]?.Remove(track);
+        {
+            Queue[Guild.Id]?.Remove(track);
+        }
 
         /// <summary>
-        /// Dequeues Bunch of Tracks.
+        ///     Dequeues Bunch of Tracks.
         /// </summary>
         /// <param name="tracks"></param>
         public void Dequeue(params LavaTrack[] tracks)

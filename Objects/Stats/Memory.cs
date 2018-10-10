@@ -4,16 +4,16 @@ namespace Victoria.Objects.Stats
 {
     internal sealed class Memory
     {
-        [JsonProperty("reservable")]
+        [JsonProperty("reservable")] 
         public long Reservable { get; set; }
 
-        [JsonProperty("used")]
+        [JsonProperty("used")] 
         public long Used { get; set; }
 
-        [JsonProperty("free")]
+        [JsonProperty("free")] 
         public long Free { get; set; }
 
-        [JsonProperty("allocated")]
+        [JsonProperty("allocated")] 
         public long Allocated { get; set; }
     }
 }

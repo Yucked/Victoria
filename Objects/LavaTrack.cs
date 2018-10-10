@@ -18,19 +18,19 @@ namespace Victoria.Objects
         public string Author { get; internal set; }
 
         [JsonIgnore]
-        public TimeSpan Length 
+        public TimeSpan Length
             => !IsStream ? TimeSpan.FromMilliseconds(length) : TimeSpan.Zero;
-        
+
         [JsonProperty("length")]
         internal long length { get; set; }
-        
+
         [JsonProperty("isStream")]
         public bool IsStream { get; internal set; }
 
         [JsonIgnore]
-        public TimeSpan Position 
+        public TimeSpan Position
             => TimeSpan.FromMilliseconds(position);
-        
+
         [JsonProperty("position")]
         internal long position { get; set; }
 
@@ -39,5 +39,5 @@ namespace Victoria.Objects
 
         [JsonProperty("uri")]
         public Uri Uri { get; internal set; }
-    }    
+    }
 }

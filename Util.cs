@@ -66,7 +66,7 @@ namespace Victoria
         private static uint SwapEndianness(uint v)
         {
             v = (v << 16) | (v >> 16);
-            return (v & 0xFF00FF00) >> 8 | ((v & 0x00FF00FF) << 8);
+            return ((v & 0xFF00FF00) >> 8) | ((v & 0x00FF00FF) << 8);
         }
 
         private static short SwapEndianness(short v)

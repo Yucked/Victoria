@@ -4,6 +4,10 @@ namespace Victoria.Objects.Stats
 {
     public sealed class LavaStats
     {
+        internal LavaStats()
+        {
+        }
+
         public long RamFree { get; private set; }
         public long RamUsed { get; private set; }
         public int TotalPlayers { get; private set; }
@@ -17,10 +21,6 @@ namespace Victoria.Objects.Stats
         public int AverageSentFramesPerMinute { get; private set; }
         public int AverageNulledFramesPerMinute { get; private set; }
         public int AverageDeficitFramesPerMinute { get; private set; }
-
-        internal LavaStats()
-        {
-        }
 
         internal void Update(Server server)
         {

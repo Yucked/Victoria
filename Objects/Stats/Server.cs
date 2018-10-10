@@ -5,26 +5,26 @@ namespace Victoria.Objects.Stats
 {
     internal sealed class Server
     {
-        [JsonProperty("playingPlayers")]
+        [JsonProperty("playingPlayers")] 
         public int ActivePlayers { get; set; }
-        
-        [JsonProperty("players")]
+
+        [JsonProperty("players")] 
         public int TotalPlayers { get; set; }
 
         [JsonIgnore]
-        public TimeSpan Uptime 
+        public TimeSpan Uptime
             => TimeSpan.FromMilliseconds(_uptime);
-        
-        [JsonProperty("uptime")]
+
+        [JsonProperty("uptime")] 
         private long _uptime { get; set; }
 
-        [JsonProperty("cpu")]
+        [JsonProperty("cpu")] 
         public CPU CPU { get; internal set; }
 
-        [JsonProperty("memory")]
+        [JsonProperty("memory")] 
         public Memory Memory { get; internal set; }
-        
-        [JsonProperty("frameStats")]
+
+        [JsonProperty("frameStats")] 
         public Frame Frames { get; internal set; }
     }
 }

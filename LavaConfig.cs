@@ -5,27 +5,27 @@ namespace Victoria
     public struct LavaConfig
     {
         /// <summary>
-        /// Number Of Tries For Reconnects.
+        ///     Number Of Tries For Reconnects.
         /// </summary>
         public int MaxTries { get; set; }
 
         /// <summary>
-        /// Lavalink Authorization.
+        ///     Lavalink Authorization.
         /// </summary>
         public string Authorization { get; set; }
 
         /// <summary>
-        /// Rest Hostname And Port.
+        ///     Rest Hostname And Port.
         /// </summary>
         public Endpoint Rest { get; set; }
 
         /// <summary>
-        /// Websocket Hostname And Port.
+        ///     Websocket Hostname And Port.
         /// </summary>
         public Endpoint Socket { get; set; }
 
         /// <summary>
-        /// Get Severity of Log
+        ///     Get Severity of Log
         /// </summary>
         public LogSeverity Severity { get; set; }
 

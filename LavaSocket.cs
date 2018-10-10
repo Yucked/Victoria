@@ -1,23 +1,23 @@
 using System;
+using System.Collections.Generic;
+using System.Net.WebSockets;
+using System.Threading;
 using Discord;
 using Newtonsoft.Json;
 using PureWebSockets;
 using Victoria.Payloads;
-using System.Threading;
-using System.Net.WebSockets;
-using System.Collections.Generic;
 
 namespace Victoria
 {
     public sealed class LavaSocket
     {
-        private int Tries;
-        private int MaxTries;
         private bool IsDisposed;
+        private int MaxTries;
         private Endpoint Socket;
-        internal event Action<LogSeverity, string, Exception> Log;
+        private int Tries;
         internal PureWebSocket PureSocket { get; set; }
         internal bool IsConnected => !Volatile.Read(ref IsDisposed);
+        internal event Action<LogSeverity, string, Exception> Log;
 
         internal void Connect()
         {
@@ -50,7 +50,6 @@ namespace Victoria
             PureSocket.OnError += OnSocketError;
             PureSocket.OnClosed += OnSocketClosed;
             PureSocket.OnOpened += OnSocketOpened;
-            Connect();
         }
 
         internal void Disconnect()
@@ -102,6 +101,8 @@ namespace Victoria
         }
 
         private void OnSocketError(Exception ex)
-            => Log?.Invoke(LogSeverity.Error, $"{ex.Message}\n{ex.StackTrace}", ex);
+        {
+            Log?.Invoke(LogSeverity.Error, $"{ex.Message}\n{ex.StackTrace}", ex);
+        }
     }
 }

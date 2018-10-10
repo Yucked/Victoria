@@ -5,10 +5,6 @@ namespace Victoria
 {
     public sealed class LavaLog
     {
-        public string Message { get; }
-        public Exception Exception { get; }
-        public LogSeverity Severity { get; }
-
         internal LavaLog()
         {
         }
@@ -19,5 +15,9 @@ namespace Victoria
             Message = message;
             Exception = exception;
         }
+
+        public string Message { get; }
+        public Exception Exception { get; }
+        public LogSeverity Severity { get; }
     }
 }

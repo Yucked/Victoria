@@ -4,13 +4,13 @@ namespace Victoria.Objects.Stats
 {
     internal sealed class Frame
     {
-        [JsonProperty("sent")]
+        [JsonProperty("sent")] 
         public int Sent { get; set; }
 
-        [JsonProperty("nulled")]
+        [JsonProperty("nulled")] 
         public int Nulled { get; set; }
 
-        [JsonProperty("deficit")]
+        [JsonProperty("deficit")] 
         public int Deficit { get; set; }
     }
 }

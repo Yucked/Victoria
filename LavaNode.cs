@@ -1,66 +1,24 @@
 using System;
-using Discord;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Text;
-using Discord.Rest;
-using Victoria.Objects;
 using System.Net.Http;
-using Victoria.Payloads;
+using System.Text;
+using System.Threading.Tasks;
+using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
-using Victoria.Objects.Stats;
+using Victoria.Objects;
 using Victoria.Objects.Enums;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
+using Victoria.Objects.Stats;
+using Victoria.Payloads;
 
 namespace Victoria
 {
     public sealed class LavaNode
     {
-        private HttpClient Rest { get; }
-        private LavaConfig Config { get; }
-        internal LavaSocket LavaSocket { get; }
-        private BaseDiscordClient BaseClient { get; }
-        private SocketVoiceState VoiceState { get; set; }
-        internal ConcurrentDictionary<ulong, LavaPlayer> Players { get; }
-
-        /// <summary>
-        /// Lavalink Server Statistics.
-        /// </summary>
-        public LavaStats Statistics { get; }
-
-        /// <summary>
-        /// Lavalink Log.
-        /// </summary>
-        public event Action<LavaLog> Log;
-
-        /// <summary>
-        /// Check if the node is connected to Lavalink.
-        /// </summary>
-        public bool IsConnected => LavaSocket.IsConnected;
-
-        /// <summary>
-        /// Fires when a track is stuck.
-        /// </summary>
-        public event Action<LavaPlayer, LavaTrack, long> Stuck;
-
-        /// <summary>
-        /// Fires when Lavalink throws an exception.
-        /// </summary>
-        public event Action<LavaPlayer, LavaTrack, string> Exception;
-
-        /// <summary>
-        /// Fires when LavaPlayer is updated.
-        /// </summary>
-        public event Action<LavaPlayer, LavaTrack, TimeSpan> Updated;
-
-        /// <summary>
-        /// Fires when a track has finished playing.
-        /// </summary>
-        public event Action<LavaPlayer, LavaTrack, TrackReason> Finished;
-
         internal LavaNode(BaseDiscordClient baseClient, LavaConfig config)
         {
             Config = config;
@@ -87,6 +45,48 @@ namespace Victoria
             }
         }
 
+        private HttpClient Rest { get; }
+        private LavaConfig Config { get; }
+        internal LavaSocket LavaSocket { get; }
+        private BaseDiscordClient BaseClient { get; }
+        private SocketVoiceState VoiceState { get; set; }
+        internal ConcurrentDictionary<ulong, LavaPlayer> Players { get; }
+
+        /// <summary>
+        ///     Lavalink Server Statistics.
+        /// </summary>
+        public LavaStats Statistics { get; }
+
+        /// <summary>
+        ///     Check if the node is connected to Lavalink.
+        /// </summary>
+        public bool IsConnected => LavaSocket.IsConnected;
+
+        /// <summary>
+        ///     Lavalink Log.
+        /// </summary>
+        public event Action<LavaLog> Log;
+
+        /// <summary>
+        ///     Fires when a track is stuck.
+        /// </summary>
+        public event Action<LavaPlayer, LavaTrack, long> Stuck;
+
+        /// <summary>
+        ///     Fires when Lavalink throws an exception.
+        /// </summary>
+        public event Action<LavaPlayer, LavaTrack, string> Exception;
+
+        /// <summary>
+        ///     Fires when LavaPlayer is updated.
+        /// </summary>
+        public event Action<LavaPlayer, LavaTrack, TimeSpan> Updated;
+
+        /// <summary>
+        ///     Fires when a track has finished playing.
+        /// </summary>
+        public event Action<LavaPlayer, LavaTrack, TrackReason> Finished;
+
         internal async Task StartAsync()
         {
             InvokeLog(LogSeverity.Verbose,
@@ -97,7 +97,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Disconnects 
+        ///     Disconnects
         /// </summary>
         /// <returns></returns>
         public async Task StopAsync()
@@ -111,7 +111,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Join A Voice Channel.
+        ///     Join A Voice Channel.
         /// </summary>
         /// <param name="voiceChannel">VoiceChannel That Needs To Be Connected To.</param>
         /// <param name="textChannel">TextChannel Where Updates Will Be Sent.</param>
@@ -127,7 +127,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Leaves A Voice Channel. Must Be Connected To Previously.
+        ///     Leaves A Voice Channel. Must Be Connected To Previously.
         /// </summary>
         /// <param name="guildId">Guild Id</param>
         public async Task<bool> LeaveAsync(ulong guildId)
@@ -142,14 +142,16 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Returns LavaPlayer For Specific Guild (Otherwise Null).
+        ///     Returns LavaPlayer For Specific Guild (Otherwise Null).
         /// </summary>
         /// <param name="guildId">Guild Id</param>
         public LavaPlayer GetPlayer(ulong guildId)
-            => Players.ContainsKey(guildId) ? Players[guildId] : null;
+        {
+            return Players.ContainsKey(guildId) ? Players[guildId] : null;
+        }
 
         /// <summary>
-        /// Searches Youtube.
+        ///     Searches Youtube.
         /// </summary>
         /// <param name="query">Your Search Terms.</param>
         public Task<LavaResult> SearchYouTubeAsync(string query)
@@ -161,7 +163,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Searches SoundCloud.
+        ///     Searches SoundCloud.
         /// </summary>
         /// <param name="query">Your Search Terms.</param>
         public Task<LavaResult> SearchSoundCloudAsync(string query)
@@ -173,7 +175,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Performs A Broad Search.
+        ///     Performs A Broad Search.
         /// </summary>
         /// <param name="uri">URL</param>
         public Task<LavaResult> GetTracksAsync(Uri uri)
@@ -182,6 +184,68 @@ namespace Victoria
                 $"http://{Config.Rest.Host}:{Config.Rest.Port}/loadtracks?identifier={WebUtility.UrlEncode($"{uri}")}");
             InvokeLog(LogSeverity.Verbose, $"GET {url}");
             return ResolveTracksAsync(url);
+        }
+
+        private async Task OnUVSU(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
+        {
+            if (user.Id != BaseClient.CurrentUser.Id) return;
+
+            switch (oldState)
+            {
+                case var state when state.VoiceChannel is null && !(newState.VoiceChannel is null):
+                    VoiceState = newState;
+                    InvokeLog(LogSeverity.Verbose, "Voice state updated.");
+                    break;
+
+                case var state when !(state.VoiceChannel is null) && newState.VoiceChannel is null:
+                    if (!Players.TryGetValue(state.VoiceChannel.Guild.Id, out var oldPlayer))
+                        return;
+                    await oldPlayer.DisconnectAsync().ConfigureAwait(false);
+                    Players.TryRemove(state.VoiceChannel.Guild.Id, out _);
+                    LavaSocket.SendPayload(new DestroyPayload(state.VoiceChannel.Guild.Id));
+                    break;
+
+                case var state when state.VoiceChannel?.Id != newState.VoiceChannel?.Id:
+                    if (!Players.TryGetValue(state.VoiceChannel.Guild.Id, out var updatePlayer))
+                        return;
+                    updatePlayer.VoiceChannel = newState.VoiceChannel;
+                    Players.TryUpdate(state.VoiceChannel.Guild.Id, updatePlayer, updatePlayer);
+                    InvokeLog(LogSeverity.Verbose, $"{updatePlayer.Guild.Id} voice channel updated.");
+                    break;
+            }
+        }
+
+        private Task OnVSU(SocketVoiceServer server)
+        {
+            if (!server.Guild.HasValue)
+                return Task.CompletedTask;
+
+            if (!Players.TryGetValue(server.Guild.Id, out _))
+                return Task.CompletedTask;
+
+            var voiceUpdate = new VoicePayload(server, VoiceState);
+            LavaSocket.SendPayload(voiceUpdate);
+            return Task.CompletedTask;
+        }
+
+        private async Task OnShardDisconnected(Exception exc, DiscordSocketClient client)
+        {
+            foreach (var guild in client.Guilds)
+            {
+                if (!Players.ContainsKey(guild.Id)) continue;
+                await Players[guild.Id].DisconnectAsync();
+                Players.TryRemove(guild.Id, out _);
+            }
+
+            InvokeLog(LogSeverity.Error, $"Disconnected from shard #{client.ShardId}.", exc);
+        }
+
+        private async Task OnSocketDisconnected(Exception exc)
+        {
+            foreach (var connection in Players)
+                await connection.Value.DisconnectAsync();
+            Players.Clear();
+            InvokeLog(LogSeverity.Error, "Disconnected from Discord.", exc);
         }
 
         #region Private Methods
@@ -265,6 +329,10 @@ namespace Victoria
                     }
 
                     break;
+
+                default:
+                    InvokeLog(LogSeverity.Info, "Unknown OP Code.");
+                    break;
             }
         }
 
@@ -274,7 +342,10 @@ namespace Victoria
             using (var req = await Rest.GetAsync(uri).ConfigureAwait(false))
             using (var res = await req.Content.ReadAsStreamAsync().ConfigureAwait(false))
             using (var sr = new StreamReader(res, Encoding.UTF8))
+            {
                 json = await sr.ReadToEndAsync().ConfigureAwait(false);
+            }
+
             var data = JToken.Parse(json);
             var tracks = new HashSet<LavaTrack>();
             switch (data)
@@ -313,8 +384,9 @@ namespace Victoria
 
         private void InvokeLog(LogSeverity severity, string message = null, Exception exc = null)
         {
-            if (severity <= Config.Severity)
-                Log?.Invoke(new LavaLog(severity, message, exc));
+            if (severity >= Config.Severity) return;
+            var log = new LavaLog(severity, message, exc);
+            Log?.Invoke(log);
         }
 
         private async Task<int> GetShardsAsync()
@@ -343,73 +415,15 @@ namespace Victoria
         }
 
         internal void StuckUpdate(TrackStuckData data)
-            => Stuck?.Invoke(data.LavaPlayer, data.Track, data.Threshold);
+        {
+            Stuck?.Invoke(data.LavaPlayer, data.Track, data.Threshold);
+        }
 
         internal void ExceptionUpdate(TrackExceptionData data)
-            => Exception?.Invoke(data.LavaPlayer, data.Track, data.Error);
+        {
+            Exception?.Invoke(data.LavaPlayer, data.Track, data.Error);
+        }
 
         #endregion
-
-        private async Task OnUVSU(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
-        {
-            if (user.Id != BaseClient.CurrentUser.Id) return;
-
-            switch (oldState)
-            {
-                case var state when state.VoiceChannel is null && !(newState.VoiceChannel is null):
-                    VoiceState = newState;
-                    InvokeLog(LogSeverity.Verbose, "Voice state updated.");
-                    break;
-
-                case var state when !(state.VoiceChannel is null) && newState.VoiceChannel is null:
-                    if (!Players.TryGetValue(state.VoiceChannel.Guild.Id, out var oldPlayer))
-                        return;
-                    await oldPlayer.DisconnectAsync().ConfigureAwait(false);
-                    Players.TryRemove(state.VoiceChannel.Guild.Id, out _);
-                    LavaSocket.SendPayload(new DestroyPayload(state.VoiceChannel.Guild.Id));
-                    break;
-
-                case var state when state.VoiceChannel?.Id != newState.VoiceChannel?.Id:
-                    if (!Players.TryGetValue(state.VoiceChannel.Guild.Id, out var updatePlayer))
-                        return;
-                    updatePlayer.VoiceChannel = newState.VoiceChannel;
-                    Players.TryUpdate(state.VoiceChannel.Guild.Id, updatePlayer, updatePlayer);
-                    InvokeLog(LogSeverity.Verbose, $"{updatePlayer.Guild.Id} voice channel updated.");
-                    break;
-            }
-        }
-
-        private Task OnVSU(SocketVoiceServer server)
-        {
-            if (!server.Guild.HasValue)
-                return Task.CompletedTask;
-
-            if (!Players.TryGetValue(server.Guild.Id, out _))
-                return Task.CompletedTask;
-
-            var voiceUpdate = new VoicePayload(server, VoiceState);
-            LavaSocket.SendPayload(voiceUpdate);
-            return Task.CompletedTask;
-        }
-
-        private async Task OnShardDisconnected(Exception exc, DiscordSocketClient client)
-        {
-            foreach (var guild in client.Guilds)
-            {
-                if (!Players.ContainsKey(guild.Id)) continue;
-                await Players[guild.Id].DisconnectAsync();
-                Players.TryRemove(guild.Id, out _);
-            }
-
-            InvokeLog(LogSeverity.Error, $"Disconnected from shard #{client.ShardId}.", exc);
-        }
-
-        private async Task OnSocketDisconnected(Exception exc)
-        {
-            foreach (var connection in Players)
-                await connection.Value.DisconnectAsync();
-            Players.Clear();
-            InvokeLog(LogSeverity.Error, "Disconnected from Discord.", exc);
-        }
     }
 }
