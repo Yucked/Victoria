@@ -6,7 +6,7 @@
  ### `About`
  Victoria is a .NET wrapper for [Lavalink]("").
  
-[![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg?style=for-the-badge&colorA=303030&colorB=f44268&label=NUGET:+Victoria)](https://www.nuget.org/packages/Victoria/)
+[![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg?style=for-the-badge&colorA=303030&colorB=f44268&label=NUGET:+Victoria&maxAge=3600)](https://www.nuget.org/packages/Victoria/)
 
 
  > *But we already have Sharplink and Lavalink.NET!!* 
