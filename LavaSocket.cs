@@ -28,6 +28,8 @@ namespace Victoria
             catch
             {
                 // ignored
+                // todo: i'm pretty sure this doesn't work properly.
+                //  in any case, it should probably wait a while before trying to reconnect.
             }
         }
 
@@ -50,6 +52,8 @@ namespace Victoria
             PureSocket.OnError += OnSocketError;
             PureSocket.OnClosed += OnSocketClosed;
             PureSocket.OnOpened += OnSocketOpened;
+            
+            Connect();
         }
 
         internal void Disconnect()

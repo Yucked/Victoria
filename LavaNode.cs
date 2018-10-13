@@ -117,8 +117,8 @@ namespace Victoria
         /// <param name="textChannel">TextChannel Where Updates Will Be Sent.</param>
         public async Task<LavaPlayer> JoinAsync(IVoiceChannel voiceChannel, IMessageChannel textChannel)
         {
-            if (Players.ContainsKey(voiceChannel.GuildId))
-                return Players[voiceChannel.GuildId];
+            if (Players.TryGetValue(voiceChannel.GuildId, out var existingPlayer))
+                return existingPlayer;
             var player = new LavaPlayer(this, voiceChannel, textChannel);
             await voiceChannel.ConnectAsync(false, false, true);
             Players.TryAdd(voiceChannel.Guild.Id, player);
@@ -130,13 +130,10 @@ namespace Victoria
         ///     Leaves A Voice Channel. Must Be Connected To Previously.
         /// </summary>
         /// <param name="guildId">Guild Id</param>
-        public async Task<bool> LeaveAsync(ulong guildId)
-        {
-            if (!Players.ContainsKey(guildId))
-                return false;
-            Players.TryGetValue(guildId, out var player);
+        public async Task<bool> LeaveAsync(ulong guildId) {
+            if (!Players.TryRemove(guildId, out var player)) return false;
             await player.DisconnectAsync();
-            Players.TryRemove(guildId, out _);
+            
             InvokeLog(LogSeverity.Verbose, $"Disconnected from {player.VoiceChannel.Name}.");
             return true;
         }
@@ -145,9 +142,9 @@ namespace Victoria
         ///     Returns LavaPlayer For Specific Guild (Otherwise Null).
         /// </summary>
         /// <param name="guildId">Guild Id</param>
-        public LavaPlayer GetPlayer(ulong guildId)
-        {
-            return Players.ContainsKey(guildId) ? Players[guildId] : null;
+        public LavaPlayer GetPlayer(ulong guildId) {
+            Players.TryGetValue(guildId, out LavaPlayer player);
+            return player;
         }
 
         /// <summary>
@@ -232,8 +229,8 @@ namespace Victoria
         {
             foreach (var guild in client.Guilds)
             {
-                if (!Players.ContainsKey(guild.Id)) continue;
-                await Players[guild.Id].DisconnectAsync();
+                if (!Players.TryGetValue(guild.Id, out var player)) continue;
+                await player.DisconnectAsync();
                 Players.TryRemove(guild.Id, out _);
             }
 
