@@ -33,10 +33,9 @@ namespace Victoria
         /// <returns>
         ///     <see cref="LavaNode" />
         /// </returns>
-        public async Task<LavaNode> ConnectAsync(BaseDiscordClient client, LavaConfig config = default)
-        {
-            if (Nodes.ContainsKey(config.Socket))
-                return Nodes[config.Socket];
+        public async Task<LavaNode> ConnectAsync(BaseDiscordClient client, LavaConfig config = default) {
+            if (Nodes.TryGetValue(config.Socket, out var existingNode))
+                return existingNode;
             config = config.Equals(default(LavaConfig)) ? LavaConfig.Default : config;
             var node = new LavaNode(client, config);
             Nodes.TryAdd(config.Socket, node);
@@ -61,9 +60,9 @@ namespace Victoria
         /// <returns>
         ///     <see cref="LavaNode" />
         /// </returns>
-        public LavaNode GetNode(Endpoint endpoint)
-        {
-            return Nodes.ContainsKey(endpoint) ? Nodes[endpoint] : null;
+        public LavaNode GetNode(Endpoint endpoint) {
+            Nodes.TryGetValue(endpoint, out LavaNode node);
+            return node;
         }
     }
 }
