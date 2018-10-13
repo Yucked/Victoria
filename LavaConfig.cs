@@ -5,10 +5,9 @@ namespace Victoria
     public struct LavaConfig
     {
         /// <summary>
-        ///     Number Of Tries For Reconnects.
+        /// Max number of connection re-attempts
         /// </summary>
         public int MaxTries { get; set; }
-
         /// <summary>
         ///     Lavalink Authorization.
         /// </summary>
@@ -43,7 +42,7 @@ namespace Victoria
                 Port = 80,
                 Host = "127.0.0.1"
             },
-            Severity = LogSeverity.Verbose,
+            Severity = LogSeverity.Debug,
             Authorization = "youshallnotpass"
         };
     }

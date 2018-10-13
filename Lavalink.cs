@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
+using Victoria.Misc;
 
 namespace Victoria
 {
@@ -10,6 +13,8 @@ namespace Victoria
     {
         private ConcurrentDictionary<Endpoint, LavaNode> Nodes
             => new ConcurrentDictionary<Endpoint, LavaNode>();
+
+        private LavaConfig Config;
 
         /// <summary>
         ///     Nodes Count.
@@ -20,6 +25,11 @@ namespace Victoria
         ///     Return the default LavaNode if any.
         /// </summary>
         public LavaNode DefaultNode => Nodes.FirstOrDefault().Value;
+
+        /// <summary>
+        ///     Logging
+        /// </summary>
+        public event AsyncEvent<LogMessage> Log; 
 
         /// <summary>
         ///     Connect to a Lavalink Node.
@@ -37,16 +47,18 @@ namespace Victoria
         {
             if (Nodes.ContainsKey(config.Socket))
                 return Nodes[config.Socket];
-            config = config.Equals(default(LavaConfig)) ? LavaConfig.Default : config;
-            var node = new LavaNode(client, config);
-            Nodes.TryAdd(config.Socket, node);
+            Config = config.Equals(default(LavaConfig)) ? LavaConfig.Default : config;
+            var shards = await GetShardsAsync(client);
+            var socket = new LavaSocket(Config, this, shards, client.CurrentUser.Id);
+            var node = new LavaNode(client, socket, Config, this);
+            Nodes.TryAdd(Config.Socket, node);
             try
             {
-                await node.StartAsync().ConfigureAwait(false);
+                node.Start();
             }
             catch
             {
-                Nodes.TryRemove(config.Socket, out var lavaNode);
+                Nodes.TryRemove(Config.Socket, out var lavaNode);
                 await lavaNode.StopAsync().ConfigureAwait(false);
                 throw;
             }
@@ -64,6 +76,24 @@ namespace Victoria
         public LavaNode GetNode(Endpoint endpoint)
         {
             return Nodes.ContainsKey(endpoint) ? Nodes[endpoint] : null;
+        }
+
+        private async Task<int> GetShardsAsync(BaseDiscordClient baseClient)
+        {
+            switch (baseClient)
+            {
+                case DiscordSocketClient client:
+                    return await client.GetRecommendedShardCountAsync();
+                case DiscordShardedClient shardedClient:
+                    return shardedClient.Shards.Count;
+                default: return 1;
+            }
+        }
+
+        internal void InvokeLog(LogSeverity severity, string message, Exception exc = null)
+        {
+            var logMessage = new LogMessage(severity, "Victoria", message, exc);
+            Log?.Invoke(logMessage);
         }
     }
 }

@@ -3,9 +3,9 @@ using System.IO;
 using System.Text;
 using Victoria.Objects;
 
-namespace Victoria
+namespace Victoria.Misc
 {
-    public class Util
+    public sealed class TrackHelper
     {
         private static UTF8Encoding UTF8 { get; } = new UTF8Encoding(false);
 

@@ -1,10 +1,10 @@
+using Discord;
+using Newtonsoft.Json;
+using PureWebSockets;
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
-using Discord;
-using Newtonsoft.Json;
-using PureWebSockets;
 using Victoria.Payloads;
 
 namespace Victoria
@@ -12,44 +12,78 @@ namespace Victoria
     public sealed class LavaSocket
     {
         private bool IsDisposed;
-        private int MaxTries;
-        private Endpoint Socket;
-        private int Tries;
-        internal PureWebSocket PureSocket { get; set; }
+        private readonly LavaConfig _config;
+        internal readonly Lavalink Lavalink;
+        internal PureWebSocket PureSocket { get; }
         internal bool IsConnected => !Volatile.Read(ref IsDisposed);
-        internal event Action<LogSeverity, string, Exception> Log;
 
-        internal void Connect()
-        {
-            try
-            {
-                PureSocket.Connect();
-            }
-            catch
-            {
-                // ignored
-            }
-        }
 
-        internal void Connect(LavaConfig config, ulong userId, int shards)
+        internal LavaSocket(LavaConfig config, Lavalink lavalink, int shards, ulong userId)
         {
-            Socket = config.Socket;
-            MaxTries = config.MaxTries;
-            PureSocket = new PureWebSocket($"ws://{Socket.Host}:{Socket.Port}",
+            _config = config;
+            Lavalink = lavalink;
+            var socket = new PureWebSocket($"ws://{config.Socket.Host}:{config.Socket.Port}",
                 new PureWebSocketOptions
                 {
-                    DisconnectWait = 5000,
+                    DebugMode = config.Severity == LogSeverity.Debug,
                     Headers = new List<Tuple<string, string>>
                     {
                         new Tuple<string, string>("Num-Shards", $"{shards}"),
                         new Tuple<string, string>("Authorization", config.Authorization),
                         new Tuple<string, string>("User-Id", $"{userId}")
-                    }
+                    },
+                    IgnoreCertErrors = true,
+                    MyReconnectStrategy = new ReconnectStrategy(reconnectInterval: 100, config.MaxTries)
                 });
 
-            PureSocket.OnError += OnSocketError;
-            PureSocket.OnClosed += OnSocketClosed;
-            PureSocket.OnOpened += OnSocketOpened;
+            socket.OnError += OnError;
+            socket.OnClosed += OnClosed;
+            socket.OnFatality += OnFatality;
+            socket.OnOpened += OnOpened;
+            socket.OnSendFailed += OnSendFailed;
+            socket.OnStateChanged += OnStateChanged;
+            PureSocket = socket;
+        }
+
+        internal void Connect()
+        {
+            try
+            {
+                switch (_config.Severity)
+                {
+                    case LogSeverity.Debug:
+                    case LogSeverity.Verbose:
+                    case LogSeverity.Info:
+                        Lavalink.InvokeLog(_config.Severity, "Connecting to websocket.");
+                        break;
+                }
+
+                var check = PureSocket.Connect();
+                if (!check)
+                {
+                    switch (_config.Severity)
+                    {
+                        case LogSeverity.Debug:
+                        case LogSeverity.Verbose:
+                        case LogSeverity.Info:
+                            Lavalink.InvokeLog(_config.Severity, "Failed to connect to websocket.");
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                switch (_config.Severity)
+                {
+                    case LogSeverity.Debug:
+                    case LogSeverity.Critical:
+                    case LogSeverity.Error:
+                    case LogSeverity.Warning:
+                    case LogSeverity.Verbose:
+                        Lavalink.InvokeLog(_config.Severity, null, ex);
+                        break;
+                }
+            }
         }
 
         internal void Disconnect()
@@ -62,47 +96,111 @@ namespace Victoria
         internal void SendPayload(LavaPayload load)
         {
             PureSocket.Send(JsonConvert.SerializeObject(load));
-            Log?.Invoke(LogSeverity.Verbose, $"Sent {load.Operation} payload.", null);
-        }
-
-        private void OnSocketClosed(WebSocketCloseStatus reason)
-        {
-            if (Tries >= MaxTries && MaxTries != 0) return;
-            if (IsConnected && reason != WebSocketCloseStatus.EndpointUnavailable && (int) reason != -1)
+            switch (_config.Severity)
             {
-                Log?.Invoke(LogSeverity.Warning, "Websocket connection broken. Re-establishing connection...", null);
-                try
-                {
-                    Interlocked.Increment(ref Tries);
-                    Connect();
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
-            else if (reason != WebSocketCloseStatus.EndpointUnavailable && (int) reason != -1)
-            {
-                Interlocked.Increment(ref Tries);
-                Log?.Invoke(LogSeverity.Warning, "Connection has been closed.", null);
-            }
-            else
-            {
-                Interlocked.Increment(ref Tries);
-                Log?.Invoke(LogSeverity.Critical, "Lavalink is unreachable.", null);
+                case LogSeverity.Debug:
+                    Lavalink.InvokeLog(_config.Severity, JsonConvert.SerializeObject(load));
+                    break;
+                case LogSeverity.Verbose:
+                    Lavalink.InvokeLog(_config.Severity, $"Sent {load.Operation} payload.");
+                    break;
             }
         }
 
-        private void OnSocketOpened()
+        private void OnClosed(WebSocketCloseStatus reason)
         {
-            Tries = 0;
+            switch (_config.Severity)
+            {
+                case LogSeverity.Critical:
+                case LogSeverity.Debug:
+                case LogSeverity.Warning:
+                case LogSeverity.Error:
+                    switch (reason)
+                    {
+                        case WebSocketCloseStatus.EndpointUnavailable:
+                        case WebSocketCloseStatus.PolicyViolation:
+                        case WebSocketCloseStatus.ProtocolError:
+                        case WebSocketCloseStatus.InternalServerError:
+                        case WebSocketCloseStatus.InvalidMessageType:
+                        case WebSocketCloseStatus.InvalidPayloadData:
+                        case WebSocketCloseStatus.MessageTooBig:
+                            Lavalink.InvokeLog(_config.Severity, $"{reason}");
+                            break;
+                    }
+
+                    break;
+            }
+        }
+
+        private void OnOpened()
+        {
             Volatile.Write(ref IsDisposed, false);
-            Log?.Invoke(LogSeverity.Verbose, "Websocket connection opened.", null);
+            switch (_config.Severity)
+            {
+                case LogSeverity.Debug:
+                case LogSeverity.Verbose:
+                case LogSeverity.Info:
+                    Lavalink.InvokeLog(_config.Severity, "Socket connection established.");
+                    break;
+            }
         }
 
-        private void OnSocketError(Exception ex)
+        private void OnError(Exception ex)
         {
-            Log?.Invoke(LogSeverity.Error, $"{ex.Message}\n{ex.StackTrace}", ex);
+            switch (_config.Severity)
+            {
+                case LogSeverity.Debug:
+                case LogSeverity.Error:
+                case LogSeverity.Critical:
+                case LogSeverity.Warning:
+                    Lavalink.InvokeLog(_config.Severity, null, ex);
+                    break;
+            }
+        }
+
+        private void OnFatality(string reason)
+        {
+            switch (_config.Severity)
+            {
+                case LogSeverity.Debug:
+                case LogSeverity.Error:
+                case LogSeverity.Critical:
+                case LogSeverity.Warning:
+                    Lavalink.InvokeLog(_config.Severity, reason);
+                    break;
+            }
+        }
+
+        private void OnSendFailed(string data, Exception ex)
+        {
+            switch (_config.Severity)
+            {
+                case LogSeverity.Debug:
+                case LogSeverity.Verbose:
+                    Lavalink.InvokeLog(_config.Severity, data, ex);
+                    break;
+
+                case LogSeverity.Info:
+                    Lavalink.InvokeLog(_config.Severity, "Failed to send data.");
+                    break;
+
+                case LogSeverity.Error:
+                case LogSeverity.Critical:
+                case LogSeverity.Warning:
+                    Lavalink.InvokeLog(_config.Severity, null, ex);
+                    break;
+            }
+        }
+
+        private void OnStateChanged(WebSocketState newstate, WebSocketState prevstate)
+        {
+            switch (_config.Severity)
+            {
+                case LogSeverity.Debug:
+                case LogSeverity.Verbose:
+                    Lavalink.InvokeLog(LogSeverity.Debug, $"State Changed: {prevstate} -> {newstate}");
+                    break;
+            }
         }
     }
 }

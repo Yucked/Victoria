@@ -72,8 +72,9 @@ namespace Victoria
         {
             if (!IsConnected)
                 throw new InvalidOperationException("This player isn't connected.");
+            CurrentTrack = null;
             await VoiceChannel.DisconnectAsync();
-            Volatile.Write(ref IsDisposed, true);
+            Volatile.Write(ref IsDisposed, true);            
             LavaSocket.SendPayload(new DestroyPayload(Guild.Id));
         }
 
@@ -131,6 +132,7 @@ namespace Victoria
             if (!IsConnected)
                 throw new InvalidOperationException("This player isn't connected.");
             Volatile.Write(ref IsDisposed, true);
+            CurrentTrack = null;
             LavaSocket.SendPayload(new StopPayload(Guild.Id));
         }
 
@@ -209,6 +211,18 @@ namespace Victoria
         }
 
         /// <summary>
+        ///     Enqueues Bunch of Tracks.
+        /// </summary>
+        /// <param name="tracks">
+        ///     <see cref="LavaTrack" />
+        /// </param>
+        public void Enqueue(IEnumerable<LavaTrack> tracks)
+        {
+            foreach (var track in tracks)
+                Queue[Guild.Id]?.AddLast(track);
+        }
+
+        /// <summary>
         ///     Removes A Track From The Default <see cref="Queue" />.
         /// </summary>
         /// <param name="track">
@@ -224,6 +238,16 @@ namespace Victoria
         /// </summary>
         /// <param name="tracks"></param>
         public void Dequeue(params LavaTrack[] tracks)
+        {
+            foreach (var track in tracks)
+                Queue[Guild.Id]?.Remove(track);
+        }
+
+        /// <summary>
+        ///     Dequeues Bunch of Tracks.
+        /// </summary>
+        /// <param name="tracks"></param>
+        public void Dequeue(IEnumerable<LavaTrack> tracks)
         {
             foreach (var track in tracks)
                 Queue[Guild.Id]?.Remove(track);
