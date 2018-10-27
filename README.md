@@ -12,10 +12,10 @@ Victoria is a Lavalink wrapper for Discord.NET library. It uses Emzi's code styl
 Even though Sharplink is great, there were constant internal exceptions and weird code style. Victoria aims to solve that and also provide full support of Lavalink.
 
 ## 🤔 `How To Use It?`
+Make sure you've latest version of Java installed (10 /11) and follow Lavalink [instructions](https://github.com/Frederikam/Lavalink#server-configuration).
 Grab the latest release from [Nuget](https://www.nuget.org/packages/Victoria/). Add `Lavalink` to your `ServiceCollection` or make a global static property of `Lavalink` since it's not a heavy object. From there on, in your `DiscordSocketClient`'s or `DiscordShardedClient`'s ready event add
 
 ```cs
-
 // Get Lavalink from DI or use your global property. 
 // LavaConfig is optional, it will use default Application.yml settings.
   var node = await Lavalink.ConnectAsync(Client, new LavaConfig {
