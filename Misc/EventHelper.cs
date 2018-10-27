@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 
 namespace Victoria.Misc
 {
+    public delegate Task AsyncEvent();
+
     public delegate Task AsyncEvent<in T1>(T1 arg1);
 
     public delegate Task AsyncEvent<in T1, in T2>(T1 arg1, T2 arg2);
@@ -11,6 +13,17 @@ namespace Victoria.Misc
 
     public static class EventHelper
     {
+        public static Task InvokeAsync(this AsyncEvent asyncEvent)
+        {
+            if (asyncEvent == null)
+                return Task.CompletedTask;
+
+            var events = asyncEvent.GetInvocationList().Cast<AsyncEvent>();
+            var eventTasks = events.Select(it => it.Invoke());
+
+            return Task.WhenAll(eventTasks);
+        }
+
         public static Task InvokeAsync<T1>(this AsyncEvent<T1> asyncEvent, T1 arg1)
         {
             if (asyncEvent == null)

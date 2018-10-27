@@ -22,14 +22,14 @@ namespace Victoria
         public int NodesCount => Nodes.Count;
 
         /// <summary>
-        ///     Return the default LavaNode if any.
-        /// </summary>
-        public LavaNode DefaultNode => Nodes.FirstOrDefault().Value;
-
-        /// <summary>
         ///     Logging
         /// </summary>
-        public event AsyncEvent<LogMessage> Log; 
+        public event AsyncEvent<LogMessage> Log;
+
+        /// <summary>
+        /// Returns the first Lavanode if any otherwise null.
+        /// </summary>
+        public LavaNode DefaultNode => Nodes.FirstOrDefault().Value;
 
         /// <summary>
         ///     Connect to a Lavalink Node.
@@ -45,22 +45,23 @@ namespace Victoria
         /// </returns>
         public async Task<LavaNode> ConnectAsync(BaseDiscordClient client, LavaConfig config = default)
         {
-            if (Nodes.ContainsKey(config.Socket))
-                return Nodes[config.Socket];
+            if (Nodes.ContainsKey(config.Endpoint))
+                return Nodes[config.Endpoint];
             Config = config.Equals(default(LavaConfig)) ? LavaConfig.Default : config;
-            var shards = await GetShardsAsync(client);
-            var socket = new LavaSocket(Config, this, shards, client.CurrentUser.Id);
-            var node = new LavaNode(client, socket, Config, this);
-            Nodes.TryAdd(Config.Socket, node);
+            Config.UserId = client.CurrentUser.Id;
+            Config.Shards = await GetShardsAsync(client);
+            var socket = new LavaSocket(Config, this);
+            var node = new LavaNode(client, socket, Config);
+            Nodes.TryAdd(Config.Endpoint, node);
             try
             {
-                node.Start();
+                await node.StartAsync();
             }
             catch
             {
-                Nodes.TryRemove(Config.Socket, out var lavaNode);
-                await lavaNode.StopAsync().ConfigureAwait(false);
-                throw;
+                node.Dispose();
+                socket.Dispose();
+                Nodes.TryRemove(config.Endpoint, out _);
             }
 
             return node;
@@ -94,6 +95,46 @@ namespace Victoria
         {
             var logMessage = new LogMessage(severity, "Victoria", message, exc);
             Log?.Invoke(logMessage);
+        }
+
+        internal void LogDebug(string message)
+        {
+            switch (Config.Severity)
+            {
+                case LogSeverity.Debug:
+                case LogSeverity.Verbose:
+                    var logMessage = new LogMessage(Config.Severity, "Victoria", message);
+                    Log?.Invoke(logMessage);
+                    break;
+            }
+        }
+
+        internal void LogInfo(string message)
+        {
+            switch (Config.Severity)
+            {
+                case LogSeverity.Info:
+                case LogSeverity.Debug:
+                case LogSeverity.Verbose:
+                    var logMessage = new LogMessage(Config.Severity, "Victoria", message);
+                    Log?.Invoke(logMessage);
+                    break;
+            }
+        }
+
+        internal void LogError(string message, Exception exc = null)
+        {
+            switch (Config.Severity)
+            {
+                case LogSeverity.Critical:
+                case LogSeverity.Debug:
+                case LogSeverity.Verbose:
+                case LogSeverity.Warning:
+                case LogSeverity.Error:
+                    var logMessage = new LogMessage(Config.Severity, "Victoria", message, exc);
+                    Log?.Invoke(logMessage);
+                    break;
+            }
         }
     }
 }

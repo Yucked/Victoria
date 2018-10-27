@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <NoWarn>1591, 1571</NoWarn>
         <LangVersion>latest</LangVersion>
@@ -7,15 +7,15 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>2.2.2</Version>
+        <Version>2.3.0</Version>
         <Title>Victoria</Title>
         <Authors>Yucked</Authors>
-        <Description>.NET Wrapper For Lavalink. Only supports Discord.NET.</Description>
+        <Description>Lavalink wrapper written for Discord.NET.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Removed LavaNode#Log\nAdded Lavalink#Log. Enabling debug flag also enables socket debugging. Added AsyncEvents.</PackageReleaseNotes>
+        <PackageReleaseNotes>Rewritten all of the websocket structure and fixed things that weren't working before. Updated config to follow lavalink's application.yml.</PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
-        <PackageIconUrl>https://cdn.discordapp.com/attachments/491355652191682582/493181196222726144/ElizabethandRichard.png</PackageIconUrl>
+        <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -28,7 +28,7 @@
 
     <ItemGroup>
         <PackageReference Include="Discord.Net" Version="2.0.0-beta2-01001"/>
-        <PackageReference Include="PureWebSockets" Version="2.2.0"/>
+        <PackageReference Include="HyperEx" Version="1.0.4"/>
     </ItemGroup>
 
 </Project>

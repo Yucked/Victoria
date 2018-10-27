@@ -1,206 +1,159 @@
-using Discord;
+using HyperEx;
 using Newtonsoft.Json;
-using PureWebSockets;
 using System;
-using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Victoria.Misc;
 using Victoria.Payloads;
 
 namespace Victoria
 {
-    public sealed class LavaSocket
+    internal sealed class LavaSocket : IDisposable
     {
         private bool IsDisposed;
         private readonly LavaConfig _config;
-        internal readonly Lavalink Lavalink;
-        internal PureWebSocket PureSocket { get; }
+        private readonly Encoding _encoding;
+        private ClientWebSocket _webSocket;
+
+        internal int _tries;
+        internal event AsyncEvent OnClose;
+        internal readonly Lavalink _lavalink;
+        internal event Action<string> OnReceive;
         internal bool IsConnected => !Volatile.Read(ref IsDisposed);
 
-
-        internal LavaSocket(LavaConfig config, Lavalink lavalink, int shards, ulong userId)
+        internal LavaSocket(LavaConfig config, Lavalink lavalink)
         {
             _config = config;
-            Lavalink = lavalink;
-            var socket = new PureWebSocket($"ws://{config.Socket.Host}:{config.Socket.Port}",
-                new PureWebSocketOptions
-                {
-                    DebugMode = config.Severity == LogSeverity.Debug,
-                    Headers = new List<Tuple<string, string>>
-                    {
-                        new Tuple<string, string>("Num-Shards", $"{shards}"),
-                        new Tuple<string, string>("Authorization", config.Authorization),
-                        new Tuple<string, string>("User-Id", $"{userId}")
-                    },
-                    IgnoreCertErrors = true,
-                    MyReconnectStrategy = new ReconnectStrategy(reconnectInterval: 100, config.MaxTries)
-                });
-
-            socket.OnError += OnError;
-            socket.OnClosed += OnClosed;
-            socket.OnFatality += OnFatality;
-            socket.OnOpened += OnOpened;
-            socket.OnSendFailed += OnSendFailed;
-            socket.OnStateChanged += OnStateChanged;
-            PureSocket = socket;
+            _lavalink = lavalink;
+            _encoding = new UTF8Encoding(false);
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
         }
 
-        internal void Connect()
+        public async Task ConnectAsync()
+        {
+            _webSocket = new ClientWebSocket();
+            _webSocket.Options.SetRequestHeader("User-Id", $"{_config.UserId}");
+            _webSocket.Options.SetRequestHeader("Num-Shards", $"{_config.Shards}");
+            _webSocket.Options.SetRequestHeader("Authorization", _config.Authorization);
+            _lavalink.LogInfo($"Connecting to Lavalink node at {_config.Endpoint.Host}:{_config.Endpoint.Port}");
+            try
+            {
+                await _webSocket.ConnectAsync(new Uri($"ws://{_config.Endpoint.Host}:{_config.Endpoint.Port}"),
+                    CancellationToken.None).ContinueWith(AfterConnect);
+            }
+            catch
+            {
+            }
+        }
+
+        private void AfterConnect(Task connectTask)
+        {
+            if (connectTask.IsCanceled || connectTask.IsFaulted || connectTask.Exception != null)
+            {
+                Volatile.Write(ref IsDisposed, true);
+                OnClose?.Invoke();
+            }
+            else
+                Task.Run(async () =>
+                {
+                    _tries = 0;
+                    Volatile.Write(ref IsDisposed, false);
+                    _lavalink.LogInfo("Connected to lavalink node.");
+                    await ReceiveDataAsync();
+                }, CancellationToken.None);
+        }
+
+        public async Task ReceiveDataAsync()
         {
             try
             {
-                switch (_config.Severity)
+                while (true)
                 {
-                    case LogSeverity.Debug:
-                    case LogSeverity.Verbose:
-                    case LogSeverity.Info:
-                        Lavalink.InvokeLog(_config.Severity, "Connecting to websocket.");
-                        break;
+                    var data = await ReceiveAsync();
+                    if (data.Length <= 0)
+                        continue;
+                    var message = _encoding.GetString(data);
+                    var trimmed = message.Trim('\0');
+                    OnReceive?.Invoke(trimmed);
                 }
-
-                var check = PureSocket.Connect();
-                if (!check)
-                {
-                    switch (_config.Severity)
-                    {
-                        case LogSeverity.Debug:
-                        case LogSeverity.Verbose:
-                        case LogSeverity.Info:
-                            Lavalink.InvokeLog(_config.Severity, "Failed to connect to websocket.");
-                            break;
-                    }
-                }
+            }
+            catch (OperationCanceledException opEx)
+            {
+                _lavalink.LogError("Server disconnected.", opEx);
+            }
+            catch (WebSocketException wsEx)
+            {
+                _lavalink.LogError("Websocket error.", wsEx);
             }
             catch (Exception ex)
             {
-                switch (_config.Severity)
-                {
-                    case LogSeverity.Debug:
-                    case LogSeverity.Critical:
-                    case LogSeverity.Error:
-                    case LogSeverity.Warning:
-                    case LogSeverity.Verbose:
-                        Lavalink.InvokeLog(_config.Severity, null, ex);
-                        break;
-                }
+                _lavalink.LogError(null, ex);
+            }
+            finally
+            {
+                Volatile.Write(ref IsDisposed, true);
+                OnClose?.Invoke();
             }
         }
 
-        internal void Disconnect()
+        public async Task DisconnectAsync()
         {
-            PureSocket.Disconnect();
-            PureSocket.Dispose(true);
+            await _webSocket
+                .CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Manual Closure.", CancellationToken.None)
+                .ConfigureAwait(false);
+            await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Manual closer.", CancellationToken.None)
+                .ConfigureAwait(false);
+            _webSocket.Dispose();
             Volatile.Write(ref IsDisposed, true);
+        }
+
+        public async Task SendAsync(string data)
+        {
+            var bytes = _encoding.GetBytes(data);
+            await _webSocket
+                .SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+
+        private async Task<byte[]> ReceiveAsync()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var buffer = new byte[1024];
+                var segment = new ArraySegment<byte>(buffer);
+                while (_webSocket.State == WebSocketState.Open)
+                {
+                    var result = await _webSocket.ReceiveAsync(segment, CancellationToken.None);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        OnClose?.Invoke();
+                        break;
+                    }
+                    else
+                    {
+                        stream.Write(buffer, 0, result.Count);
+                        if (result.EndOfMessage) break;
+                    }
+                }
+                return stream.ToArray();
+            }
         }
 
         internal void SendPayload(LavaPayload load)
         {
-            PureSocket.Send(JsonConvert.SerializeObject(load));
-            switch (_config.Severity)
-            {
-                case LogSeverity.Debug:
-                    Lavalink.InvokeLog(_config.Severity, JsonConvert.SerializeObject(load));
-                    break;
-                case LogSeverity.Verbose:
-                    Lavalink.InvokeLog(_config.Severity, $"Sent {load.Operation} payload.");
-                    break;
-            }
+            var data = JsonConvert.SerializeObject(load);
+            Asyncs.RunSync(() => SendAsync(data));
+            _lavalink.LogDebug(JsonConvert.SerializeObject(load));
         }
 
-        private void OnClosed(WebSocketCloseStatus reason)
+        public void Dispose()
         {
-            switch (_config.Severity)
-            {
-                case LogSeverity.Critical:
-                case LogSeverity.Debug:
-                case LogSeverity.Warning:
-                case LogSeverity.Error:
-                    switch (reason)
-                    {
-                        case WebSocketCloseStatus.EndpointUnavailable:
-                        case WebSocketCloseStatus.PolicyViolation:
-                        case WebSocketCloseStatus.ProtocolError:
-                        case WebSocketCloseStatus.InternalServerError:
-                        case WebSocketCloseStatus.InvalidMessageType:
-                        case WebSocketCloseStatus.InvalidPayloadData:
-                        case WebSocketCloseStatus.MessageTooBig:
-                            Lavalink.InvokeLog(_config.Severity, $"{reason}");
-                            break;
-                    }
-
-                    break;
-            }
-        }
-
-        private void OnOpened()
-        {
-            Volatile.Write(ref IsDisposed, false);
-            switch (_config.Severity)
-            {
-                case LogSeverity.Debug:
-                case LogSeverity.Verbose:
-                case LogSeverity.Info:
-                    Lavalink.InvokeLog(_config.Severity, "Socket connection established.");
-                    break;
-            }
-        }
-
-        private void OnError(Exception ex)
-        {
-            switch (_config.Severity)
-            {
-                case LogSeverity.Debug:
-                case LogSeverity.Error:
-                case LogSeverity.Critical:
-                case LogSeverity.Warning:
-                    Lavalink.InvokeLog(_config.Severity, null, ex);
-                    break;
-            }
-        }
-
-        private void OnFatality(string reason)
-        {
-            switch (_config.Severity)
-            {
-                case LogSeverity.Debug:
-                case LogSeverity.Error:
-                case LogSeverity.Critical:
-                case LogSeverity.Warning:
-                    Lavalink.InvokeLog(_config.Severity, reason);
-                    break;
-            }
-        }
-
-        private void OnSendFailed(string data, Exception ex)
-        {
-            switch (_config.Severity)
-            {
-                case LogSeverity.Debug:
-                case LogSeverity.Verbose:
-                    Lavalink.InvokeLog(_config.Severity, data, ex);
-                    break;
-
-                case LogSeverity.Info:
-                    Lavalink.InvokeLog(_config.Severity, "Failed to send data.");
-                    break;
-
-                case LogSeverity.Error:
-                case LogSeverity.Critical:
-                case LogSeverity.Warning:
-                    Lavalink.InvokeLog(_config.Severity, null, ex);
-                    break;
-            }
-        }
-
-        private void OnStateChanged(WebSocketState newstate, WebSocketState prevstate)
-        {
-            switch (_config.Severity)
-            {
-                case LogSeverity.Debug:
-                case LogSeverity.Verbose:
-                    Lavalink.InvokeLog(LogSeverity.Debug, $"State Changed: {prevstate} -> {newstate}");
-                    break;
-            }
+            _webSocket.Dispose();
+            _webSocket = null;
         }
     }
 }

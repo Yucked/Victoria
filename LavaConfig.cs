@@ -4,10 +4,14 @@ namespace Victoria
 {
     public struct LavaConfig
     {
+        internal int Shards { get; set; }
+        internal ulong UserId { get; set; }
+
         /// <summary>
         /// Max number of connection re-attempts
         /// </summary>
         public int MaxTries { get; set; }
+
         /// <summary>
         ///     Lavalink Authorization.
         /// </summary>
@@ -16,12 +20,7 @@ namespace Victoria
         /// <summary>
         ///     Rest Hostname And Port.
         /// </summary>
-        public Endpoint Rest { get; set; }
-
-        /// <summary>
-        ///     Websocket Hostname And Port.
-        /// </summary>
-        public Endpoint Socket { get; set; }
+        public Endpoint Endpoint { get; set; }
 
         /// <summary>
         ///     Get Severity of Log
@@ -32,17 +31,12 @@ namespace Victoria
         internal static LavaConfig Default => new LavaConfig
         {
             MaxTries = 0,
-            Rest = new Endpoint
+            Endpoint = new Endpoint
             {
                 Port = 2333,
                 Host = "127.0.0.1"
             },
-            Socket = new Endpoint
-            {
-                Port = 80,
-                Host = "127.0.0.1"
-            },
-            Severity = LogSeverity.Debug,
+            Severity = LogSeverity.Info,
             Authorization = "youshallnotpass"
         };
     }

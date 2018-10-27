@@ -1,9 +1,9 @@
+using Discord;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord;
 using Victoria.Objects;
 using Victoria.Payloads;
 
@@ -12,19 +12,7 @@ namespace Victoria
     public sealed class LavaPlayer
     {
         internal bool IsDisposed;
-
-        internal LavaPlayer()
-        {
-        }
-
-        internal LavaPlayer(LavaNode lavaNode, IVoiceChannel voiceChannel, IMessageChannel textChannel)
-        {
-            TextChannel = textChannel;
-            VoiceChannel = voiceChannel;
-            LavaSocket = lavaNode.LavaSocket;
-            Volatile.Write(ref IsDisposed, false);
-            Queue = new ConcurrentDictionary<ulong, LinkedList<LavaTrack>>();
-        }
+        private LavaSocket _lavaSocket;
 
         /// <summary>
         ///     Connected Voice Channel.
@@ -66,7 +54,18 @@ namespace Victoria
         /// </summary>
         public ConcurrentDictionary<ulong, LinkedList<LavaTrack>> Queue { get; }
 
-        private LavaSocket LavaSocket { get; }
+        internal LavaPlayer()
+        {
+        }
+
+        internal LavaPlayer(LavaNode lavaNode, IVoiceChannel voiceChannel, IMessageChannel textChannel)
+        {
+            TextChannel = textChannel;
+            VoiceChannel = voiceChannel;
+            _lavaSocket = lavaNode._lavaSocket;
+            Volatile.Write(ref IsDisposed, false);
+            Queue = new ConcurrentDictionary<ulong, LinkedList<LavaTrack>>();
+        }
 
         internal async Task DisconnectAsync()
         {
@@ -74,8 +73,8 @@ namespace Victoria
                 throw new InvalidOperationException("This player isn't connected.");
             CurrentTrack = null;
             await VoiceChannel.DisconnectAsync();
-            Volatile.Write(ref IsDisposed, true);            
-            LavaSocket.SendPayload(new DestroyPayload(Guild.Id));
+            Volatile.Write(ref IsDisposed, true);
+            _lavaSocket.SendPayload(new DestroyPayload(Guild.Id));
         }
 
         /// <summary>
@@ -90,7 +89,7 @@ namespace Victoria
             if (!IsConnected)
                 throw new InvalidOperationException("This player isn't connected.");
             CurrentTrack = track;
-            LavaSocket.SendPayload(new PlayPayload(Guild.Id, track));
+            _lavaSocket.SendPayload(new PlayPayload(Guild.Id, track));
         }
 
         /// <summary>
@@ -120,7 +119,7 @@ namespace Victoria
                 throw new ArgumentException("End Time Must Be Greater Than Start Time.");
 
             CurrentTrack = track;
-            LavaSocket.SendPayload(new PlayPartialPayload(Guild.Id, track, start, stop));
+            _lavaSocket.SendPayload(new PlayPartialPayload(Guild.Id, track, start, stop));
         }
 
         /// <summary>
@@ -133,7 +132,7 @@ namespace Victoria
                 throw new InvalidOperationException("This player isn't connected.");
             Volatile.Write(ref IsDisposed, true);
             CurrentTrack = null;
-            LavaSocket.SendPayload(new StopPayload(Guild.Id));
+            _lavaSocket.SendPayload(new StopPayload(Guild.Id));
         }
 
         /// <summary>
@@ -144,7 +143,7 @@ namespace Victoria
         {
             if (!IsConnected)
                 throw new InvalidOperationException("This player isn't connected.");
-            LavaSocket.SendPayload(new PausePayload(true, Guild.Id));
+            _lavaSocket.SendPayload(new PausePayload(true, Guild.Id));
         }
 
         /// <summary>
@@ -155,7 +154,7 @@ namespace Victoria
         {
             if (!IsConnected)
                 throw new InvalidOperationException("This player isn't connected.");
-            LavaSocket.SendPayload(new PausePayload(false, Guild.Id));
+            _lavaSocket.SendPayload(new PausePayload(false, Guild.Id));
         }
 
         /// <summary>
@@ -167,7 +166,7 @@ namespace Victoria
         {
             if (!IsConnected)
                 throw new InvalidOperationException("This player isn't connected.");
-            LavaSocket.SendPayload(new SeekPayload(position, Guild.Id));
+            _lavaSocket.SendPayload(new SeekPayload(position, Guild.Id));
         }
 
         /// <summary>
@@ -184,7 +183,7 @@ namespace Victoria
             if (volume < 0 || volume > 150)
                 throw new ArgumentException("Volume range must be between 0 - 150.", nameof(volume));
 
-            LavaSocket.SendPayload(new VolumePayload(volume, Guild.Id));
+            _lavaSocket.SendPayload(new VolumePayload(volume, Guild.Id));
         }
 
         /// <summary>
