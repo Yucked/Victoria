@@ -1,58 +1,35 @@
 <p align="center">
-  <img src="https://scontent-ort2-2.cdninstagram.com/vp/1557da3249dfe1b5bba30b70e6272201/5C45E12A/t51.2885-15/e35/41401088_300535220537995_8483483865107589107_n.jpg" width="25%"/>
-  <h2> V I C T O R I A </h2>
-  </p>
-  
- ### `About`
- Victoria is a .NET wrapper for [Lavalink]("").
- 
-[![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg?style=for-the-badge&colorA=303030&colorB=f44268&label=NUGET:+Victoria&maxAge=3600)](https://www.nuget.org/packages/Victoria/)
+  <img src="https://i.imgur.com/i6wyG8k.gif" widht="70%">
+</p>  
+
+Lavalink wrapper for Discord.NET that aims to be better than Sharplink and Lavalink.NET combined.
+
+---
 
 
- > *But we already have Sharplink and Lavalink.NET!!* 
- 
- S*#& THE F@$! UP. I did it for the :stars: 🤘
- 
- > *What makes it better than Sharplink or Lavalink.Net?*
- 
- I mashed up [Emzi's Wrapper]("https://github.com/DSharpPlus/DSharpPlus/tree/master/DSharpPlus.Lavalink") and Sharplink. So, you get good quality code and also [verinaz](https://i.imgur.com/VeJGAi8.gif) performance. ~~I haven't benchmarked it but trust me.~~ 
- 
- 
- ### `Example`
- 
- 
- - Add `Lavalink` in `ServiceCollection`.
- ```cs
- var client = new DiscordSocketClient();
- ...
- .AddSingleton<Lavalink>()
- ....
- ```
- 
- - Put this in your ready event.
- ```cs
- client.Ready += OnReady;
- 
- ...
- 
- private async Task OnReady() {
+## 🔧`What Is It?`
+Victoria is a Lavalink wrapper for Discord.NET library. It uses Emzi's code style while keeping it simple like sharplink.
+Even though Sharplink is great, there were constant internal exceptions and weird code style. Victoria aims to solve that and also provide full support of Lavalink.
+
+## 🤔 `How To Use It?`
+Grab the latest release from [Nuget](https://www.nuget.org/packages/Victoria/). Add `Lavalink` to your `ServiceCollection` or make a global static property of `Lavalink` since it's not a heavy object. From there on, in your `DiscordSocketClient`'s or `DiscordShardedClient`'s ready event add
+
+```cs
+
+// Get Lavalink from DI or use your global property. 
+// LavaConfig is optional, it will use default Application.yml settings.
   var node = await Lavalink.ConnectAsync(Client, new LavaConfig {
    MaxTries = 5,
     Authorization = "foo",
-    Rest = new Endpoint {
+    Endpoint = new Endpoint {
      Port = 2333,
-      Host = "127.0.0.1"
-    },
-    Socket = new Endpoint {
-     Port = 80,
       Host = "127.0.0.1"
     }
   });
-  AudioService.Initialize(node);
- }
- ```
- 
- - Get the LavaNode & Connect to VoiceChannel Or Get an Existing LavaPlayer And Play Some Track.
+  AudioService.Initialize(node); // Your AudioService.
+  ```
+  
+- Get the `LavaNode` or use `DefaultNode` to join a voice channel and play a track.
  ```cs
  // Get Node by Endpoint or get the first node.
  var node = Lavalink.GetNode(new Endpoint {
@@ -61,9 +38,9 @@
  }) ?? Lavalink.DefaultNode;
  
  // Join 
-var player = await node.JoinAsync(VOICE_CHANNEL);
+var player = await node.JoinAsync(VOICE_CHANNEL, TEXT_CHANNEL);
 
-// Use build in queue or make your own (No Support)
+// Use built in queue or make your own (No Support)
 player.Queue.TryAdd(GUILD_ID, new LinkedList<LavaTrack>());
  ....
  
@@ -76,3 +53,12 @@ player.Queue.TryAdd(GUILD_ID, new LinkedList<LavaTrack>());
  
  player.Play(track);
  ```
+ 
+ For full usage please look at this example: https://github.com/Yucked/Veronica
+
+## 💡 `I Want X Feature In Victoria!`
+You can oepn an issue and describe your feature with massive details and make sure your feature is required on global scale.
+
+## 🚀 `I Like Victoria! How Can I Support Her?!`
+GREAT! SMASH THAT :star: BUTTON, HIT THE :eyes: (watch) BUTTON. Or, you can [Buy Me A Coffee](https://www.buymeacoffee.com/Yucked) for my hardwork.
+OR you can spread the word about Victoria. None of them are necessary but it would be greatly appreciated.
