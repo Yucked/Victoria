@@ -25,7 +25,7 @@ namespace Victoria
         private readonly HttpClient _rest;
         private readonly Lavalink _lavalink;
         private readonly LavaConfig _config;
-        private SocketVoiceState _voiceState;        
+        private SocketVoiceState _voiceState;
         private readonly BaseDiscordClient _baseClient;
 
         internal readonly LavaSocket _lavaSocket;
@@ -67,7 +67,7 @@ namespace Victoria
             _config = config;
             _baseClient = baseClient;
             _lavaSocket = socket;
-            _lavalink = _lavaSocket._lavalink;            
+            _lavalink = _lavaSocket._lavalink;
             _rest = new HttpClient();
             _rest.DefaultRequestHeaders.Add("Authorization", _config.Authorization);
             Statistics = new LavaStats();
@@ -152,7 +152,8 @@ namespace Victoria
         public Task<LavaResult> SearchYouTubeAsync(string query)
         {
             var ytQuery = WebUtility.UrlEncode($"ytsearch:{query}");
-            var url = new Uri($"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={ytQuery}");
+            var url = new Uri(
+                $"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={ytQuery}");
             return ResolveTracksAsync(url);
         }
 
@@ -163,7 +164,8 @@ namespace Victoria
         public Task<LavaResult> SearchSoundCloudAsync(string query)
         {
             var scQuery = WebUtility.UrlEncode($"scsearch:{query}");
-            var url = new Uri($"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={scQuery}");
+            var url = new Uri(
+                $"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={scQuery}");
             return ResolveTracksAsync(url);
         }
 
@@ -339,7 +341,8 @@ namespace Victoria
                 if (_lavaSocket.IsConnected) return;
                 _lavaSocket._tries++;
                 _retryInterval += 1500;
-                _lavalink.LogInfo($"Reconnect attempt #{_lavaSocket._tries}. Waiting {_retryInterval}ms before reconnecting.");
+                _lavalink.LogInfo(
+                    $"Reconnect attempt #{_lavaSocket._tries}. Waiting {_retryInterval}ms before reconnecting.");
                 await Task.Delay(_retryInterval).ContinueWith(_ => _lavaSocket.ConnectAsync());
             }
         }
@@ -371,19 +374,19 @@ namespace Victoria
                         LoadResultType = tracks.Count == 0 ? LoadResultType.LoadFailed : LoadResultType.TrackLoaded
                     };
                 case JObject jObject:
+                {
+                    var jsonArray = jObject["tracks"] as JArray;
+                    var info = jObject.ToObject<LavaResult>();
+                    foreach (var item in jsonArray)
                     {
-                        var jsonArray = jObject["tracks"] as JArray;
-                        var info = jObject.ToObject<LavaResult>();
-                        foreach (var item in jsonArray)
-                        {
-                            var track = item["info"].ToObject<LavaTrack>();
-                            track.TrackString = $"{item["track"]}";
-                            tracks.Add(track);
-                        }
-
-                        info.Tracks = tracks;
-                        return info;
+                        var track = item["info"].ToObject<LavaTrack>();
+                        track.TrackString = $"{item["track"]}";
+                        tracks.Add(track);
                     }
+
+                    info.Tracks = tracks;
+                    return info;
+                }
                 default: return null;
             }
         }

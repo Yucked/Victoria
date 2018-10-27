@@ -139,6 +139,7 @@ namespace Victoria
                         if (result.EndOfMessage) break;
                     }
                 }
+
                 return stream.ToArray();
             }
         }
