@@ -2,7 +2,7 @@
   <img src="https://i.imgur.com/i6wyG8k.gif" widht="70%">
 </p>  
 
-Lavalink wrapper for Discord.NET and better than Sharplink / Lavalink.NET.
+Lavalink wrapper for Discord.NET that aims to be better than Sharplink and Lavalink.NET combined.
 
 ---
 
@@ -16,24 +16,20 @@ Grab the latest release from [Nuget](https://www.nuget.org/packages/Victoria/). 
 
 ```cs
 
-// Get Lavalink from DI or Your Global Property. 
+// Get Lavalink from DI or use your global property. 
 // LavaConfig is optional, it will use default Application.yml settings.
   var node = await Lavalink.ConnectAsync(Client, new LavaConfig {
    MaxTries = 5,
     Authorization = "foo",
-    Rest = new Endpoint {
+    Endpoint = new Endpoint {
      Port = 2333,
-      Host = "127.0.0.1"
-    },
-    Socket = new Endpoint {
-     Port = 80,
       Host = "127.0.0.1"
     }
   });
   AudioService.Initialize(node); // Your AudioService.
   ```
   
-- Get the LavaNode & Connect to VoiceChannel Or Get an Existing LavaPlayer And Play Some Track.
+- Get the `LavaNode` or use `DefaultNode` to join a voice channel and play a track.
  ```cs
  // Get Node by Endpoint or get the first node.
  var node = Lavalink.GetNode(new Endpoint {
@@ -57,6 +53,8 @@ player.Queue.TryAdd(GUILD_ID, new LinkedList<LavaTrack>());
  
  player.Play(track);
  ```
+ 
+ For full usage please look at this example: https://github.com/Yucked/Veronica
 
 ## 💡 `I Want X Feature In Victoria!`
 You can oepn an issue and describe your feature with massive details and make sure your feature is required on global scale.
