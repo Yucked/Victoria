@@ -7,12 +7,12 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>2.3.0</Version>
+        <Version>2.3.1</Version>
         <Title>Victoria</Title>
         <Authors>Yucked</Authors>
         <Description>Lavalink wrapper written for Discord.NET.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Rewritten all of the websocket structure and fixed things that weren't working before. Updated config to follow lavalink's application.yml.</PackageReleaseNotes>
+        <PackageReleaseNotes>Removed Lavalink#InvokeLog since it was useless. Specified default number of retries.</PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
         <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>

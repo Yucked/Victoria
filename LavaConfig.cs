@@ -8,7 +8,7 @@ namespace Victoria
         internal ulong UserId { get; set; }
 
         /// <summary>
-        /// Max number of connection re-attempts
+        /// Max number of retry attempts.
         /// </summary>
         public int MaxTries { get; set; }
 
@@ -30,7 +30,7 @@ namespace Victoria
 
         internal static LavaConfig Default => new LavaConfig
         {
-            MaxTries = 0,
+            MaxTries = 15,
             Endpoint = new Endpoint
             {
                 Port = 2333,

@@ -91,12 +91,6 @@ namespace Victoria
             }
         }
 
-        internal void InvokeLog(LogSeverity severity, string message, Exception exc = null)
-        {
-            var logMessage = new LogMessage(severity, "Victoria", message, exc);
-            Log?.Invoke(logMessage);
-        }
-
         internal void LogDebug(string message)
         {
             switch (Config.Severity)
