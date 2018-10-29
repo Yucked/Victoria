@@ -57,7 +57,7 @@ player.Queue.TryAdd(GUILD_ID, new LinkedList<LavaTrack>());
  For full usage please look at this example: https://github.com/Yucked/Veronica
 
 ## 💡 `I Want X Feature In Victoria!`
-You can oepn an issue and describe your feature with massive details and make sure your feature is required on global scale.
+You can open an issue and describe your feature with massive details and make sure your feature is required on global scale.
 
 ## 🚀 `I Like Victoria! How Can I Support Her?!`
 GREAT! SMASH THAT :star: BUTTON, HIT THE :eyes: (watch) BUTTON. Or, you can [Buy Me A Coffee](https://www.buymeacoffee.com/Yucked) for my hardwork.
