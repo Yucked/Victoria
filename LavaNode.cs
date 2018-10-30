@@ -168,15 +168,15 @@ namespace Victoria
                 $"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={scQuery}");
             return ResolveTracksAsync(url);
         }
-
+     
         /// <summary>
-        ///     Performs A Broad Search.
+        ///     Performs A Local Search Or From Url.
         /// </summary>
-        /// <param name="uri">URL</param>
-        public Task<LavaResult> GetTracksAsync(Uri uri)
+        /// <param name="query">Local path or url</param>
+        public Task<LavaResult> GetTracksAsync(string query)
         {
-            var url = new Uri(
-                $"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={WebUtility.UrlEncode($"{uri}")}");
+            var url = new Uri($"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}");
+
             return ResolveTracksAsync(url);
         }
 
