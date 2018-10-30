@@ -175,7 +175,7 @@ namespace Victoria
         /// <param name="query">Local path or url</param>
         public Task<LavaResult> GetTracksAsync(string query)
         {
-            Uri url = new Uri($"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}");
+            var url = new Uri($"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}");
 
             return ResolveTracksAsync(url);
         }
