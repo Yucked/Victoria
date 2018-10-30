@@ -179,6 +179,17 @@ namespace Victoria
                 $"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={WebUtility.UrlEncode($"{uri}")}");
             return ResolveTracksAsync(url);
         }
+        
+        /// <summary>
+        ///     Performs A Local Search.
+        /// </summary>
+        /// <param name="path">Local path</param>
+        public Task<LavaResult> GetLocalTracksAsync(string path)
+        {
+            Uri url = new Uri($"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={WebUtility.UrlEncode(path)}");
+
+            return ResolveTracksAsync(url);
+        }
 
         private async Task OnUVSU(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
         {
