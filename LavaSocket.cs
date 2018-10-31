@@ -47,6 +47,7 @@ namespace Victoria
             }
             catch
             {
+                // Ignored
             }
         }
 
@@ -67,7 +68,7 @@ namespace Victoria
                 }, CancellationToken.None);
         }
 
-        public async Task ReceiveDataAsync()
+        private async Task ReceiveDataAsync()
         {
             try
             {
@@ -111,7 +112,7 @@ namespace Victoria
             Volatile.Write(ref IsDisposed, true);
         }
 
-        public async Task SendAsync(string data)
+        private async Task SendAsync(string data)
         {
             var bytes = _encoding.GetBytes(data);
             await _webSocket
@@ -123,7 +124,7 @@ namespace Victoria
         {
             using (var stream = new MemoryStream())
             {
-                var buffer = new byte[1024];
+                var buffer = new byte[2048];
                 var segment = new ArraySegment<byte>(buffer);
                 while (_webSocket.State == WebSocketState.Open)
                 {
@@ -133,21 +134,19 @@ namespace Victoria
                         OnClose?.Invoke();
                         break;
                     }
-                    else
-                    {
-                        stream.Write(buffer, 0, result.Count);
-                        if (result.EndOfMessage) break;
-                    }
+
+                    stream.Write(buffer, 0, result.Count);
+                    if (result.EndOfMessage) break;
                 }
 
                 return stream.ToArray();
             }
         }
 
-        internal void SendPayload(LavaPayload load)
+        public void SendPayload(LavaPayload load)
         {
             var data = JsonConvert.SerializeObject(load);
-            Asyncs.RunSync(() => SendAsync(data));
+            SendAsync(data).RunSync();
             _lavalink.LogDebug(JsonConvert.SerializeObject(load));
         }
 

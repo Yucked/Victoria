@@ -28,8 +28,8 @@ namespace Victoria
         private SocketVoiceState _voiceState;
         private readonly BaseDiscordClient _baseClient;
 
-        internal readonly LavaSocket _lavaSocket;
-        internal ConcurrentDictionary<ulong, LavaPlayer> _players;
+        internal readonly LavaSocket LavaSocket;
+        private ConcurrentDictionary<ulong, LavaPlayer> _players;
 
         /// <summary>
         ///     _lavalink Server Statistics.
@@ -39,7 +39,7 @@ namespace Victoria
         /// <summary>
         ///     Check if the node is connected to _lavalink.
         /// </summary>
-        public bool IsConnected => _lavaSocket.IsConnected;
+        public bool IsConnected => LavaSocket.IsConnected;
 
         /// <summary>
         ///     Fires when a track is stuck.
@@ -66,8 +66,8 @@ namespace Victoria
         {
             _config = config;
             _baseClient = baseClient;
-            _lavaSocket = socket;
-            _lavalink = _lavaSocket._lavalink;
+            LavaSocket = socket;
+            _lavalink = LavaSocket._lavalink;
             _rest = new HttpClient();
             _rest.DefaultRequestHeaders.Add("Authorization", _config.Authorization);
             Statistics = new LavaStats();
@@ -90,13 +90,13 @@ namespace Victoria
 
         internal async Task StartAsync()
         {
-            _lavaSocket.OnReceive += OnMessage;
-            _lavaSocket.OnClose += OnClose;
-            await _lavaSocket.ConnectAsync();
+            LavaSocket.OnReceive += OnMessage;
+            LavaSocket.OnClose += OnClose;
+            await LavaSocket.ConnectAsync();
         }
 
         /// <summary>
-        ///     Disconnects
+        ///     Disconnects from all the players
         /// </summary>
         /// <returns></returns>
         public async Task StopAsync()
@@ -105,7 +105,7 @@ namespace Victoria
                 await connection.Value.DisconnectAsync();
 
             _players.Clear();
-            Asyncs.RunSync(_lavaSocket.DisconnectAsync);
+            LavaSocket.DisconnectAsync().RunSync();
         }
 
         /// <summary>
@@ -168,14 +168,15 @@ namespace Victoria
                 $"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={scQuery}");
             return ResolveTracksAsync(url);
         }
-     
+
         /// <summary>
         ///     Performs A Local Search Or From Url.
         /// </summary>
         /// <param name="query">Local path or url</param>
         public Task<LavaResult> GetTracksAsync(string query)
         {
-            var url = new Uri($"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}");
+            var url = new Uri(
+                $"http://{_config.Endpoint.Host}:{_config.Endpoint.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}");
 
             return ResolveTracksAsync(url);
         }
@@ -196,7 +197,7 @@ namespace Victoria
                         return;
                     await oldPlayer.DisconnectAsync().ConfigureAwait(false);
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
-                    _lavaSocket.SendPayload(new DestroyPayload(state.VoiceChannel.Guild.Id));
+                    LavaSocket.SendPayload(new DestroyPayload(state.VoiceChannel.Guild.Id));
                     break;
 
                 case var state when state.VoiceChannel?.Id != newState.VoiceChannel?.Id:
@@ -219,7 +220,7 @@ namespace Victoria
                 return Task.CompletedTask;
 
             var voiceUpdate = new VoicePayload(server, _voiceState);
-            _lavaSocket.SendPayload(voiceUpdate);
+            LavaSocket.SendPayload(voiceUpdate);
             return Task.CompletedTask;
         }
 
@@ -331,20 +332,18 @@ namespace Victoria
 
         private async Task OnClose()
         {
-            if (_lavaSocket._tries >= _config.MaxTries && _config.MaxTries != 0)
+            if (LavaSocket._tries >= _config.MaxTries && _config.MaxTries != 0)
             {
                 _lavalink.LogInfo("Max numbers of tries reached.");
                 return;
             }
-            else
-            {
-                if (_lavaSocket.IsConnected) return;
-                _lavaSocket._tries++;
-                _retryInterval += 1500;
-                _lavalink.LogInfo(
-                    $"Reconnect attempt #{_lavaSocket._tries}. Waiting {_retryInterval}ms before reconnecting.");
-                await Task.Delay(_retryInterval).ContinueWith(_ => _lavaSocket.ConnectAsync());
-            }
+
+            if (LavaSocket.IsConnected) return;
+            LavaSocket._tries++;
+            _retryInterval += 1500;
+            _lavalink.LogInfo(
+                $"Reconnect attempt #{LavaSocket._tries}. Waiting {_retryInterval}ms before reconnecting.");
+            await Task.Delay(_retryInterval).ContinueWith(_ => LavaSocket.ConnectAsync());
         }
 
         private async Task<LavaResult> ResolveTracksAsync(Uri uri)
@@ -391,25 +390,25 @@ namespace Victoria
             }
         }
 
-        internal void UpdatePlayer(LavaPlayer player, LavaState state)
+        private void UpdatePlayer(LavaPlayer player, LavaState state)
         {
             player.LastUpdate = state.Time;
             player.Position = state.Position;
             Updated?.Invoke(player, player.CurrentTrack, player.Position);
         }
 
-        internal void TrackUpdate(TrackFinishData data)
+        private void TrackUpdate(TrackFinishData data)
         {
             data.LavaPlayer.CurrentTrack = null;
             Finished?.Invoke(data.LavaPlayer, data.Track, data.Reason);
         }
 
-        internal void StuckUpdate(TrackStuckData data)
+        private void StuckUpdate(TrackStuckData data)
         {
             Stuck?.Invoke(data.LavaPlayer, data.Track, data.Threshold);
         }
 
-        internal void ExceptionUpdate(TrackExceptionData data)
+        private void ExceptionUpdate(TrackExceptionData data)
         {
             Exception?.Invoke(data.LavaPlayer, data.Track, data.Error);
         }

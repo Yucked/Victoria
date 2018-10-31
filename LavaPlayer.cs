@@ -11,7 +11,7 @@ namespace Victoria
 {
     public sealed class LavaPlayer
     {
-        internal bool IsDisposed;
+        private bool IsDisposed;
         private LavaSocket _lavaSocket;
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Victoria
         {
             TextChannel = textChannel;
             VoiceChannel = voiceChannel;
-            _lavaSocket = lavaNode._lavaSocket;
+            _lavaSocket = lavaNode.LavaSocket;
             Volatile.Write(ref IsDisposed, false);
             Queue = new ConcurrentDictionary<ulong, LinkedList<LavaTrack>>();
         }

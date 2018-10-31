@@ -7,12 +7,12 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>2.3.1</Version>
+        <Version>2.3.2</Version>
         <Title>Victoria</Title>
         <Authors>Yucked</Authors>
         <Description>Lavalink wrapper written for Discord.NET.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Removed Lavalink#InvokeLog since it was useless. Specified default number of retries.</PackageReleaseNotes>
+        <PackageReleaseNotes>Thanks to TheNoodleMummy for PR#2 which fixed playing local files. Fixed modifiiers, changed buffer size to 2048.</PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
         <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
@@ -28,7 +28,7 @@
 
     <ItemGroup>
         <PackageReference Include="Discord.Net" Version="2.0.0-beta2-01001"/>
-        <PackageReference Include="HyperEx" Version="1.0.4"/>
+        <PackageReference Include="HyperEx" Version="1.0.5"/>
     </ItemGroup>
 
 </Project>
