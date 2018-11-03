@@ -28,7 +28,7 @@
 
     <ItemGroup>
         <PackageReference Include="Discord.Net" Version="2.0.0-beta2-01001"/>
-        <PackageReference Include="HyperEx" Version="1.0.5"/>
+        <PackageReference Include="HyperEx" Version="1.0.9"/>
     </ItemGroup>
 
 </Project>
