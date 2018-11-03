@@ -54,7 +54,7 @@ player.Queue.TryAdd(GUILD_ID, new LinkedList<LavaTrack>());
  player.Play(track);
  ```
  
- For full usage please look at this example: https://github.com/Yucked/Veronica
+ For full usage please look at this example: [Audio Service & Audio Module](https://github.com/Yucked/Veronica/tree/6e472c53e67514c8dc6d0e51faae7f357f1fbc1e)
 
 ## 💡 `I Want X Feature In Victoria!`
 You can open an issue and describe your feature with massive details and make sure your feature is required on global scale.
