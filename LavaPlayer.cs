@@ -12,45 +12,45 @@ namespace Victoria
     public sealed class LavaPlayer
     {
         private bool IsDisposed;
-        private LavaSocket _lavaSocket;
+        private readonly LavaSocket _lavaSocket;
 
         /// <summary>
-        ///     Connected Voice Channel.
+        /// Voice channel that the player is connected to.
         /// </summary>
         public IVoiceChannel VoiceChannel { get; internal set; }
 
         /// <summary>
-        ///     Guild That Belongs To The Voice Channel.
+        /// Guild that the player belongs to.
         /// </summary>
         public IGuild Guild => VoiceChannel.Guild;
 
         /// <summary>
-        ///     Text Channel That Handles Updates.
+        /// Text channel linked to player.
         /// </summary>
         public IMessageChannel TextChannel { get; }
 
         /// <summary>
-        ///     Current Track Position.
+        /// Current track positon.
         /// </summary>
         public TimeSpan Position { get; internal set; }
 
         /// <summary>
-        ///     Track That Is Currently Playing.
+        /// Current track that is playing.
         /// </summary>
         public LavaTrack CurrentTrack { get; internal set; }
 
         /// <summary>
-        ///     Last Time This LavaPlayer Was Updated.
+        /// Last time when player was updated.
         /// </summary>
         public DateTimeOffset LastUpdate { get; internal set; }
 
         /// <summary>
-        ///     If This LavaPlayer Is Connected Or Not.
+        /// If player is playing any songs or connected.
         /// </summary>
         public bool IsConnected => !Volatile.Read(ref IsDisposed);
 
         /// <summary>
-        ///     Default Queue That Stores Your Tracks.
+        /// Default queue.
         /// </summary>
         public ConcurrentDictionary<ulong, LinkedList<LavaTrack>> Queue { get; }
 
@@ -70,7 +70,7 @@ namespace Victoria
         internal async Task DisconnectAsync()
         {
             if (!IsConnected)
-                throw new InvalidOperationException("This player isn't connected.");
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             CurrentTrack = null;
             await VoiceChannel.DisconnectAsync();
             Volatile.Write(ref IsDisposed, true);
@@ -78,39 +78,30 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Plays The Specified Track.
+        /// Plays the specified track.
         /// </summary>
-        /// <param name="track">
-        ///     <see cref="LavaTrack" />
-        /// </param>
-        /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
+        /// <param name="track"><see cref="LavaTrack"/></param>
+        /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
         public void Play(LavaTrack track)
         {
             if (!IsConnected)
-                throw new InvalidOperationException("This player isn't connected.");
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             CurrentTrack = track;
             _lavaSocket.SendPayload(new PlayPayload(Guild.Id, track));
         }
 
         /// <summary>
-        ///     Plays The Specified Track But With A Specified Start And Stop Time.
+        /// Play a track with start and stop time.
         /// </summary>
-        /// <param name="track">
-        ///     <see cref="LavaTrack" />
-        /// </param>
-        /// <param name="start">When Track Should Start Playing.</param>
-        /// <param name="stop">When Track Should Stop Playing.</param>
-        /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
-        /// <exception cref="ArgumentException">Throws If
-        ///     <param name="start" />
-        ///     and
-        ///     <param name="stop" />
-        ///     Aren't Set Properly.
-        /// </exception>
+        /// <param name="track"><see cref="LavaTrack"/></param>
+        /// <param name="start">Start time for track.</param>
+        /// <param name="stop">Stop time for track.</param>
+        /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
+        /// <exception cref="ArgumentException">Throws if start and stop logic isn't valid.</exception>
         public void PlayPartial(LavaTrack track, TimeSpan start, TimeSpan stop)
         {
             if (!IsConnected)
-                throw new InvalidOperationException("This player isn't connected.");
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
 
             if (start.TotalMilliseconds < 0 || stop.TotalMilliseconds < 0)
                 throw new ArgumentException("Start & Stop Must Be Greater Than 0.");
@@ -123,62 +114,62 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Stop Playing Current Track A.K.A Skip.
+        /// Stops the player completely and sets <see cref="CurrentTrack"/> to null.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Throws If Track Isn't Connected.</exception>
+        /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
         public void Stop()
         {
             if (!IsConnected)
-                throw new InvalidOperationException("This player isn't connected.");
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             Volatile.Write(ref IsDisposed, true);
             CurrentTrack = null;
             _lavaSocket.SendPayload(new StopPayload(Guild.Id));
         }
 
         /// <summary>
-        ///     Pauses The Current Track.
+        /// Pauses the current player.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
+        /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
         public void Pause()
         {
             if (!IsConnected)
-                throw new InvalidOperationException("This player isn't connected.");
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             _lavaSocket.SendPayload(new PausePayload(true, Guild.Id));
         }
 
         /// <summary>
-        ///     Resumes The Current Track.
+        /// Resumes the current player.
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
         public void Resume()
         {
             if (!IsConnected)
-                throw new InvalidOperationException("This player isn't connected.");
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             _lavaSocket.SendPayload(new PausePayload(false, Guild.Id));
         }
 
         /// <summary>
-        ///     Seeks The Current Track To Specified Time.
+        /// Seeks the current track to specific time frame.
         /// </summary>
         /// <param name="position">Where To Skip To.</param>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
         public void Seek(TimeSpan position)
         {
             if (!IsConnected)
-                throw new InvalidOperationException("This player isn't connected.");
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             _lavaSocket.SendPayload(new SeekPayload(position, Guild.Id));
         }
 
         /// <summary>
-        ///     Set The Current LavaPlayer's Volume.
+        /// Sets volume of current player.
         /// </summary>
         /// <param name="volume"></param>
         /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">Throws if volume is out of range.</exception>
         public void Volume(int volume)
         {
             if (!IsConnected)
-                throw new InvalidOperationException("This player isn't connected.");
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
 
             if (volume < 0 || volume > 150)
                 throw new ArgumentException("Volume range must be between 0 - 150.", nameof(volume));
@@ -187,22 +178,18 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Add A Track To The Default <see cref="Queue" />.
+        /// Adds a track to default queue.
         /// </summary>
-        /// <param name="track">
-        ///     <see cref="LavaTrack" />
-        /// </param>
+        /// <param name="track"><see cref="LavaTrack"/></param>
         public void Enqueue(LavaTrack track)
         {
             Queue[Guild.Id]?.AddLast(track);
         }
 
         /// <summary>
-        ///     Enqueues Bunch of Tracks.
+        /// Adds multiple tracks to default queue.
         /// </summary>
-        /// <param name="tracks">
-        ///     <see cref="LavaTrack" />
-        /// </param>
+        /// <param name="tracks"><see cref="LavaTrack"/></param>
         public void Enqueue(params LavaTrack[] tracks)
         {
             foreach (var track in tracks)
@@ -210,11 +197,9 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Enqueues Bunch of Tracks.
+        /// Adds multiple tracks to default queue.
         /// </summary>
-        /// <param name="tracks">
-        ///     <see cref="LavaTrack" />
-        /// </param>
+        /// <param name="tracks"><see cref="LavaTrack"/></param>
         public void Enqueue(IEnumerable<LavaTrack> tracks)
         {
             foreach (var track in tracks)
@@ -222,20 +207,18 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Removes A Track From The Default <see cref="Queue" />.
+        /// Removes a track from default queue.
         /// </summary>
-        /// <param name="track">
-        ///     <see cref="LavaTrack" />
-        /// </param>
+        /// <param name="track"><see cref="LavaTrack"/></param>
         public void Dequeue(LavaTrack track)
         {
             Queue[Guild.Id]?.Remove(track);
         }
 
         /// <summary>
-        ///     Dequeues Bunch of Tracks.
+        /// Removes multiple tracks from default queue.
         /// </summary>
-        /// <param name="tracks"></param>
+        /// <param name="tracks"><see cref="LavaTrack"/></param>
         public void Dequeue(params LavaTrack[] tracks)
         {
             foreach (var track in tracks)
@@ -243,9 +226,9 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Dequeues Bunch of Tracks.
+        /// Removes multiple tracks from default queue.
         /// </summary>
-        /// <param name="tracks"></param>
+        /// <param name="tracks"><see cref="LavaTrack"/></param>
         public void Dequeue(IEnumerable<LavaTrack> tracks)
         {
             foreach (var track in tracks)
