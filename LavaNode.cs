@@ -130,9 +130,8 @@ namespace Victoria
         /// <returns><c>bool</c></returns>
         public async Task<bool> LeaveAsync(ulong guildId)
         {
-            if (!_players.ContainsKey(guildId))
+            if (!_players.TryGetValue(guildId, out var player))
                 return false;
-            _players.TryGetValue(guildId, out var player);
             await player.DisconnectAsync();
             return _players.TryRemove(guildId, out _);
         }
@@ -251,7 +250,7 @@ namespace Victoria
 
         private void OnMessage(string message)
         {
-            ulong guildId = 0;
+            ulong guildId;
             var data = JObject.Parse(message);
 
             switch ($"{data["op"]}")
@@ -259,9 +258,7 @@ namespace Victoria
                 case "playerUpdate":
                     guildId = ulong.Parse($"{data["guildId"]}");
                     var state = data["state"].ToObject<LavaState>();
-                    if (_players.TryGetValue(guildId, out var player))
-                        UpdatePlayer(player, state);
-                    _lavalink.LogDebug("Received Player Update.");
+                    UpdatePlayerInformation(guildId, state);
                     break;
 
                 case "stats":
@@ -271,11 +268,12 @@ namespace Victoria
                     break;
 
                 case "event":
+                    guildId = ulong.Parse($"{data["guildId"]}");
                     var eventType = data["type"].ToObject<EventType>();
+                    var track = TrackHelper.DecodeTrack($"{data["track"]}");
                     switch (eventType)
                     {
                         case EventType.TrackEndEvent:
-                            guildId = ulong.Parse($"{data["guildId"]}");
                             var reason = default(TrackReason);
                             switch ($"{data["reason"]}")
                             {
@@ -296,34 +294,24 @@ namespace Victoria
                                     break;
                             }
 
-                            if (_players.TryGetValue(guildId, out var eventPlayer))
-                                TrackUpdate(new TrackFinishData
-                                {
-                                    Reason = reason,
-                                    LavaPlayer = eventPlayer,
-                                    Track = TrackHelper.DecodeTrack($"{data["track"]}")
-                                });
-
+                            TrackUpdateInformation(guildId, reason, track);
                             break;
 
                         case EventType.TrackExceptionEvent:
-                            if (_players.TryGetValue(guildId, out var stuck))
-                                StuckUpdate(new TrackStuckData
-                                {
-                                    LavaPlayer = stuck,
-                                    Track = TrackHelper.DecodeTrack($"{data["track"]}"),
-                                    Threshold = long.Parse($"{data["thresholdMs"]}")
-                                });
+                            var error = $"{data["error"]}";
+                            TrackExceptionInformation(guildId, error, track);
                             break;
 
                         case EventType.TrackStuckEvent:
-                            if (_players.TryGetValue(guildId, out var exc))
-                                ExceptionUpdate(new TrackExceptionData
-                                {
-                                    LavaPlayer = exc,
-                                    Error = $"{data["error"]}",
-                                    Track = TrackHelper.DecodeTrack($"{data["track"]}")
-                                });
+                            var threshold = long.Parse($"{data["thresholdMs"]}");
+                            TrackStuckInformation(guildId, threshold, track);
+                            break;
+
+                        case EventType.WebSocketClosedEvent:
+                            break;
+
+                        default:
+                            _lavalink.LogInfo("Unknown eventType. Please report this on my repo.");
                             break;
                     }
 
@@ -395,28 +383,41 @@ namespace Victoria
             }
         }
 
-        private void UpdatePlayer(LavaPlayer player, LavaState state)
+        private void UpdatePlayerInformation(ulong guildId, LavaState state)
         {
-            player.LastUpdate = state.Time;
-            player.Position = state.Position;
-            Updated?.Invoke(player, player.CurrentTrack, player.Position);
+            _lavalink.LogDebug("Received Player Update.");
+            if (!_players.TryGetValue(guildId, out var old)) return;
+            old.Position = state.Position;
+            old.LastUpdate = state.Time;
+            _players.TryUpdate(guildId, old, old);
+            Updated?.Invoke(old, old.CurrentTrack, state.Position);
         }
 
-        private void TrackUpdate(TrackFinishData data)
+        private void TrackUpdateInformation(ulong guildId, TrackReason reason, LavaTrack track)
         {
-            data.LavaPlayer.CurrentTrack = data.Track;
-            Finished?.Invoke(data.LavaPlayer, data.Track, data.Reason);
+            _lavalink.LogDebug("Received track update.");
+            if (!_players.TryGetValue(guildId, out var old)) return;
+            old.CurrentTrack = track;
+            _players.TryUpdate(guildId, old, old);
+            Finished?.Invoke(old, track, reason);
         }
 
-        private void StuckUpdate(TrackStuckData data)
+        private void TrackStuckInformation(ulong guildId, long threshold, LavaTrack track)
         {
-            data.LavaPlayer.CurrentTrack = data.Track;
-            Stuck?.Invoke(data.LavaPlayer, data.Track, data.Threshold);
+            _lavalink.LogDebug("Received track stuck update.");
+            if (!_players.TryGetValue(guildId, out var old)) return;
+            old.CurrentTrack = track;
+            _players.TryUpdate(guildId, old, old);
+            Stuck?.Invoke(old, track, threshold);
         }
 
-        private void ExceptionUpdate(TrackExceptionData data)
+        private void TrackExceptionInformation(ulong guildId, string reason, LavaTrack track)
         {
-            Exception?.Invoke(data.LavaPlayer, data.Track, data.Error);
+            _lavalink.LogDebug("Received track stuck update.");
+            if (!_players.TryGetValue(guildId, out var old)) return;
+            old.CurrentTrack = track;
+            _players.TryUpdate(guildId, old, old);
+            Exception?.Invoke(old, track, reason);
         }
 
         public void Dispose()
