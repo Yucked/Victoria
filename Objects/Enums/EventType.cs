@@ -4,6 +4,7 @@ namespace Victoria.Objects.Enums
     {
         TrackEndEvent,
         TrackStuckEvent,
-        TrackExceptionEvent
+        TrackExceptionEvent,
+        WebSocketClosedEvent
     }
 }
