@@ -32,32 +32,32 @@ namespace Victoria
         private ConcurrentDictionary<ulong, LavaPlayer> _players;
 
         /// <summary>
-        ///     _lavalink Server Statistics.
+        /// Lavalink server statistics.
         /// </summary>
         public LavaStats Statistics { get; }
 
         /// <summary>
-        ///     Check if the node is connected to _lavalink.
+        /// Checks if Websocket is connected or not.
         /// </summary>
         public bool IsConnected => LavaSocket.IsConnected;
 
         /// <summary>
-        ///     Fires when a track is stuck.
+        /// Fires when a track is stuck.
         /// </summary>
         public event AsyncEvent<LavaPlayer, LavaTrack, long> Stuck;
 
         /// <summary>
-        ///     Fires when _lavalink throws an exception.
+        /// Fires when an exception is thrown.
         /// </summary>
         public event AsyncEvent<LavaPlayer, LavaTrack, string> Exception;
 
         /// <summary>
-        ///     Fires when LavaPlayer is updated.
+        /// Fires when a player is updated.
         /// </summary>
         public event AsyncEvent<LavaPlayer, LavaTrack, TimeSpan> Updated;
 
         /// <summary>
-        ///     Fires when a track has finished playing.
+        /// Fires when a track is finished.
         /// </summary>
         public event AsyncEvent<LavaPlayer, LavaTrack, TrackReason> Finished;
 
@@ -96,9 +96,8 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Disconnects from all the players
+        /// Disconnects all the players.
         /// </summary>
-        /// <returns></returns>
         public async Task StopAsync()
         {
             foreach (var connection in _players)
@@ -109,10 +108,11 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Join A Voice Channel.
+        /// Joins a voice channel and returns <see cref="LavaPlayer"/> otherwise returns an existing <see cref="LavaPlayer"/>.
         /// </summary>
-        /// <param name="voiceChannel">VoiceChannel That Needs To Be Connected To.</param>
-        /// <param name="textChannel">TextChannel Where Updates Will Be Sent.</param>
+        /// <param name="voiceChannel">Voice channel to conenct to.</param>
+        /// <param name="textChannel">Text channel to send updates to.</param>
+        /// <returns><see cref="LavaPlayer"/></returns>
         public async Task<LavaPlayer> JoinAsync(IVoiceChannel voiceChannel, IMessageChannel textChannel = null)
         {
             if (_players.ContainsKey(voiceChannel.GuildId))
@@ -124,9 +124,10 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Leaves A Voice Channel. Must Be Connected To Previously.
+        /// Disconnects <see cref="LavaPlayer"/> from a guild and returns a bool.
         /// </summary>
-        /// <param name="guildId">Guild Id</param>
+        /// <param name="guildId">Guild Id.</param>
+        /// <returns><c>bool</c></returns>
         public async Task<bool> LeaveAsync(ulong guildId)
         {
             if (!_players.ContainsKey(guildId))
@@ -137,18 +138,20 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Returns LavaPlayer For Specific Guild (Otherwise Null).
+        /// Returns a player from Players collection and if none exists, it returns null.
         /// </summary>
-        /// <param name="guildId">Guild Id</param>
+        /// <param name="guildId">Guild Id.</param>
+        /// <returns><see cref="LavaPlayer"/></returns>
         public LavaPlayer GetPlayer(ulong guildId)
         {
             return _players.ContainsKey(guildId) ? _players[guildId] : null;
         }
 
         /// <summary>
-        ///     Searches Youtube.
+        /// Searches Youtube for your query and returns a <see cref="LavaResult"/>.
         /// </summary>
-        /// <param name="query">Your Search Terms.</param>
+        /// <param name="query">Your search query.</param>
+        /// <returns><see cref="LavaResult"/></returns>
         public Task<LavaResult> SearchYouTubeAsync(string query)
         {
             var ytQuery = WebUtility.UrlEncode($"ytsearch:{query}");
@@ -158,9 +161,10 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Searches SoundCloud.
+        /// Searches SoundCloud for your query and returns a <see cref="LavaResult"/>.
         /// </summary>
-        /// <param name="query">Your Search Terms.</param>
+        /// <param name="query">Your search query.</param>
+        /// <returns><see cref="LavaResult"/></returns>
         public Task<LavaResult> SearchSoundCloudAsync(string query)
         {
             var scQuery = WebUtility.UrlEncode($"scsearch:{query}");
@@ -170,9 +174,10 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Performs A Local Search Or From Url.
+        /// Performs a global search for your query and returns a <see cref="LavaResult"/>.
         /// </summary>
-        /// <param name="query">Local path or url</param>
+        /// <param name="query">Your search query.</param>
+        /// <returns><see cref="LavaResult"/></returns>
         public Task<LavaResult> GetTracksAsync(string query)
         {
             var url = new Uri(
@@ -399,12 +404,13 @@ namespace Victoria
 
         private void TrackUpdate(TrackFinishData data)
         {
-            data.LavaPlayer.CurrentTrack = null;
+            data.LavaPlayer.CurrentTrack = data.Track;
             Finished?.Invoke(data.LavaPlayer, data.Track, data.Reason);
         }
 
         private void StuckUpdate(TrackStuckData data)
         {
+            data.LavaPlayer.CurrentTrack = data.Track;
             Stuck?.Invoke(data.LavaPlayer, data.Track, data.Threshold);
         }
 

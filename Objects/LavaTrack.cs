@@ -27,13 +27,6 @@ namespace Victoria.Objects
         [JsonProperty("isStream")]
         public bool IsStream { get; internal set; }
 
-        [JsonIgnore]
-        public TimeSpan Position
-            => TimeSpan.FromMilliseconds(position);
-
-        [JsonProperty("position")]
-        internal long position { get; set; }
-
         [JsonProperty("title")]
         public string Title { get; internal set; }
 

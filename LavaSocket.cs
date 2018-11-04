@@ -124,7 +124,7 @@ namespace Victoria
         {
             using (var stream = new MemoryStream())
             {
-                var buffer = new byte[2048];
+                var buffer = new byte[_config.BufferSize];
                 var segment = new ArraySegment<byte>(buffer);
                 while (_webSocket.State == WebSocketState.Open)
                 {

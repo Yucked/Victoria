@@ -84,8 +84,6 @@ namespace Victoria
         /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
         public void Play(LavaTrack track)
         {
-            if (!IsConnected)
-                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             CurrentTrack = track;
             _lavaSocket.SendPayload(new PlayPayload(Guild.Id, track));
         }
@@ -100,9 +98,6 @@ namespace Victoria
         /// <exception cref="ArgumentException">Throws if start and stop logic isn't valid.</exception>
         public void PlayPartial(LavaTrack track, TimeSpan start, TimeSpan stop)
         {
-            if (!IsConnected)
-                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
-
             if (start.TotalMilliseconds < 0 || stop.TotalMilliseconds < 0)
                 throw new ArgumentException("Start & Stop Must Be Greater Than 0.");
 
