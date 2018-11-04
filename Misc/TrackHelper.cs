@@ -1,61 +1,90 @@
 using System;
 using System.IO;
+using System.Text;
 using Victoria.Objects;
 
-// Taken From: https://github.com/DSharpPlus/DSharpPlus/blob/master/DSharpPlus.Lavalink/LavalinkUtil.cs
-// Coz I'm not smart enough for this. Thanks Emzi.
 namespace Victoria.Misc
 {
     public sealed class TrackHelper
     {
+        private static UTF8Encoding UTF8 { get; } = new UTF8Encoding(false);
+
         public static LavaTrack DecodeTrack(string track)
         {
-            // https://github.com/sedmelluq/lavaplayer/blob/804cd1038229230052d9b1dee5e6d1741e30e284/main/src/main/java/com/sedmelluq/discord/lavaplayer/player/DefaultAudioPlayerManager.java#L63-L64
-            const int TRACK_INFO_VERSIONED = 1;
-            //const int TRACK_INFO_VERSION = 2;
-
             var raw = Convert.FromBase64String(track);
-
             var decoded = new LavaTrack
             {
                 TrackString = track
             };
 
-            using (var ms = new MemoryStream(raw))
-            using (var br = new BinaryHelper(ms))
+            try
             {
-                // https://github.com/sedmelluq/lavaplayer/blob/b0c536098c4f92e6d03b00f19221021f8f50b19b/main/src/main/java/com/sedmelluq/discord/lavaplayer/tools/io/MessageInput.java#L37-L39
-                var messageHeader = br.ReadInt32();
-                var messageFlags = (int) ((messageHeader & 0xC0000000L) >> 30);
-                //if (messageSize != raw.Length)
-                //    Warn($"Size conflict: {messageSize} but was {raw.Length}");
+                var msgval = BitConverter.ToInt32(raw, 0);
+                msgval = (int) SwapEndianness((uint) msgval);
+                var msgFlags = (int) ((msgval & 0xC0000000L) >> 30);
+                var msgSize = msgval & 0x3FFFFFFF;
 
-                // https://github.com/sedmelluq/lavaplayer/blob/804cd1038229230052d9b1dee5e6d1741e30e284/main/src/main/java/com/sedmelluq/discord/lavaplayer/player/DefaultAudioPlayerManager.java#L268
+                using (var ms = new MemoryStream(msgSize))
+                {
+                    ms.Write(raw, 4, msgSize);
+                    ms.Position = 0;
 
-                // java bytes are signed
-                // https://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html#readByte()
-                var version = (messageFlags & TRACK_INFO_VERSIONED) != 0 ? br.ReadSByte() & 0xFF : 1;
-                //if (version != TRACK_INFO_VERSION)
-                //    Warn($"Version conflict: Expected {TRACK_INFO_VERSION} but got {version}");
+                    using (var br = new BinaryReader(ms))
+                    {
+                        var version = (msgFlags & 1) == 1 ? br.ReadByte() & 0xFF : 1;
 
-                decoded.Title = br.ReadJavaUtf8();
+                        var len = br.ReadInt16();
+                        len = SwapEndianness(len);
+                        raw = br.ReadBytes(len);
+                        decoded.Title = UTF8.GetString(raw, 0, len);
 
-                decoded.Author = br.ReadJavaUtf8();
+                        len = br.ReadInt16();
+                        len = SwapEndianness(len);
+                        raw = br.ReadBytes(len);
+                        decoded.Author = UTF8.GetString(raw, 0, len);
 
-                decoded.length = br.ReadInt64();
+                        decoded.length = (long) SwapEndianness((ulong) br.ReadInt64());
 
-                decoded.Id = br.ReadJavaUtf8();
+                        len = br.ReadInt16();
+                        len = SwapEndianness(len);
+                        raw = br.ReadBytes(len);
+                        decoded.Id = UTF8.GetString(raw, 0, len);
 
-                decoded.IsStream = br.ReadBoolean();
+                        decoded.IsStream = br.ReadBoolean();
 
-                var uri = br.ReadNullableString();
-                if (uri != null && version >= 2)
-                    decoded.Uri = new Uri(uri);
-                else
-                    decoded.Uri = null;
+                        var isthere = br.ReadBoolean();
+                        if (!isthere) return decoded;
+                        len = br.ReadInt16();
+                        len = SwapEndianness(len);
+                        raw = br.ReadBytes(len);
+                        decoded.Uri = version >= 2 ? new Uri(UTF8.GetString(raw, 0, len)) : null;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignored
             }
 
             return decoded;
+        }
+
+        private static uint SwapEndianness(uint v)
+        {
+            v = (v << 16) | (v >> 16);
+            return ((v & 0xFF00FF00) >> 8) | ((v & 0x00FF00FF) << 8);
+        }
+
+        private static short SwapEndianness(short v)
+        {
+            return (short) ((v << 8) | (v >> 8));
+        }
+
+        private static ulong SwapEndianness(ulong v)
+        {
+            v = (v >> 32) | (v << 32);
+            v = ((v & 0xFFFF0000FFFF0000) >> 16) | ((v & 0x0000FFFF0000FFFF) << 16);
+            return ((v & 0xFF00FF00FF00FF00) >> 8) | ((v & 0x00FF00FF00FF00FF) << 8);
         }
     }
 }
