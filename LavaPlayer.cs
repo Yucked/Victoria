@@ -27,7 +27,7 @@ namespace Victoria
         /// <summary>
         /// Text channel linked to player.
         /// </summary>
-        public IMessageChannel TextChannel { get; }
+        public IMessageChannel TextChannel { get; internal set; }
 
         /// <summary>
         /// Current track positon.
@@ -71,10 +71,9 @@ namespace Victoria
         {
             if (!IsConnected)
                 throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
-            CurrentTrack = null;
-            await VoiceChannel.DisconnectAsync();
-            Volatile.Write(ref IsDisposed, true);
             _lavaSocket.SendPayload(new DestroyPayload(Guild.Id));
+            await VoiceChannel.DisconnectAsync();
+            Dispose();
         }
 
         /// <summary>
@@ -85,6 +84,7 @@ namespace Victoria
         public void Play(LavaTrack track)
         {
             CurrentTrack = track;
+            Volatile.Write(ref IsDisposed, false);
             _lavaSocket.SendPayload(new PlayPayload(Guild.Id, track));
         }
 
@@ -105,7 +105,8 @@ namespace Victoria
                 throw new ArgumentException("End Time Must Be Greater Than Start Time.");
 
             CurrentTrack = track;
-            _lavaSocket.SendPayload(new PlayPartialPayload(Guild.Id, track, start, stop));
+            Volatile.Write(ref IsDisposed, false);
+            _lavaSocket.SendPayload(new PlayPartialPayload(Guild.Id, track, start, stop));            
         }
 
         /// <summary>
@@ -115,10 +116,10 @@ namespace Victoria
         public void Stop()
         {
             if (!IsConnected)
-                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
-            Volatile.Write(ref IsDisposed, true);
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");            
             CurrentTrack = null;
             _lavaSocket.SendPayload(new StopPayload(Guild.Id));
+            Volatile.Write(ref IsDisposed, true);
         }
 
         /// <summary>
@@ -228,6 +229,16 @@ namespace Victoria
         {
             foreach (var track in tracks)
                 Queue[Guild.Id]?.Remove(track);
+        }
+
+        private void Dispose()
+        {
+            VoiceChannel = null;
+            TextChannel = null;
+            CurrentTrack = null;
+            Position = TimeSpan.MinValue;            
+            LastUpdate = DateTime.Now;
+            Volatile.Write(ref IsDisposed, true);
         }
     }
 }
