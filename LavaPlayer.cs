@@ -1,6 +1,7 @@
 using Discord;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Victoria.Objects;
@@ -10,7 +11,7 @@ namespace Victoria
 {
     public sealed class LavaPlayer
     {
-        private bool IsDisposed;
+        private bool _isDisposed;
         private readonly LavaSocket _lavaSocket;
 
         /// <summary>
@@ -46,7 +47,7 @@ namespace Victoria
         /// <summary>
         /// If player is playing any songs or connected.
         /// </summary>
-        public bool IsConnected => !Volatile.Read(ref IsDisposed);
+        public bool IsConnected => !Volatile.Read(ref _isDisposed);
 
         /// <summary>
         /// Default queue.
@@ -62,7 +63,7 @@ namespace Victoria
             TextChannel = textChannel;
             VoiceChannel = voiceChannel;
             _lavaSocket = lavaNode.LavaSocket;
-            Volatile.Write(ref IsDisposed, false);
+            Volatile.Write(ref _isDisposed, false);
             Queue = new LinkedList<LavaTrack>();
         }
 
@@ -80,7 +81,7 @@ namespace Victoria
         public void Play(LavaTrack track)
         {
             CurrentTrack = track;
-            Volatile.Write(ref IsDisposed, false);
+            Volatile.Write(ref _isDisposed, false);
             _lavaSocket.SendPayload(new PlayPayload(Guild.Id, track));
         }
 
@@ -101,7 +102,7 @@ namespace Victoria
                 throw new ArgumentException("End Time Must Be Greater Than Start Time.");
 
             CurrentTrack = track;
-            Volatile.Write(ref IsDisposed, false);
+            Volatile.Write(ref _isDisposed, false);
             _lavaSocket.SendPayload(new PlayPartialPayload(Guild.Id, track, start, stop));
         }
 
@@ -114,18 +115,6 @@ namespace Victoria
         {
             if (!IsConnected)
                 throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
-            Dequeue(CurrentTrack);
-            _lavaSocket.SendPayload(new StopPayload(Guild.Id));
-            var nextTrack = Queue.First?.Value;
-            if (Queue.Count < 1 || nextTrack == null)
-            {
-                Volatile.Write(ref IsDisposed, true);
-                throw new InvalidOperationException("Queue is empty. No more songs to play.");
-            }
-
-            CurrentTrack = nextTrack;
-            Volatile.Write(ref IsDisposed, false);
-            _lavaSocket.SendPayload(new PlayPayload(Guild.Id, nextTrack));
         }
 
         /// <summary>
@@ -138,7 +127,7 @@ namespace Victoria
                 throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             CurrentTrack = null;
             _lavaSocket.SendPayload(new StopPayload(Guild.Id));
-            Volatile.Write(ref IsDisposed, true);
+            Volatile.Write(ref _isDisposed, true);
         }
 
         /// <summary>
@@ -155,7 +144,7 @@ namespace Victoria
         /// <summary>
         /// Resumes the current player.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
+        /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
         public void Resume()
         {
             if (!IsConnected)
@@ -167,7 +156,7 @@ namespace Victoria
         /// Seeks the current track to specific time frame.
         /// </summary>
         /// <param name="position">Where To Skip To.</param>
-        /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
+        /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
         public void Seek(TimeSpan position)
         {
             if (!IsConnected)
@@ -179,7 +168,7 @@ namespace Victoria
         /// Sets volume of current player.
         /// </summary>
         /// <param name="volume"></param>
-        /// <exception cref="InvalidOperationException">Throws If LavaPlayer Isn't Connected.</exception>
+        /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
         /// <exception cref="ArgumentException">Throws if volume is out of range.</exception>
         public void Volume(int volume)
         {
@@ -190,6 +179,19 @@ namespace Victoria
                 throw new ArgumentException("Volume range must be between 0 - 150.", nameof(volume));
 
             _lavaSocket.SendPayload(new VolumePayload(volume, Guild.Id));
+        }
+
+        /// <summary>
+        /// Changes the player equalizer.
+        /// </summary>
+        /// <param name="equalizerBands">List of bands ranging from 0 - 14.</param>
+        /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
+        public void Equalizer(params EqualizerBand[] equalizerBands)
+        {
+            if (!IsConnected)
+                throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
+            
+            _lavaSocket.SendPayload(new EqualizerPayload(Guild.Id, equalizerBands));
         }
 
         /// <summary>
@@ -260,7 +262,7 @@ namespace Victoria
             LastUpdate = DateTime.Now;
             Queue.Clear();
             Queue = null;
-            Volatile.Write(ref IsDisposed, true);
+            Volatile.Write(ref _isDisposed, true);
         }
     }
 }
