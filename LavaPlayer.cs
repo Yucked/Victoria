@@ -1,7 +1,6 @@
 using Discord;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Victoria.Objects;
@@ -52,7 +51,8 @@ namespace Victoria
         /// <summary>
         /// Default queue.
         /// </summary>
-        public LinkedList<LavaTrack> Queue { get; internal set; }
+        //public ConcurrentQueue<LavaTrack> Queue { get; internal set; }
+        public LavaQueue<LavaTrack> Queue { get; internal set; }
 
         internal LavaPlayer()
         {
@@ -64,7 +64,7 @@ namespace Victoria
             VoiceChannel = voiceChannel;
             _lavaSocket = lavaNode.LavaSocket;
             Volatile.Write(ref _isDisposed, false);
-            Queue = new LinkedList<LavaTrack>();
+            Queue = new LavaQueue<LavaTrack>();
         }
 
         internal async Task DisconnectAsync()
@@ -108,13 +108,24 @@ namespace Victoria
 
 
         /// <summary>
-        /// Skips a song. (Works only with default queue)
+        /// Skips a song. (Works only with default queue).
         /// </summary>
+        /// <returns>Returns the next <see cref="LavaTrack"/></returns>
         /// <exception cref="InvalidOperationException">Throws if <see cref="Queue"/> is empty or if player isn't connected.</exception>
-        public void Skip()
+        public LavaTrack Skip()
         {
             if (!IsConnected)
                 throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
+
+            if (!Queue.TryDequeue(out var track))
+            {
+                Stop();
+                throw new InvalidOperationException("Queue was empty. Played has been stopped.");
+            }
+
+            Stop();
+            Play(track);
+            return track;
         }
 
         /// <summary>
@@ -126,8 +137,8 @@ namespace Victoria
             if (!IsConnected)
                 throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
             CurrentTrack = null;
-            _lavaSocket.SendPayload(new StopPayload(Guild.Id));
             Volatile.Write(ref _isDisposed, true);
+            _lavaSocket.SendPayload(new StopPayload(Guild.Id));
         }
 
         /// <summary>
@@ -190,7 +201,7 @@ namespace Victoria
         {
             if (!IsConnected)
                 throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
-            
+
             _lavaSocket.SendPayload(new EqualizerPayload(Guild.Id, equalizerBands));
         }
 
@@ -200,17 +211,7 @@ namespace Victoria
         /// <param name="track"><see cref="LavaTrack"/></param>
         public void Enqueue(LavaTrack track)
         {
-            Queue.AddLast(track);
-        }
-
-        /// <summary>
-        /// Adds multiple tracks to default queue.
-        /// </summary>
-        /// <param name="tracks"><see cref="LavaTrack"/></param>
-        public void Enqueue(params LavaTrack[] tracks)
-        {
-            foreach (var track in tracks)
-                Queue.AddLast(track);
+            Queue.Enqueue(track);
         }
 
         /// <summary>
@@ -220,36 +221,25 @@ namespace Victoria
         public void Enqueue(IEnumerable<LavaTrack> tracks)
         {
             foreach (var track in tracks)
-                Queue.AddLast(track);
+                Queue.Enqueue(track);
         }
 
         /// <summary>
-        /// Removes a track from default queue.
+        /// Dequeues the first track from the <see cref="Queue"/>.
+        /// </summary>
+        /// <returns><see cref="LavaTrack"/></returns>
+        public LavaTrack Dequeue()
+        {
+            return Queue.Dequeue();
+        }
+
+        /// <summary>
+        /// Removes the first instance of given <see cref="LavaTrack"/>.
         /// </summary>
         /// <param name="track"><see cref="LavaTrack"/></param>
-        public void Dequeue(LavaTrack track)
+        public void Remove(LavaTrack track)
         {
             Queue.Remove(track);
-        }
-
-        /// <summary>
-        /// Removes multiple tracks from default queue.
-        /// </summary>
-        /// <param name="tracks"><see cref="LavaTrack"/></param>
-        public void Dequeue(params LavaTrack[] tracks)
-        {
-            foreach (var track in tracks)
-                Queue.Remove(track);
-        }
-
-        /// <summary>
-        /// Removes multiple tracks from default queue.
-        /// </summary>
-        /// <param name="tracks"><see cref="LavaTrack"/></param>
-        public void Dequeue(IEnumerable<LavaTrack> tracks)
-        {
-            foreach (var track in tracks)
-                Queue.Remove(track);
         }
 
         private void Dispose()
@@ -260,7 +250,6 @@ namespace Victoria
             CurrentTrack = null;
             Position = TimeSpan.MinValue;
             LastUpdate = DateTime.Now;
-            Queue.Clear();
             Queue = null;
             Volatile.Write(ref _isDisposed, true);
         }

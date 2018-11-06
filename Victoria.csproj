@@ -7,13 +7,12 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>2.3.4</Version>
+        <Version>2.3.6</Version>
         <Title>Victoria</Title>
         <Authors>Yucked</Authors>
         <Description>Lavalink wrapper written for Discord.NET.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Added LavaPlayer#Skip. Fixed Queue (It didn't need to be concurrentdictionary). Fixed objects updating via events that were being omitted from lavalink and this should fix Player#Position.
-            Fixed a bug where TrackStuck and TrackException were mixed up. Calling LavaNode#LeaveAsync disposes of everything within the player.
+        <PackageReleaseNotes>Added a new class LavaQueue which uses LinkedList. Added Equalizer support (Needs further testing). Fixed LavaPlayer#Skip method.
         </PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>

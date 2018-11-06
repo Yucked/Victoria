@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-using HyperEx;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
@@ -100,11 +99,11 @@ namespace Victoria
         /// </summary>
         public async Task StopAsync()
         {
-            foreach (var connection in _players)
-                await connection.Value.DisconnectAsync();
+            foreach (var connection in _players.Values)
+                await connection.DisconnectAsync();
 
             _players.Clear();
-            LavaSocket.DisconnectAsync().RunSync();
+            await LavaSocket.DisconnectAsync();
         }
 
         /// <summary>
