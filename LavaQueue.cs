@@ -71,6 +71,14 @@ namespace Victoria
         }
 
         /// <summary>
+        /// Clears the queue.
+        /// </summary>
+        public void Clear()
+        {
+            _linky.Clear();
+        }
+
+        /// <summary>
         /// All the items in queue.
         /// </summary>
         public int Count => _linky.Count;
