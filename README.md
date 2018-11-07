@@ -33,24 +33,19 @@ Grab the latest release from [Nuget](https://www.nuget.org/packages/Victoria/). 
  ```cs
  // Get Node by Endpoint or get the first node.
  var node = Lavalink.GetNode(new Endpoint {
-   Port = 80,
+  Port = 80,
    Host = "127.0.0.1"
- }) ?? Lavalink.DefaultNode;
- 
- // Join 
-var player = await node.JoinAsync(VOICE_CHANNEL, TEXT_CHANNEL);
+ }) ? ? Lavalink.DefaultNode;
 
-// Use built in queue or make your own (No Support)
-player.Queue.TryAdd(GUILD_ID, new LinkedList<LavaTrack>());
- ....
- 
- // Existing
+ // Join a voice channel.
+ var player = await node.JoinAsync(VOICE_CHANNEL, TEXT_CHANNEL);
+
+ // Or get an existing player.
  var player = node.GetPlayer(GUILD_ID);
- 
- 
+
  var search = await node.SearchYouTubeAsync(QUERY);
  var track = search.Tracks.FirstOrDefault();
- 
+
  player.Play(track);
  ```
  
