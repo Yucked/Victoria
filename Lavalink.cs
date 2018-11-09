@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -11,15 +11,15 @@ namespace Victoria
 {
     public sealed class Lavalink
     {
-        private ConcurrentDictionary<Endpoint, LavaNode> Nodes
-            => new ConcurrentDictionary<Endpoint, LavaNode>();
+        private readonly List<(Endpoint endpoint, LavaNode node)>
+            _nodes = new List<(Endpoint endpoint, LavaNode node)>();
 
         private LavaConfig Config;
 
         /// <summary>
         /// Number of connected nodes.
         /// </summary>
-        public int NodesCount => Nodes.Count;
+        public int _nodesCount => _nodes.Count;
 
         /// <summary>
         /// Global logging of everything basically.
@@ -29,7 +29,7 @@ namespace Victoria
         /// <summary>
         /// Returns the first Lavanode if any otherwise null.
         /// </summary>
-        public LavaNode DefaultNode => Nodes.FirstOrDefault().Value;
+        public LavaNode DefaultNode => _nodes[0].node;
 
         /// <summary>
         /// Fires up websocket and tries to connect to Lavalink server.
@@ -39,23 +39,25 @@ namespace Victoria
         /// <returns><see cref="LavaNode"/></returns>
         public async Task<LavaNode> ConnectAsync(BaseDiscordClient client, LavaConfig config = default)
         {
-            if (Nodes.ContainsKey(config.Endpoint))
-                return Nodes[config.Endpoint];
             Config = config.Equals(default(LavaConfig)) ? LavaConfig.Default : config;
+            var existing = _nodes.FirstOrDefault(x => x.endpoint.Equals(Config.Endpoint));
+            if (existing.node != null)
+                return existing.node;
+
             Config.UserId = client.CurrentUser.Id;
             Config.Shards = await GetShardsAsync(client);
             var socket = new LavaSocket(Config, this);
             var node = new LavaNode(client, socket, Config);
-            Nodes.TryAdd(Config.Endpoint, node);
             try
             {
                 await node.StartAsync();
+                _nodes.Add((Config.Endpoint, node));
             }
             catch
             {
                 node.Dispose();
                 socket.Dispose();
-                Nodes.TryRemove(config.Endpoint, out _);
+                _nodes.Remove((Config.Endpoint, node));
             }
 
             return node;
@@ -68,7 +70,7 @@ namespace Victoria
         /// <returns><see cref="LavaNode"/></returns>
         public LavaNode GetNode(Endpoint endpoint)
         {
-            return Nodes.ContainsKey(endpoint) ? Nodes[endpoint] : null;
+            return _nodes.FirstOrDefault(x => x.endpoint.Equals(endpoint)).node;
         }
 
         private async Task<int> GetShardsAsync(BaseDiscordClient baseClient)

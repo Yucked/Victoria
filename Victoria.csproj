@@ -7,13 +7,12 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>2.3.6</Version>
+        <Version>2.3.7</Version>
         <Title>Victoria</Title>
         <Authors>Yucked</Authors>
         <Description>Lavalink wrapper written for Discord.NET.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Added a new class LavaQueue which uses LinkedList. Added Equalizer support (Needs further testing). Fixed LavaPlayer#Skip method.
-        </PackageReleaseNotes>
+        <PackageReleaseNotes>Merged PR#7. Removed concurrentdictionary in Lavalink and replaced it with a list which fixes everything related to nodes.</PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
         <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>

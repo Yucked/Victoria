@@ -26,7 +26,7 @@ namespace Victoria
         /// <summary>
         /// Text channel linked to player.
         /// </summary>
-        public IMessageChannel TextChannel { get; internal set; }
+        public IMessageChannel TextChannel { get; private set; }
 
         /// <summary>
         /// Current track positon.
@@ -122,7 +122,7 @@ namespace Victoria
                 Stop();
                 throw new InvalidOperationException("Queue was empty. Played has been stopped.");
             }
-            
+
             Play(track);
             return track;
         }
@@ -186,7 +186,7 @@ namespace Victoria
                 throw new InvalidOperationException("Either this player isn't connected or connection isn't valid.");
 
             if (volume < 0 || volume > 150)
-                throw new ArgumentException("Volume range must be between 0 - 150.", nameof(volume));
+                throw new ArgumentOutOfRangeException(nameof(volume), "Value must be between 0 - 150.");
 
             _lavaSocket.SendPayload(new VolumePayload(volume, Guild.Id));
         }
