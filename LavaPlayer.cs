@@ -122,7 +122,7 @@ namespace Victoria
                 Stop();
                 throw new InvalidOperationException("Queue was empty. Played has been stopped.");
             }
-
+            
             Play(track);
             return track;
         }
