@@ -396,7 +396,8 @@ namespace Victoria
         {
             _lavalink.LogDebug("Received track update.");
             if (!_players.TryGetValue(guildId, out var old)) return;
-            old.CurrentTrack = track;
+            if (reason != TrackReason.Replaced)
+                old.CurrentTrack = default;
             _players.TryUpdate(guildId, old, old);
             Finished?.Invoke(old, track, reason);
         }
