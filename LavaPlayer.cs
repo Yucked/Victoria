@@ -120,7 +120,7 @@ namespace Victoria
             if (!Queue.TryDequeue(out var track))
             {
                 Stop();
-                throw new InvalidOperationException("Queue was empty. Played has been stopped.");
+                throw new InvalidOperationException("Queue was empty. Player has been stopped.");
             }
 
             Play(track);
