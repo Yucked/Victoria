@@ -13,11 +13,11 @@ namespace Victoria
     internal sealed class Sockeon
     {
         private bool _isUseable;
+        private TimeSpan _interval;
         private int _reconnectAttempts;
         private readonly Encoding _encoding;
         private Configuration _configuration;
         private ClientWebSocket _clientWebSocket;
-        private readonly TimeSpan _interval;
 
         public Func<string, bool> OnMessage;
 
@@ -40,6 +40,16 @@ namespace Victoria
             _clientWebSocket.Options.SetRequestHeader("Authorization", _configuration.Authorization);
             var url = new Uri($"ws://{_configuration.Host}:{_configuration.Port}");
             return _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnection);
+        }
+
+        public async Task DisconnectAsync()
+        {
+            await _clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Closed called.",
+                CancellationToken.None).ConfigureAwait(false);
+            await _clientWebSocket
+                .CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed called.", CancellationToken.None)
+                .ConfigureAwait(false);
+            _isUseable = false;
         }
 
         public Task SendPayloadAsync(LavaPayload payload)
@@ -75,7 +85,7 @@ namespace Victoria
 
             if (_isUseable) return;
             _reconnectAttempts++;
-            _interval.Add(_configuration.ReconnectInterval);
+            _interval += _configuration.ReconnectInterval;
             // TODO: Log            
             await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
