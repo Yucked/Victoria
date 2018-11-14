@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Rest;
 
 namespace Victoria
 {
@@ -11,25 +12,65 @@ namespace Victoria
     /// </summary>
     public sealed class Lavalink
     {
+        private int _counter;
+        private const string _prefix = "Lavalink_Node_#";
+        private readonly ConcurrentDictionary<string, LavaNode> _nodes;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public Func<LogMessage, Task> Log;
-        private readonly HashSet<Sockeon> _nodes;
 
-        public Lavalink()
+        /// <summary>
+        /// 
+        /// </summary>
+        public LavaNode DefaultNode => _nodes[$"{_prefix}0"];
+
+
+        internal Lavalink()
         {
-            _nodes = new HashSet<Sockeon>();
+            _nodes = new ConcurrentDictionary<string, LavaNode>();
         }
 
-        public async Task AddNodeAsync()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="baseDiscordClient"></param>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public async Task<LavaNode> AddNodeAsync(BaseDiscordClient baseDiscordClient,
+            Configuration configuration = default)
         {
-            var sockeon = new Sockeon();
+            var node_name = $"{_prefix}{_counter}";
+            Interlocked.Increment(ref _counter);
+            var node = new LavaNode(node_name, baseDiscordClient, configuration);
+            try
+            {
+                await node.StartAsync().ConfigureAwait(false);
+                _nodes.TryAdd($"{_prefix}{_counter}", node);
+            }
+            catch
+            {
+                //TODO: Dispose node.
+                _nodes.TryRemove(node_name, out _);
+            }
 
-            await sockeon.ConnectAsync();
-            _nodes.Add(sockeon);
+            return node;
         }
 
-
-        public async Task RemoveNodeAsync(int index)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="nodeName"></param>
+        /// <returns></returns>
+        public async Task<bool> RemoveNodeAsync(string nodeName)
         {
+            if (!_nodes.TryGetValue(nodeName, out var node))
+                return false;
+
+            //TODO: Disconnect node and dispose.
+
+            return _nodes.TryRemove(nodeName, out _);
         }
     }
 }
