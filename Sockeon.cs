@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Victoria
 {
@@ -14,14 +13,15 @@ namespace Victoria
     {
         private bool _isUseable;
         private int _reconnectAttempts;
-        private readonly Lavalink _lavalink;
         private readonly Encoding _encoding;
         private Configuration _configuration;
         private ClientWebSocket _clientWebSocket;
 
-        public Sockeon(Lavalink lavalink)
+        public Func<string, bool> OnMessage;
+
+        public Sockeon(Configuration configuration)
         {
-            _lavalink = lavalink;
+            _configuration = configuration;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
         }
@@ -32,6 +32,7 @@ namespace Victoria
             {
                 Options = {Proxy = _configuration.Proxy}
             };
+
             _clientWebSocket.Options.SetRequestHeader("User-Id", $"{_configuration.UserId}");
             _clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_configuration.Shards}");
             _clientWebSocket.Options.SetRequestHeader("Authorization", _configuration.Authorization);
@@ -43,38 +44,9 @@ namespace Victoria
         {
             if (!_isUseable)
                 return Task.CompletedTask;
-            var data = _encoding.GetBytes(JsonConvert.SerializeObject(payload));
+            var data = _encoding.GetBytes(JsonConvert.SerializeObject(payload, Formatting.None));
             var segment = new ArraySegment<byte>(data);
             return _clientWebSocket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-
-        private void OnMessage(string message)
-        {
-            var obj = new JObject(message);
-            if (!obj.TryGetValue("op", out var opCode))
-                return;
-            var guildId = obj.GetValue("guildId");
-
-            switch ($"{opCode}")
-            {
-                case "playerUpdate":
-                    break;
-
-                case "stats":
-                    break;
-
-                case "event":
-                    break;
-
-                default:
-                    // TODO: Log unknown opCode
-                    break;
-            }
-        }
-
-        private void HandleEvent()
-        {
-            
         }
 
         private void VerifyConnection(Task task)
