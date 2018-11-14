@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
@@ -72,7 +74,7 @@ namespace Victoria
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             })
             {
-                BaseAddress = new Uri($"http://{configuration.Host}:{configuration.Port}/loadtracks")
+                BaseAddress = new Uri($"http://{configuration.Host}:{configuration.Port}/loadtracks?identifier=")
             };
 
             _httpClient.DefaultRequestHeaders.Clear();
@@ -108,16 +110,16 @@ namespace Victoria
         /// 
         /// </summary>
         /// <returns></returns>
-        internal Task StopAsync()
+        internal async Task StopAsync()
         {
             foreach (var player in _players.Values)
-            {
-            }
+                await player.DisconnectAsync().ConfigureAwait(false);
 
+
+            await _sockeon.DisconnectAsync().ConfigureAwait(false);
+            _sockeon.Dispose();
             IsConnected = false;
-            return Task.CompletedTask;
         }
-
 
         /// <summary>
         /// 
@@ -130,15 +132,40 @@ namespace Victoria
             if (_players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
 
+            player = new LavaPlayer(this, voiceChannel, messageChannel);
+            await voiceChannel
+                .ConnectAsync(_configuration.VoiceChannelOptions.SelfDeaf, _configuration.VoiceChannelOptions.SelfMute,
+                    _configuration.VoiceChannelOptions.External)
+                .ConfigureAwait(false);
+            _players.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
 
-        
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="guildId"></param>
+        /// <returns></returns>
+        public LavaPlayer GetPlayer(ulong guildId)
+            => _players.TryGetValue(guildId, out var player) ? player : null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public async Task GetTracksAsync(string query)
+        {
+            query = WebUtility.UrlEncode(query);
+            await ResolveRequestAsync(query).ConfigureAwait(false);
+        }
+
         private bool OnMessage(string data)
         {
             var parsed = JObject.Parse(data);
-            var guildId = ulong.Parse($"{parsed.GetValue("guildId")}");
+            ulong guildId;
+            if (parsed.TryGetValue("guildId", out var value))
+                guildId = ulong.Parse($"{value}");
 
             switch ($"{parsed.GetValue("op")}")
             {
@@ -165,7 +192,13 @@ namespace Victoria
 
         private async Task<string> ResolveRequestAsync(string query)
         {
-            
+            var json = string.Empty;
+            using (var req = await _httpClient.GetAsync(query).ConfigureAwait(false))
+            using (var res = await req.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var sr = new StreamReader(res, Encoding.UTF8))
+                json = await sr.ReadToEndAsync().ConfigureAwait(false);
+
+            return json;
         }
 
         // Event stuff
@@ -202,7 +235,7 @@ namespace Victoria
                 case var state when !(state.VoiceChannel is null) && newState.VoiceChannel is null:
                     if (!_players.TryGetValue(state.VoiceChannel.Guild.Id, out var oldPlayer))
                         return;
-                    await oldPlayer.TryDisconnectAsync().ConfigureAwait(false);
+                    await oldPlayer.DisconnectAsync().ConfigureAwait(false);
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
                     await _sockeon.SendPayloadAsync(new DestroyPayload(state.VoiceChannel.Guild.Id))
                         .ConfigureAwait(false);

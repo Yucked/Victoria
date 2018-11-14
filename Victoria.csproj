@@ -5,6 +5,30 @@
         <LangVersion>7.1</LangVersion>
     </PropertyGroup>
 
+
+    <PropertyGroup>
+        <Version>3.0.0-beta-0001</Version>
+        <Title>Victoria</Title>
+        <Authors>Yucked</Authors>
+        <Description>Lavalink wrapper written for Discord.NET.</Description>
+        <Copyright>2018 Yucked. All rights reserved.</Copyright>
+        <PackageReleaseNotes>Several breaking changes!
+            Websocket has been rewritten to be efficient.
+            AsyncEvents has been replaced with Func for faster performance since invoking AsyncEvents took extra memory.
+        </PackageReleaseNotes>
+        <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
+        <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
+        <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DocumentationFile>bin\Debug\netstandard2.0\Victoria.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DocumentationFile>bin\Release\netstandard2.0\Victoria.xml</DocumentationFile>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00990"/>
         <PackageReference Include="Newtonsoft.Json" Version="12.0.1-beta1"/>
