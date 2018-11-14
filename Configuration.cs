@@ -30,7 +30,7 @@ namespace Victoria
         /// <summary>
         /// Wait time before trying again.
         /// </summary>
-        public TimeSpan ReconnectDelay { get; set; }
+        public TimeSpan ReconnectInterval { get; set; }
 
         /// <summary>
         /// Websocket buffer size for receiving data.
@@ -64,7 +64,7 @@ namespace Victoria
             => new Configuration
             {
                 ReconnectAttempts = 10,
-                ReconnectDelay = TimeSpan.FromSeconds(3000),
+                ReconnectInterval = TimeSpan.FromSeconds(3000),
                 BufferSize = 1024,
                 Authorization = "youshallnotpass",
                 Host = "127.0.0.1",

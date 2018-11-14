@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Victoria.Entities.Payloads;
 
 namespace Victoria
 {
@@ -16,6 +17,7 @@ namespace Victoria
         private readonly Encoding _encoding;
         private Configuration _configuration;
         private ClientWebSocket _clientWebSocket;
+        private readonly TimeSpan _interval;
 
         public Func<string, bool> OnMessage;
 
@@ -40,7 +42,7 @@ namespace Victoria
             return _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnection);
         }
 
-        public Task SendPayloadAsync(object payload)
+        public Task SendPayloadAsync(LavaPayload payload)
         {
             if (!_isUseable)
                 return Task.CompletedTask;
@@ -73,8 +75,9 @@ namespace Victoria
 
             if (_isUseable) return;
             _reconnectAttempts++;
-            // TODO: Log
-            await Task.Delay(_configuration.ReconnectDelay).ContinueWith(_ => ConnectAsync());
+            _interval.Add(_configuration.ReconnectInterval);
+            // TODO: Log            
+            await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
 
         private async Task ReceiveAsync()
@@ -88,10 +91,11 @@ namespace Victoria
                     var segment = new ArraySegment<byte>(buffer);
                     while (_clientWebSocket.State == WebSocketState.Open)
                     {
-                        var result = await _clientWebSocket.ReceiveAsync(segment, CancellationToken.None);
+                        var result = await _clientWebSocket.ReceiveAsync(segment, CancellationToken.None)
+                            .ConfigureAwait(false);
                         if (result.MessageType == WebSocketMessageType.Close)
                         {
-                            await RetryConnectionAsync();
+                            await RetryConnectionAsync().ConfigureAwait(false);
                             break;
                         }
 
