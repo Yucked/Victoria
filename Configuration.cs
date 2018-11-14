@@ -58,6 +58,11 @@ namespace Victoria
         public LogSeverity Severity { get; set; }
 
         /// <summary>
+        /// Voice channel connection options.
+        /// </summary>
+        public VoiceChannelOptions VoiceChannelOptions { get; set; }
+
+        /// <summary>
         /// Default configuration.
         /// </summary>
         internal static Configuration Default
@@ -69,7 +74,37 @@ namespace Victoria
                 Authorization = "youshallnotpass",
                 Host = "127.0.0.1",
                 Port = 2333,
-                Severity = LogSeverity.Info
+                Severity = LogSeverity.Info,
+                VoiceChannelOptions = VoiceChannelOptions.Default
+            };
+    }
+
+    /// <summary>
+    /// Voice channel connection options.
+    /// </summary>
+    public struct VoiceChannelOptions
+    {
+        /// <summary>
+        /// Make <see cref="BaseDiscordClient"/> deaf.
+        /// </summary>
+        public bool SelfDeaf { get; set; }
+
+        /// <summary>
+        /// Make <see cref="BaseDiscordClient"/> mute.
+        /// </summary>
+        public bool SelfMute { get; set; }
+
+        /// <summary>
+        /// OwO, what's this?
+        /// </summary>
+        public bool External { get; set; }
+
+        internal static VoiceChannelOptions Default
+            => new VoiceChannelOptions
+            {
+                External = false,
+                SelfDeaf = true,
+                SelfMute = false
             };
     }
 }
