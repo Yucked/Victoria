@@ -21,7 +21,7 @@ namespace Victoria
 
         public string Name { get; }
         public Func<bool> OnOpen;
-        public Func<bool> OnClose;
+        public Func<string, bool> OnClose;
         public Func<string, bool> OnMessage;
 
         public Sockeon(string nodeName, Configuration configuration)
@@ -65,38 +65,38 @@ namespace Victoria
             return _clientWebSocket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
-        private void VerifyConnection(Task task)
+        private async Task VerifyConnection(Task task)
         {
-            if (task.IsCanceled || task.IsFaulted || task.Exception == null)
+            if (task.IsCanceled || task.IsFaulted || task.Exception != null)
             {
                 _isUseable = false;
-                RetryConnectionAsync().ConfigureAwait(false);
+                OnClose?.Invoke("Websocket connection lost.");
+                await RetryConnectionAsync().ConfigureAwait(false);
             }
             else
             {
                 _isUseable = true;
                 _reconnectAttempts = 0;
-                ReceiveAsync().ConfigureAwait(false);
+                OnOpen?.Invoke();
+                await ReceiveAsync().ConfigureAwait(false);
             }
         }
 
         private async Task RetryConnectionAsync()
         {
             if (_reconnectAttempts > _configuration.ReconnectAttempts && _configuration.ReconnectAttempts != -1)
-            {
                 return;
-            }
 
             if (_isUseable) return;
             _reconnectAttempts++;
             _interval += _configuration.ReconnectInterval;
-            // TODO: Log            
+            OnClose?.Invoke($"Retry attempt #{_reconnectAttempts}. Waiting {_interval.Seconds}s...");
             await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
 
         private async Task ReceiveAsync()
         {
-            while (_isUseable)
+            while (true)
             {
                 byte[] bytes;
                 using (var stream = new MemoryStream())
@@ -108,13 +108,16 @@ namespace Victoria
                         var result = await _clientWebSocket.ReceiveAsync(segment, CancellationToken.None)
                             .ConfigureAwait(false);
                         if (result.MessageType == WebSocketMessageType.Close)
-                        {
-                            await RetryConnectionAsync().ConfigureAwait(false);
-                            break;
-                        }
+                            if (result.CloseStatus == WebSocketCloseStatus.EndpointUnavailable)
+                            {
+                                await RetryConnectionAsync().ConfigureAwait(false);
+                                break;
+                            }
+
 
                         stream.Write(buffer, 0, result.Count);
-                        if (result.EndOfMessage) break;
+                        if (result.EndOfMessage)
+                            break;
                     }
 
                     bytes = stream.ToArray();

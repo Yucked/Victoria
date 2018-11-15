@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Victoria.Entities;
 using Victoria.Entities.Enums;
@@ -73,6 +74,7 @@ namespace Victoria
         private HttpClient _httpClient;
         private SocketVoiceState _socketVoiceState;
         private readonly Configuration _configuration;
+        private readonly VoiceChannelOptions _vcOptions;
         private readonly BaseDiscordClient _baseDiscordClient;
         private readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
 
@@ -81,6 +83,7 @@ namespace Victoria
             Name = name;
             _baseDiscordClient = baseDiscordClient;
             _configuration = configuration;
+            _vcOptions = configuration.VoiceChannelOptions;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
 
             switch (baseDiscordClient)
@@ -98,35 +101,23 @@ namespace Victoria
                     break;
             }
 
-            Initialize(configuration);
+            Initialize(_configuration);
             IsConnected = true;
         }
 
-        internal Task StartAsync()
-            => _sockeon.ConnectAsync();
-
-        internal async Task StopAsync()
-        {
-            foreach (var player in _players.Values)
-                await player.DisconnectAsync().ConfigureAwait(false);
-
-            await _sockeon.DisconnectAsync().ConfigureAwait(false);
-            _sockeon.Dispose();
-            _httpClient.Dispose();
-            IsConnected = false;
-        }
 
         internal void Initialize(Configuration configuration)
         {
             _sockeon = new Sockeon(Name, configuration);
-            _sockeon.OnClose += () =>
+            _sockeon.OnClose += msg =>
             {
-                Log(LogResolver.Info(_sockeon.Name, "Connection established."));
+                Log?.Invoke(LogResolver.Error(_sockeon.Name, msg));
                 return true;
             };
             _sockeon.OnOpen += () =>
             {
-                Log(LogResolver.Info(_sockeon.Name, "Connection established."));
+                var mg = LogResolver.Error(Name, "Websocket connection established.");
+                Log?.Invoke(mg);
                 return true;
             };
             _sockeon.OnMessage += OnMessage;
@@ -145,6 +136,20 @@ namespace Victoria
             _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
         }
 
+        internal Task StartAsync()
+            => _sockeon.ConnectAsync();
+
+        internal async Task StopAsync()
+        {
+            foreach (var player in _players.Values)
+                await player.DisconnectAsync().ConfigureAwait(false);
+
+            await _sockeon.DisconnectAsync().ConfigureAwait(false);
+            _sockeon.Dispose();
+            _httpClient.Dispose();
+            IsConnected = false;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -157,10 +162,7 @@ namespace Victoria
                 return player;
 
             player = new LavaPlayer(this, voiceChannel, messageChannel);
-            await voiceChannel
-                .ConnectAsync(_configuration.VoiceChannelOptions.SelfDeaf, _configuration.VoiceChannelOptions.SelfMute,
-                    _configuration.VoiceChannelOptions.External)
-                .ConfigureAwait(false);
+            await voiceChannel.ConnectAsync(_vcOptions.SelfDeaf, _vcOptions.SelfMute, true).ConfigureAwait(false);
             _players.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -178,10 +180,10 @@ namespace Victoria
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public async Task<LavaResult> GetTracksAsync(string query)
+        public Task<LavaResult> GetTracksAsync(string query)
         {
             query = WebUtility.UrlEncode(query);
-            return await ResolveRequestAsync(query).ConfigureAwait(false);
+            return ResolveRequestAsync(query);
         }
 
         /// <summary>
@@ -189,15 +191,27 @@ namespace Victoria
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public async Task<LavaResult> SearchYoutubeAsync(string query)
+        public Task<LavaResult> SearchYoutubeAsync(string query)
         {
             query = WebUtility.UrlEncode($"ytsearch:{query}");
-            return await ResolveRequestAsync(query).ConfigureAwait(false);
+            return ResolveRequestAsync(query);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public Task<LavaResult> SearchSoundcloudAsync(string query)
+        {
+            query = WebUtility.UrlEncode($"scsearch:{query}");
+            return ResolveRequestAsync(query);
         }
 
         private bool OnMessage(string data)
         {
             var parsed = JObject.Parse(data);
+            Log?.Invoke(LogResolver.Debug(Name, data)).ConfigureAwait(false);
             ulong guildId = 0;
             if (parsed.TryGetValue("guildId", out var value))
                 guildId = ulong.Parse($"{value}");
@@ -212,7 +226,7 @@ namespace Victoria
 
                 case "stats":
                     var server = parsed.ToObject<Server>();
-                    StatsUpdated(server);
+                    StatsUpdated?.Invoke(server);
                     break;
 
                 case "event":
@@ -243,14 +257,14 @@ namespace Victoria
                             break;
 
                         default:
-                            Log(LogResolver.Info(Name, $"Unhandled event type: {evt}."));
+                            Log?.Invoke(LogResolver.Info(Name, $"Unhandled event type: {evt}."));
                             break;
                     }
 
                     break;
 
                 default:
-                    Log(LogResolver.Info(Name, $"Unhandled OP code: {opCode}."));
+                    Log?.Invoke(LogResolver.Info(Name, $"Unhandled OP code: {opCode}."));
                     break;
             }
 
@@ -310,7 +324,7 @@ namespace Victoria
             old.CurrentTrack.Position = state.Position;
             old.LastUpdate = state.Time;
             _players.TryUpdate(guildId, old, old);
-            PlayerUpdated(old, old.CurrentTrack, state.Position);
+            PlayerUpdated?.Invoke(old, old.CurrentTrack, state.Position);
         }
 
         private void TrackUpdateInfo(ulong guildId, LavaTrack track, TrackReason reason)
@@ -320,7 +334,7 @@ namespace Victoria
             if (reason != TrackReason.Replaced)
                 old.CurrentTrack = default;
             _players.TryUpdate(guildId, old, old);
-            TrackFinished(old, track, reason);
+            TrackFinished?.Invoke(old, track, reason);
         }
 
         private void TrackStuckInfo(ulong guildId, LavaTrack track, long threshold)
@@ -329,7 +343,7 @@ namespace Victoria
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
-            TrackStuck(old, track, threshold);
+            TrackStuck?.Invoke(old, track, threshold);
         }
 
         private void TrackExceptionInfo(ulong guildId, LavaTrack track, string reason)
@@ -338,7 +352,7 @@ namespace Victoria
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
-            TrackException(old, track, reason);
+            TrackException?.Invoke(old, track, reason);
         }
 
         private async Task OnSocketDisconnected(Exception exception)
@@ -346,7 +360,7 @@ namespace Victoria
             foreach (var player in _players.Values)
                 await player.DisconnectAsync().ConfigureAwait(false);
             _players.Clear();
-            await Log(LogResolver.Error(Name, "Socket disconnected.", exception)).ConfigureAwait(false);
+            Log?.Invoke(LogResolver.Error(Name, "Socket disconnected.", exception)).ConfigureAwait(false);
         }
 
         private async Task OnShardDisconnected(Exception exception, DiscordSocketClient socketClient)
@@ -358,7 +372,7 @@ namespace Victoria
                 _players.TryRemove(guild.Id, out _);
             }
 
-            await Log(LogResolver.Error(Name, "Discord shard lost connection.", exception)).ConfigureAwait(false);
+            Log?.Invoke(LogResolver.Error(Name, "Discord shard lost connection.", exception)).ConfigureAwait(false);
         }
 
         private async Task OnVoiceServerUpdated(SocketVoiceServer socketVoiceServer)
@@ -367,7 +381,7 @@ namespace Victoria
                 return;
             var voiceUpdate = new VoicePayload(socketVoiceServer, _socketVoiceState);
             await _sockeon.SendPayloadAsync(voiceUpdate).ConfigureAwait(false);
-            await Log(LogResolver.Debug(Name, $"Sent voice server payload. {voiceUpdate}")).ConfigureAwait(false);
+            Log?.Invoke(LogResolver.Debug(Name, $"Sent voice server payload. {JsonConvert.SerializeObject(voiceUpdate)}")).ConfigureAwait(false);
         }
 
         private async Task OnVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
@@ -378,7 +392,8 @@ namespace Victoria
             {
                 case var state when state.VoiceChannel is null && !(newState.VoiceChannel is null):
                     _socketVoiceState = newState;
-                    await Log(LogResolver.Debug(Name, $"Socket voice state updated. {newState}")).ConfigureAwait(false);
+                    Log?.Invoke(LogResolver.Debug(Name, $"Socket voice state updated {newState}"))
+                        .ConfigureAwait(false);
                     break;
 
                 case var state when !(state.VoiceChannel is null) && newState.VoiceChannel is null:
@@ -388,7 +403,7 @@ namespace Victoria
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
                     var payload = new DestroyPayload(state.VoiceChannel.Guild.Id);
                     await _sockeon.SendPayloadAsync(payload).ConfigureAwait(false);
-                    await Log(LogResolver.Debug(Name, $"Sent destroy payload. {payload}")).ConfigureAwait(false);
+                    Log?.Invoke(LogResolver.Debug(Name, $"Sent destroy payload. {JsonConvert.SerializeObject(payload)}")).ConfigureAwait(false);
                     break;
 
                 case var state when state.VoiceChannel?.Id != newState.VoiceChannel?.Id:
@@ -396,7 +411,7 @@ namespace Victoria
                         return;
                     updatePlayer.VoiceChannel = newState.VoiceChannel;
                     _players.TryUpdate(state.VoiceChannel.Guild.Id, updatePlayer, updatePlayer);
-                    await Log(LogResolver.Debug(Name, "Voice channel moved.")).ConfigureAwait(false);
+                    Log?.Invoke(LogResolver.Debug(Name, "Voice channel moved.")).ConfigureAwait(false);
                     break;
             }
         }

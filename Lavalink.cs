@@ -27,8 +27,7 @@ namespace Victoria
         /// </summary>
         public LavaNode DefaultNode => _nodes[$"{_prefix}0"];
 
-
-        internal Lavalink()
+        public Lavalink()
         {
             _nodes = new ConcurrentDictionary<string, LavaNode>();
         }
@@ -42,21 +41,23 @@ namespace Victoria
         public async Task<LavaNode> AddNodeAsync(BaseDiscordClient baseDiscordClient,
             Configuration configuration = default)
         {
-            configuration = configuration.Equals(default) ? Configuration.Default : configuration;
+            configuration = configuration.Equals(default(Configuration)) ? Configuration.Default : configuration;
             LogResolver.LogSeverity = configuration.Severity;
-            var node_name = $"{_prefix}{_counter}";
-            Interlocked.Increment(ref _counter);
+            var node_name = $"{_prefix}{_counter}";            
             var node = new LavaNode(node_name, baseDiscordClient, configuration);
             try
             {
                 await node.StartAsync().ConfigureAwait(false);
                 _nodes.TryAdd($"{_prefix}{_counter}", node);
+                Interlocked.Increment(ref _counter);
+                Log?.Invoke(LogResolver.Info(node_name, "Node added."));
             }
             catch
-            {
-                Interlocked.Decrement(ref _counter);
+            {                
                 await node.StopAsync().ConfigureAwait(false);
                 _nodes.TryRemove(node_name, out _);
+                Interlocked.Decrement(ref _counter);
+                Log?.Invoke(LogResolver.Info(node_name, "Node removed."));
             }
 
             return node;
@@ -74,6 +75,7 @@ namespace Victoria
             Interlocked.Decrement(ref _counter);
             await node.StopAsync().ConfigureAwait(false);
             node.Dispose();
+            Log?.Invoke(LogResolver.Info(nodeName, "Node removed."));
             return _nodes.TryRemove(nodeName, out _);
         }
 
@@ -90,6 +92,7 @@ namespace Victoria
             await node.StopAsync().ConfigureAwait(false);
             node.Initialize(configuration);
             _nodes.TryUpdate(nodeName, node, node);
+            Log?.Invoke(LogResolver.Info(nodeName, "Node moved."));
         }
     }
 }

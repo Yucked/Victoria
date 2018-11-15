@@ -29,6 +29,10 @@
         <DocumentationFile>bin\Release\netstandard2.0\Victoria.xml</DocumentationFile>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <NoWarn>1701;1702;1591;1723</NoWarn>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00990"/>
         <PackageReference Include="Newtonsoft.Json" Version="12.0.1-beta1"/>

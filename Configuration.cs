@@ -74,7 +74,7 @@ namespace Victoria
                 Authorization = "youshallnotpass",
                 Host = "127.0.0.1",
                 Port = 2333,
-                Severity = LogSeverity.Info,
+                Severity = LogSeverity.Verbose,
                 VoiceChannelOptions = VoiceChannelOptions.Default
             };
     }
@@ -94,15 +94,9 @@ namespace Victoria
         /// </summary>
         public bool SelfMute { get; set; }
 
-        /// <summary>
-        /// OwO, what's this?
-        /// </summary>
-        public bool External { get; set; }
-
         internal static VoiceChannelOptions Default
             => new VoiceChannelOptions
             {
-                External = false,
                 SelfDeaf = true,
                 SelfMute = false
             };
