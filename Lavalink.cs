@@ -73,7 +73,23 @@ namespace Victoria
                 return false;
             Interlocked.Decrement(ref _counter);
             await node.StopAsync().ConfigureAwait(false);
+            node.Dispose();
             return _nodes.TryRemove(nodeName, out _);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="nodeName"></param>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public async Task MoveNodeAsync(string nodeName, Configuration configuration)
+        {
+            if (!_nodes.TryGetValue(nodeName, out var node))
+                return;
+            await node.StopAsync().ConfigureAwait(false);
+            node.Initialize(configuration);
+            _nodes.TryUpdate(nodeName, node, node);
         }
     }
 }
