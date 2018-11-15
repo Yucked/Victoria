@@ -2,8 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+
 namespace Victoria.Entities
 {
+    /// <summary>
+    /// Based on linked list and uses FIFO.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public sealed class LavaQueue<T> where T : class
     {
         private LinkedList<T> _linky;
@@ -79,7 +84,7 @@ namespace Victoria.Entities
         /// Clears the queue.
         /// </summary>
         public void Clear()
-        {            
+        {
             _linky.Clear();
         }
 
@@ -101,12 +106,26 @@ namespace Victoria.Entities
         }
 
         /// <summary>
-        /// Shuffles the whole queue.
+        /// Shuffles the whole queue. Thanks to @WorkingRobot (Issue #9).
         /// </summary>
         public void Shuffle()
         {
-            var shuffle = Items.OrderBy(x => _random.Next());
-            _linky = new LinkedList<T>(shuffle);
+            if (_linky.Count < 2)
+                return;
+            var shadow = new T[_linky.Count];
+            var i = 0;
+            for (var node = _linky.First; !(node is null); node = node.Next)
+            {
+                var j = _random.Next(i + 1);
+                if (i != j)
+                    shadow[i] = shadow[j];
+                shadow[j] = node.Value;
+                i++;
+            }
+
+            _linky.Clear();
+            foreach (var value in shadow)
+                _linky.AddLast(value);
         }
     }
 }
