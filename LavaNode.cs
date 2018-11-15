@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using Victoria.Entities;
 using Victoria.Entities.Enums;
 using Victoria.Entities.Payloads;
+using Victoria.Utilities;
 
 namespace Victoria
 {
@@ -30,7 +32,17 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
+        public Func<LogMessage, Task> Log;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public Func<object, Task> StatsUpdated;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Func<int, string, bool, Task> SocketUpdate;
 
         /// <summary>
         /// 
@@ -51,6 +63,7 @@ namespace Victoria
         /// 
         /// </summary>
         public Func<LavaPlayer, LavaTrack, TrackReason, Task> TrackFinished;
+
 
         internal readonly Sockeon _sockeon;
         private readonly HttpClient _httpClient;
@@ -91,6 +104,7 @@ namespace Victoria
                     break;
 
                 case DiscordShardedClient shardedClient:
+                    shardedClient.ShardDisconnected += OnShardDisconnected;
                     shardedClient.VoiceServerUpdated += OnVoiceServerUpdated;
                     shardedClient.UserVoiceStateUpdated += OnVoiceStateUpdated;
                     break;
@@ -114,7 +128,6 @@ namespace Victoria
         {
             foreach (var player in _players.Values)
                 await player.DisconnectAsync().ConfigureAwait(false);
-
 
             await _sockeon.DisconnectAsync().ConfigureAwait(false);
             _sockeon.Dispose();
@@ -163,15 +176,16 @@ namespace Victoria
         private bool OnMessage(string data)
         {
             var parsed = JObject.Parse(data);
-            ulong guildId;
+            ulong guildId = 0;
             if (parsed.TryGetValue("guildId", out var value))
                 guildId = ulong.Parse($"{value}");
 
-            switch ($"{parsed.GetValue("op")}")
+            var opCode = $"{parsed.GetValue("op")}";
+            switch (opCode)
             {
                 case "playerUpdate":
                     var state = parsed.GetValue("state").ToObject<LavaState>();
-                    UpdatePlayerInformation(guildId, state);
+                    UpdatePlayerInfo(guildId, state);
                     break;
 
                 case "stats":
@@ -179,31 +193,95 @@ namespace Victoria
                     break;
 
                 case "event":
+                    var evt = parsed.GetValue("type").ToObject<EventType>();
+                    var track = TrackResolver.DecodeTrack($"{parsed.GetValue("track")}");
+                    switch (evt)
+                    {
+                        case EventType.TrackEndEvent:
+                            var trackReason = parsed.GetValue("reason").ToObject<TrackReason>();
+                            TrackUpdateInfo(guildId, track, trackReason);
+                            break;
+
+                        case EventType.TrackExceptionEvent:
+                            var error = $"{parsed.GetValue("error")}";
+                            TrackExceptionInfo(guildId, track, error);
+                            break;
+
+                        case EventType.TrackStuckEvent:
+                            var threshold = long.Parse($"{parsed.GetValue("thresholdMs")}");
+                            TrackStuckInfo(guildId, track, threshold);
+                            break;
+
+                        case EventType.WebSocketClosedEvent:
+                            var reason = $"{parsed.GetValue("reason")}";
+                            var code = int.Parse($"{parsed.GetValue("code")}");
+                            var byRemote = bool.Parse($"{parsed.GetValue("byRemote")}");
+                            SocketUpdate(code, reason, byRemote);
+                            break;
+
+                        default:
+                            Log(LogResolver.Info(Name, $"Unhandled event type: {evt}."));
+                            break;
+                    }
 
                     break;
 
                 default:
-                    //TODO: Log uknown op code.
+                    Log(LogResolver.Info(Name, $"Unhandled OP code: {opCode}."));
                     break;
             }
 
             return true;
         }
 
-        private async Task<string> ResolveRequestAsync(string query)
+        private async Task<LavaResult> ResolveRequestAsync(string query)
         {
-            var json = string.Empty;
+            string json;
             using (var req = await _httpClient.GetAsync(query).ConfigureAwait(false))
             using (var res = await req.Content.ReadAsStreamAsync().ConfigureAwait(false))
             using (var sr = new StreamReader(res, Encoding.UTF8))
                 json = await sr.ReadToEndAsync().ConfigureAwait(false);
+            var data = JToken.Parse(json);
+            var tracks = new HashSet<LavaTrack>();
 
-            return json;
+            switch (data)
+            {
+                case JArray jArray:
+                    foreach (var arr in jArray)
+                    {
+                        var arrTrack = arr["info"].ToObject<LavaTrack>();
+                        arrTrack.TrackString = $"{arr["track"]}";
+                        tracks.Add(arrTrack);
+                    }
+
+                    return new LavaResult
+                    {
+                        Tracks = tracks,
+                        PlaylistInfo = default,
+                        LoadResultType = tracks.Count == 0 ? LoadResultType.LoadFailed : LoadResultType.TrackLoaded
+                    };
+
+                case JObject jObject:
+                    var jsonArray = jObject["tracks"] as JArray;
+                    var info = jObject.ToObject<LavaResult>();
+                    foreach (var item in jsonArray)
+                    {
+                        var track = item["info"].ToObject<LavaTrack>();
+                        track.TrackString = $"{item["track"]}";
+                        tracks.Add(track);
+                    }
+
+                    info.Tracks = tracks;
+                    return info;
+
+                default:
+                    return null;
+            }
         }
 
         // Event stuff
 
-        private void UpdatePlayerInformation(ulong guildId, LavaState state)
+        private void UpdatePlayerInfo(ulong guildId, LavaState state)
         {
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack.Position = state.Position;
@@ -212,7 +290,37 @@ namespace Victoria
             PlayerUpdated(old, old.CurrentTrack, state.Position);
         }
 
+        private void TrackUpdateInfo(ulong guildId, LavaTrack track, TrackReason reason)
+        {
+            if (!_players.TryGetValue(guildId, out var old)) return;
+            if (reason != TrackReason.Replaced)
+                old.CurrentTrack = default;
+            _players.TryUpdate(guildId, old, old);
+            TrackFinished(old, track, reason);
+        }
+
+        private void TrackStuckInfo(ulong guildId, LavaTrack track, long threshold)
+        {
+            if (!_players.TryGetValue(guildId, out var old)) return;
+            old.CurrentTrack = track;
+            _players.TryUpdate(guildId, old, old);
+            TrackStuck(old, track, threshold);
+        }
+
+        private void TrackExceptionInfo(ulong guildId, LavaTrack track, string reason)
+        {
+            if (!_players.TryGetValue(guildId, out var old)) return;
+            old.CurrentTrack = track;
+            _players.TryUpdate(guildId, old, old);
+            TrackException(old, track, reason);
+        }
+
         private Task OnSocketDisconnected(Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Task OnShardDisconnected(Exception arg1, DiscordSocketClient arg2)
         {
             throw new NotImplementedException();
         }

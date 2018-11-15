@@ -1,11 +1,20 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Discord.Rest;
 using Discord.WebSocket;
 
 namespace Victoria
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class DiscordExtensions
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <returns></returns>
         public static async Task<Lavalink> InitializeLavalinkAsync(this DiscordSocketClient socketClient)
         {
             var lavalink = new Lavalink();
@@ -13,6 +22,11 @@ namespace Victoria
             return lavalink;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="shardedClient"></param>
+        /// <returns></returns>
         public static async Task<IReadOnlyDictionary<int, Lavalink>> InitializeLavalinkAsync(
             this DiscordShardedClient shardedClient)
         {

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
+using Victoria.Utilities;
 
 namespace Victoria
 {
@@ -41,6 +42,8 @@ namespace Victoria
         public async Task<LavaNode> AddNodeAsync(BaseDiscordClient baseDiscordClient,
             Configuration configuration = default)
         {
+            configuration = configuration.Equals(default) ? Configuration.Default : configuration;
+            LogResolver.LogSeverity = configuration.Severity;
             var node_name = $"{_prefix}{_counter}";
             Interlocked.Increment(ref _counter);
             var node = new LavaNode(node_name, baseDiscordClient, configuration);
@@ -51,7 +54,8 @@ namespace Victoria
             }
             catch
             {
-                //TODO: Dispose node.
+                Interlocked.Decrement(ref _counter);
+                await node.StopAsync().ConfigureAwait(false);
                 _nodes.TryRemove(node_name, out _);
             }
 
@@ -67,9 +71,8 @@ namespace Victoria
         {
             if (!_nodes.TryGetValue(nodeName, out var node))
                 return false;
-
-            //TODO: Disconnect node and dispose.
-
+            Interlocked.Decrement(ref _counter);
+            await node.StopAsync().ConfigureAwait(false);
             return _nodes.TryRemove(nodeName, out _);
         }
     }
