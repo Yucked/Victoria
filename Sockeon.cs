@@ -19,10 +19,14 @@ namespace Victoria
         private Configuration _configuration;
         private ClientWebSocket _clientWebSocket;
 
+        public string Name { get; }
+        public Func<bool> OnOpen;
+        public Func<bool> OnClose;
         public Func<string, bool> OnMessage;
 
-        public Sockeon(Configuration configuration)
+        public Sockeon(string nodeName, Configuration configuration)
         {
+            Name = $"{nodeName}_sockeon";
             _configuration = configuration;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;

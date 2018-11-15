@@ -13,10 +13,14 @@ using Newtonsoft.Json.Linq;
 using Victoria.Entities;
 using Victoria.Entities.Enums;
 using Victoria.Entities.Payloads;
+using Victoria.Entities.Stats;
 using Victoria.Utilities;
 
 namespace Victoria
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public sealed class LavaNode
     {
         /// <summary>
@@ -37,12 +41,12 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
-        public Func<object, Task> StatsUpdated;
+        public Func<Server, Task> StatsUpdated;
 
         /// <summary>
         /// 
         /// </summary>
-        public Func<int, string, bool, Task> SocketUpdate;
+        public Func<int, string, bool, Task> SocketClosed;
 
         /// <summary>
         /// 
@@ -65,8 +69,8 @@ namespace Victoria
         public Func<LavaPlayer, LavaTrack, TrackReason, Task> TrackFinished;
 
 
-        internal readonly Sockeon _sockeon;
-        private readonly HttpClient _httpClient;
+        internal Sockeon _sockeon;
+        private HttpClient _httpClient;
         private SocketVoiceState _socketVoiceState;
         private readonly Configuration _configuration;
         private readonly BaseDiscordClient _baseDiscordClient;
@@ -75,25 +79,9 @@ namespace Victoria
         internal LavaNode(string name, BaseDiscordClient baseDiscordClient, Configuration configuration)
         {
             Name = name;
-            _sockeon = new Sockeon(configuration);
             _baseDiscordClient = baseDiscordClient;
             _configuration = configuration;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
-
-            _httpClient = new HttpClient(new HttpClientHandler
-            {
-                UseCookies = false,
-                Proxy = configuration.Proxy,
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-            })
-            {
-                BaseAddress = new Uri($"http://{configuration.Host}:{configuration.Port}/loadtracks?identifier=")
-            };
-
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Victoria");
-            _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
-            _sockeon.OnMessage += OnMessage;
 
             switch (baseDiscordClient)
             {
@@ -110,20 +98,13 @@ namespace Victoria
                     break;
             }
 
+            Initialize(configuration);
             IsConnected = true;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         internal Task StartAsync()
             => _sockeon.ConnectAsync();
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         internal async Task StopAsync()
         {
             foreach (var player in _players.Values)
@@ -131,7 +112,37 @@ namespace Victoria
 
             await _sockeon.DisconnectAsync().ConfigureAwait(false);
             _sockeon.Dispose();
+            _httpClient.Dispose();
             IsConnected = false;
+        }
+
+        internal void Initialize(Configuration configuration)
+        {
+            _sockeon = new Sockeon(Name, configuration);
+            _sockeon.OnClose += () =>
+            {
+                Log(LogResolver.Info(_sockeon.Name, "Connection established."));
+                return true;
+            };
+            _sockeon.OnOpen += () =>
+            {
+                Log(LogResolver.Info(_sockeon.Name, "Connection established."));
+                return true;
+            };
+            _sockeon.OnMessage += OnMessage;
+            _httpClient = new HttpClient(new HttpClientHandler
+            {
+                UseCookies = false,
+                Proxy = configuration.Proxy,
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            })
+            {
+                BaseAddress = new Uri($"http://{configuration.Host}:{configuration.Port}/loadtracks?identifier=")
+            };
+
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Victoria");
+            _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
         }
 
         /// <summary>
@@ -167,10 +178,21 @@ namespace Victoria
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public async Task GetTracksAsync(string query)
+        public async Task<LavaResult> GetTracksAsync(string query)
         {
             query = WebUtility.UrlEncode(query);
-            await ResolveRequestAsync(query).ConfigureAwait(false);
+            return await ResolveRequestAsync(query).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public async Task<LavaResult> SearchYoutubeAsync(string query)
+        {
+            query = WebUtility.UrlEncode($"ytsearch:{query}");
+            return await ResolveRequestAsync(query).ConfigureAwait(false);
         }
 
         private bool OnMessage(string data)
@@ -189,7 +211,8 @@ namespace Victoria
                     break;
 
                 case "stats":
-
+                    var server = parsed.ToObject<Server>();
+                    StatsUpdated(server);
                     break;
 
                 case "event":
@@ -216,7 +239,7 @@ namespace Victoria
                             var reason = $"{parsed.GetValue("reason")}";
                             var code = int.Parse($"{parsed.GetValue("code")}");
                             var byRemote = bool.Parse($"{parsed.GetValue("byRemote")}");
-                            SocketUpdate(code, reason, byRemote);
+                            SocketClosed(code, reason, byRemote);
                             break;
 
                         default:
@@ -292,6 +315,7 @@ namespace Victoria
 
         private void TrackUpdateInfo(ulong guildId, LavaTrack track, TrackReason reason)
         {
+            Log(LogResolver.Debug(Name, "Track update received."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             if (reason != TrackReason.Replaced)
                 old.CurrentTrack = default;
@@ -301,6 +325,7 @@ namespace Victoria
 
         private void TrackStuckInfo(ulong guildId, LavaTrack track, long threshold)
         {
+            Log(LogResolver.Debug(Name, $"{track.Title} timed out after {threshold}ms."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
@@ -309,25 +334,40 @@ namespace Victoria
 
         private void TrackExceptionInfo(ulong guildId, LavaTrack track, string reason)
         {
+            Log(LogResolver.Debug(Name, $"{track.Title} threw an exception because {reason}."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
             TrackException(old, track, reason);
         }
 
-        private Task OnSocketDisconnected(Exception exception)
+        private async Task OnSocketDisconnected(Exception exception)
         {
-            throw new NotImplementedException();
+            foreach (var player in _players.Values)
+                await player.DisconnectAsync().ConfigureAwait(false);
+            _players.Clear();
+            await Log(LogResolver.Error(Name, "Socket disconnected.", exception)).ConfigureAwait(false);
         }
 
-        private Task OnShardDisconnected(Exception arg1, DiscordSocketClient arg2)
+        private async Task OnShardDisconnected(Exception exception, DiscordSocketClient socketClient)
         {
-            throw new NotImplementedException();
+            foreach (var guild in socketClient.Guilds)
+            {
+                if (!_players.ContainsKey(guild.Id)) continue;
+                await _players[guild.Id].DisconnectAsync().ConfigureAwait(false);
+                _players.TryRemove(guild.Id, out _);
+            }
+
+            await Log(LogResolver.Error(Name, "Discord shard lost connection.", exception)).ConfigureAwait(false);
         }
 
-        private Task OnVoiceServerUpdated(SocketVoiceServer socketVoiceServer)
+        private async Task OnVoiceServerUpdated(SocketVoiceServer socketVoiceServer)
         {
-            throw new NotImplementedException();
+            if (!socketVoiceServer.Guild.HasValue || !_players.TryGetValue(socketVoiceServer.Guild.Id, out _))
+                return;
+            var voiceUpdate = new VoicePayload(socketVoiceServer, _socketVoiceState);
+            await _sockeon.SendPayloadAsync(voiceUpdate).ConfigureAwait(false);
+            await Log(LogResolver.Debug(Name, $"Sent voice server payload. {voiceUpdate}")).ConfigureAwait(false);
         }
 
         private async Task OnVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
@@ -338,6 +378,7 @@ namespace Victoria
             {
                 case var state when state.VoiceChannel is null && !(newState.VoiceChannel is null):
                     _socketVoiceState = newState;
+                    await Log(LogResolver.Debug(Name, $"Socket voice state updated. {newState}")).ConfigureAwait(false);
                     break;
 
                 case var state when !(state.VoiceChannel is null) && newState.VoiceChannel is null:
@@ -345,8 +386,9 @@ namespace Victoria
                         return;
                     await oldPlayer.DisconnectAsync().ConfigureAwait(false);
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
-                    await _sockeon.SendPayloadAsync(new DestroyPayload(state.VoiceChannel.Guild.Id))
-                        .ConfigureAwait(false);
+                    var payload = new DestroyPayload(state.VoiceChannel.Guild.Id);
+                    await _sockeon.SendPayloadAsync(payload).ConfigureAwait(false);
+                    await Log(LogResolver.Debug(Name, $"Sent destroy payload. {payload}")).ConfigureAwait(false);
                     break;
 
                 case var state when state.VoiceChannel?.Id != newState.VoiceChannel?.Id:
@@ -354,8 +396,17 @@ namespace Victoria
                         return;
                     updatePlayer.VoiceChannel = newState.VoiceChannel;
                     _players.TryUpdate(state.VoiceChannel.Guild.Id, updatePlayer, updatePlayer);
+                    await Log(LogResolver.Debug(Name, "Voice channel moved.")).ConfigureAwait(false);
                     break;
             }
+        }
+
+        internal void Dispose()
+        {
+            IsConnected = false;
+            _players.Clear();
+            _sockeon.Dispose();
+            _httpClient.Dispose();
         }
     }
 }
