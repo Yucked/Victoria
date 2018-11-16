@@ -53,6 +53,50 @@ namespace Victoria
         }
 
         /// <summary>
+        /// Dequeues an item from the queue at a specific index.
+        /// </summary>
+        /// <param name="index">A 0-based index</param>
+        /// <returns><see cref="T"/></returns>
+        public T RemoveAt(int index)
+        {
+            LinkedListNode<T> currentNode = _linky.First;
+            for (int i = 0; i <= index && currentNode != null; i++)
+            {
+                if (i != index)
+                {
+                    currentNode = currentNode.Next;
+                    continue;
+                }
+
+                _linky.Remove(currentNode);
+                return currentNode.Value;
+            }
+
+            throw new ArgumentOutOfRangeException("index");
+        }
+
+        /// <summary>
+        /// Dequeues multiple items from the queue based on the index range.
+        /// </summary>
+        /// <param name="from">A 0-based inclusive index</param>
+        /// <param name="to">A 0-based inclusive index</param>
+        public void RemoveRange(int from, int to)
+        {
+            LinkedListNode<T> currentNode = _linky.First;
+            for (int i = 0; i <= to && currentNode != null; i++)
+            {
+                if (from <= i)
+                {
+                    _linky.Remove(currentNode);
+                    currentNode = currentNode.Next;
+                    continue;
+                }
+
+                _linky.Remove(currentNode);
+            }
+        }
+
+        /// <summary>
         /// Returns the first item in queue without removing it.
         /// </summary>
         /// <returns><see cref="T"/></returns>
