@@ -1,7 +1,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace Victoria
+namespace Victoria.Entities
 {
     internal struct LavaState
     {

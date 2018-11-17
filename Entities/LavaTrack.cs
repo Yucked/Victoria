@@ -33,7 +33,7 @@ namespace Victoria.Entities
         [JsonProperty("uri")]
         public Uri Uri { get; internal set; }
         
-        [JsonProperty("position")]
+        [JsonIgnore]
         public TimeSpan Position { get; internal set; }
     }
 }
