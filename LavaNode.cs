@@ -20,52 +20,52 @@ using Victoria.Utilities;
 namespace Victoria
 {
     /// <summary>
-    /// 
+    /// Represents a <see cref="BaseDiscordClient"/> connection.
     /// </summary>
     public sealed class LavaNode
     {
         /// <summary>
-        /// 
+        /// Name of current <see cref="LavaNode"/>.
         /// </summary>
         public string Name { get; }
 
         /// <summary>
-        /// 
+        /// Whether this node is connected or not.
         /// </summary>
         public bool IsConnected { get; private set; }
 
         /// <summary>
-        /// 
+        /// Fires when stats are sent from Lavalink server.
         /// </summary>
         public Func<Server, Task> StatsUpdated;
 
         /// <summary>
-        /// 
+        /// Fires when state is requested via <see cref="GetPlayerInfoAsync"/> or <see cref="GetAllPlayersInfoAsync"/>.
         /// </summary>
         public Func<ResponseState, Task> StateRequested;
 
         /// <summary>
-        /// 
+        /// Fires when websocket is closed.
         /// </summary>
         public Func<int, string, bool, Task> SocketClosed;
 
         /// <summary>
-        /// 
+        /// Fires when a track has timed out.
         /// </summary>
         public Func<LavaPlayer, LavaTrack, long, Task> TrackStuck;
 
         /// <summary>
-        /// 
+        /// Fires when a track throws an exception.
         /// </summary>
         public Func<LavaPlayer, LavaTrack, string, Task> TrackException;
 
         /// <summary>
-        /// 
+        /// Fires when player update is sent from lavalink server.
         /// </summary>
         public Func<LavaPlayer, LavaTrack, TimeSpan, Task> PlayerUpdated;
 
         /// <summary>
-        /// 
+        /// Fires when any of the <see cref="TrackReason"/> 's are met.
         /// </summary>
         public Func<LavaPlayer, LavaTrack, TrackReason, Task> TrackFinished;
 
@@ -142,12 +142,12 @@ namespace Victoria
         }
 
         /// <summary>
-        /// 
+        /// Connects to a voice channel and bounds given text channel for any updates.
         /// </summary>
-        /// <param name="voiceChannel"></param>
-        /// <param name="messageChannel"></param>
-        /// <returns></returns>
-        public async Task<LavaPlayer> ConnectAsync(IVoiceChannel voiceChannel, IMessageChannel messageChannel)
+        /// <param name="voiceChannel">Voice channel to connect to.</param>
+        /// <param name="messageChannel">Bounded text channel.</param>
+        /// <returns><see cref="LavaPlayer"/></returns>
+        public async Task<LavaPlayer> ConnectAsync(IVoiceChannel voiceChannel, IMessageChannel messageChannel = null)
         {
             if (_players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
@@ -159,45 +159,53 @@ namespace Victoria
         }
 
         /// <summary>
-        /// 
+        /// Requests state of <see cref="LavaPlayer"/> for given guild.
+        /// </summary>
+        /// <param name="guildId">Guild Id</param>
+        public async Task GetPlayerInfoAsync(ulong guildId)
+        {
+            await _socket.SendPayloadAsync(new RequestPayload(guildId, false)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Requests player state of all connected players.
+        /// </summary>
+        public async Task GetAllPlayersInfoAsync()
+        {
+            await _socket.SendPayloadAsync(new RequestPayload(0, true)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Fetches <see cref="LavaPlayer"/> for given guild otherwise null.
         /// </summary>
         /// <param name="guildId"></param>
-        /// <returns></returns>
+        /// <returns><see cref="LavaPlayer"/></returns>
         public LavaPlayer GetPlayer(ulong guildId)
             => _players.TryGetValue(guildId, out var player) ? player : null;
 
         /// <summary>
-        /// 
+        /// Searches all of the sources specified in application.yml. Also accepts file path pointing to a playable file.
         /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
+        /// <param name="query">Search terms.</param>
+        /// <returns><see cref="LavaResult"/></returns>
         public Task<LavaResult> GetTracksAsync(string query)
-        {
-            query = WebUtility.UrlEncode(query);
-            return ResolveRequestAsync(query);
-        }
+            => ResolveRequestAsync(WebUtility.UrlEncode(query));
 
         /// <summary>
-        /// 
+        /// Performs a Youtube search for your query.
         /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
+        /// <param name="query">Search terms.</param>
+        /// <returns><see cref="LavaResult"/></returns>
         public Task<LavaResult> SearchYoutubeAsync(string query)
-        {
-            query = WebUtility.UrlEncode($"ytsearch:{query}");
-            return ResolveRequestAsync(query);
-        }
+            => ResolveRequestAsync(WebUtility.UrlEncode($"ytsearch:{query}"));
 
         /// <summary>
-        /// 
+        /// Performs a Soundcloud search for your query.
         /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
+        /// <param name="query">Search terms.</param>
+        /// <returns><see cref="LavaResult"/></returns>
         public Task<LavaResult> SearchSoundcloudAsync(string query)
-        {
-            query = WebUtility.UrlEncode($"scsearch:{query}");
-            return ResolveRequestAsync(query);
-        }
+            => ResolveRequestAsync(WebUtility.UrlEncode($"scsearch:{query}"));
 
         private bool OnMessage(string data)
         {
