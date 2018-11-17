@@ -26,7 +26,7 @@ namespace Victoria.Utilities
 
         public SocketResolver(string nodeName, Configuration configuration, Func<LogMessage, Task> log)
         {
-            _name = $"{nodeName}_socket";
+            _name = $"{nodeName}_Socket";
             _configuration = configuration;
             _log = log;
             _encoding = new UTF8Encoding(false);
@@ -100,7 +100,7 @@ namespace Victoria.Utilities
             _reconnectAttempts++;
             _interval += _configuration.ReconnectInterval;
             _log?.Invoke(LogResolver.Debug(_name,
-                $"Waiting {_interval.TotalMilliseconds}ms before try #{_reconnectAttempts + 1}."));
+                $"Retry attempt #{_reconnectAttempts}. Next retry in {_interval.Seconds}s."));
             await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
 
