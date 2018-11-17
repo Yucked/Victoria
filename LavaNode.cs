@@ -37,11 +37,6 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
-        public Func<LogMessage, Task> Log;
-
-        /// <summary>
-        /// 
-        /// </summary>
         public Func<Server, Task> StatsUpdated;
 
         /// <summary>
@@ -75,16 +70,19 @@ namespace Victoria
         public Func<LavaPlayer, LavaTrack, TrackReason, Task> TrackFinished;
 
 
-        internal SocketResolver _socket;
         private HttpClient _httpClient;
+        internal SocketResolver _socket;
         private SocketVoiceState _socketVoiceState;
         private readonly Configuration _configuration;
+        private readonly Func<LogMessage, Task> _log;
         private readonly BaseDiscordClient _baseDiscordClient;
         private readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
 
-        internal LavaNode(string name, BaseDiscordClient baseDiscordClient, Configuration configuration)
+        internal LavaNode(string name, BaseDiscordClient baseDiscordClient, Configuration configuration,
+            Func<LogMessage, Task> log)
         {
             Name = name;
+            _log = log;
             _configuration = configuration;
             _baseDiscordClient = baseDiscordClient;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
@@ -110,7 +108,7 @@ namespace Victoria
 
         internal void Initialize(Configuration configuration)
         {
-            _socket = new SocketResolver(Name, configuration, Log);
+            _socket = new SocketResolver(Name, configuration, _log);
             _httpClient = new HttpClient(new HttpClientHandler
             {
                 UseCookies = false,
@@ -126,8 +124,11 @@ namespace Victoria
             _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
         }
 
-        internal Task StartAsync()
-            => _socket.ConnectAsync().ContinueWith(_ => { _socket.OnMessage += OnMessage; });
+        internal async Task StartAsync()
+        {
+            await _socket.ConnectAsync().ConfigureAwait(false);
+            _socket.OnMessage += OnMessage;
+        }
 
         internal async Task StopAsync()
         {
@@ -201,7 +202,7 @@ namespace Victoria
         private bool OnMessage(string data)
         {
             var parsed = JObject.Parse(data);
-            Log?.Invoke(LogResolver.Debug(Name, data)).ConfigureAwait(false);
+            _log?.Invoke(LogResolver.Debug(Name, data)).ConfigureAwait(false);
             ulong guildId = 0;
             if (parsed.TryGetValue("guildId", out var value))
                 guildId = ulong.Parse($"{value}");
@@ -247,7 +248,7 @@ namespace Victoria
                             break;
 
                         default:
-                            Log?.Invoke(LogResolver.Info(Name, $"Unhandled event type: {evt}."));
+                            _log?.Invoke(LogResolver.Info(Name, $"Unhandled event type: {evt}."));
                             break;
                     }
 
@@ -259,7 +260,7 @@ namespace Victoria
                     break;
 
                 default:
-                    Log?.Invoke(LogResolver.Info(Name, $"Unhandled OP code: {opCode}."));
+                    _log?.Invoke(LogResolver.Info(Name, $"Unhandled OP code: {opCode}."));
                     break;
             }
 
@@ -323,7 +324,7 @@ namespace Victoria
 
         private void TrackUpdateInfo(ulong guildId, LavaTrack track, TrackReason reason)
         {
-            Log(LogResolver.Debug(Name, "Track update received."));
+            _log(LogResolver.Debug(Name, "Track update received."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             if (reason != TrackReason.Replaced)
                 old.CurrentTrack = default;
@@ -333,7 +334,7 @@ namespace Victoria
 
         private void TrackStuckInfo(ulong guildId, LavaTrack track, long threshold)
         {
-            Log(LogResolver.Debug(Name, $"{track.Title} timed out after {threshold}ms."));
+            _log(LogResolver.Debug(Name, $"{track.Title} timed out after {threshold}ms."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
@@ -342,7 +343,7 @@ namespace Victoria
 
         private void TrackExceptionInfo(ulong guildId, LavaTrack track, string reason)
         {
-            Log(LogResolver.Debug(Name, $"{track.Title} threw an exception because {reason}."));
+            _log(LogResolver.Debug(Name, $"{track.Title} threw an exception because {reason}."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
@@ -354,7 +355,7 @@ namespace Victoria
             foreach (var player in _players.Values)
                 await player.DisconnectAsync().ConfigureAwait(false);
             _players.Clear();
-            Log?.Invoke(LogResolver.Error(Name, "Socket disconnected.", exception)).ConfigureAwait(false);
+            _log?.Invoke(LogResolver.Error(Name, "Socket disconnected.", exception)).ConfigureAwait(false);
         }
 
         private async Task OnShardDisconnected(Exception exception, DiscordSocketClient socketClient)
@@ -366,7 +367,7 @@ namespace Victoria
                 _players.TryRemove(guild.Id, out _);
             }
 
-            Log?.Invoke(LogResolver.Error(Name, "Discord shard lost connection.", exception)).ConfigureAwait(false);
+            _log?.Invoke(LogResolver.Error(Name, "Discord shard lost connection.", exception)).ConfigureAwait(false);
         }
 
         private async Task OnVoiceServerUpdated(SocketVoiceServer socketVoiceServer)
@@ -375,7 +376,7 @@ namespace Victoria
                 return;
             var voiceUpdate = new VoicePayload(socketVoiceServer, _socketVoiceState);
             await _socket.SendPayloadAsync(voiceUpdate).ConfigureAwait(false);
-            Log?.Invoke(LogResolver.Debug(Name,
+            _log?.Invoke(LogResolver.Debug(Name,
                 $"Sent voice server payload. {JsonConvert.SerializeObject(voiceUpdate)}")).ConfigureAwait(false);
         }
 
@@ -387,7 +388,7 @@ namespace Victoria
             {
                 case var state when state.VoiceChannel is null && !(newState.VoiceChannel is null):
                     _socketVoiceState = newState;
-                    Log?.Invoke(LogResolver.Debug(Name, $"Socket voice state updated {newState}"))
+                    _log?.Invoke(LogResolver.Debug(Name, $"Socket voice state updated {newState}"))
                         .ConfigureAwait(false);
                     break;
 
@@ -398,7 +399,7 @@ namespace Victoria
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
                     var payload = new DestroyPayload(state.VoiceChannel.Guild.Id);
                     await _socket.SendPayloadAsync(payload).ConfigureAwait(false);
-                    Log?.Invoke(
+                    _log?.Invoke(
                             LogResolver.Debug(Name, $"Sent destroy payload. {JsonConvert.SerializeObject(payload)}"))
                         .ConfigureAwait(false);
                     break;
@@ -408,7 +409,7 @@ namespace Victoria
                         return;
                     updatePlayer.VoiceChannel = newState.VoiceChannel;
                     _players.TryUpdate(state.VoiceChannel.Guild.Id, updatePlayer, updatePlayer);
-                    Log?.Invoke(LogResolver.Debug(Name, "Voice channel moved.")).ConfigureAwait(false);
+                    _log?.Invoke(LogResolver.Debug(Name, "Voice channel moved.")).ConfigureAwait(false);
                     break;
             }
         }

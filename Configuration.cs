@@ -69,7 +69,7 @@ namespace Victoria
             => new Configuration
             {
                 ReconnectAttempts = 10,
-                ReconnectInterval = TimeSpan.FromSeconds(3000),
+                ReconnectInterval = TimeSpan.FromSeconds(3),
                 BufferSize = 1024,
                 Authorization = "youshallnotpass",
                 Host = "127.0.0.1",

@@ -54,7 +54,7 @@ namespace Victoria
             configuration = configuration.Equals(default(Configuration)) ? Configuration.Default : configuration;
             LogResolver.LogSeverity = configuration.Severity;
             var node_name = $"{_prefix}{_counter}";
-            var node = new LavaNode(node_name, baseDiscordClient, configuration);
+            var node = new LavaNode(node_name, baseDiscordClient, configuration, Log);
             try
             {
                 await node.StartAsync().ConfigureAwait(false);
