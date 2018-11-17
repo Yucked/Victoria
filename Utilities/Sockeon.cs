@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Victoria.Entities.Payloads;
 
-namespace Victoria
+namespace Victoria.Utilities
 {
-    internal sealed class Sockeon
+    internal sealed class SocketResolver
     {
         private bool _isUseable;
         private TimeSpan _interval;
@@ -24,9 +24,9 @@ namespace Victoria
         public Func<string, bool> OnClose;
         public Func<string, bool> OnMessage;
 
-        public Sockeon(string nodeName, Configuration configuration)
+        public SocketResolver(string nodeName, Configuration configuration)
         {
-            Name = $"{nodeName}_sockeon";
+            Name = $"{nodeName}_socket";
             _configuration = configuration;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
@@ -43,7 +43,7 @@ namespace Victoria
             _clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_configuration.Shards}");
             _clientWebSocket.Options.SetRequestHeader("Authorization", _configuration.Authorization);
             var url = new Uri($"ws://{_configuration.Host}:{_configuration.Port}");
-            return _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnection);
+            return _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
         }
 
         public async Task DisconnectAsync()
@@ -65,7 +65,7 @@ namespace Victoria
             return _clientWebSocket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
-        private async Task VerifyConnection(Task task)
+        private async Task VerifyConnectionAsync(Task task)
         {
             if (task.IsCanceled || task.IsFaulted || task.Exception != null)
             {

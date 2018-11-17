@@ -58,9 +58,9 @@ namespace Victoria
         public LogSeverity Severity { get; set; }
 
         /// <summary>
-        /// Voice channel connection options.
+        /// 
         /// </summary>
-        public VoiceChannelOptions VoiceChannelOptions { get; set; }
+        public bool SelfDeaf { get; set; }
 
         /// <summary>
         /// Default configuration.
@@ -75,30 +75,7 @@ namespace Victoria
                 Host = "127.0.0.1",
                 Port = 2333,
                 Severity = LogSeverity.Verbose,
-                VoiceChannelOptions = VoiceChannelOptions.Default
-            };
-    }
-
-    /// <summary>
-    /// Voice channel connection options.
-    /// </summary>
-    public struct VoiceChannelOptions
-    {
-        /// <summary>
-        /// Make <see cref="BaseDiscordClient"/> deaf.
-        /// </summary>
-        public bool SelfDeaf { get; set; }
-
-        /// <summary>
-        /// Make <see cref="BaseDiscordClient"/> mute.
-        /// </summary>
-        public bool SelfMute { get; set; }
-
-        internal static VoiceChannelOptions Default
-            => new VoiceChannelOptions
-            {
-                SelfDeaf = true,
-                SelfMute = false
+                SelfDeaf = true
             };
     }
 }

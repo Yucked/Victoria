@@ -20,7 +20,7 @@ namespace Victoria.Utilities
             };
 
             using (var ms = new MemoryStream(raw))
-            using (var br = new BinaryResolver(ms))
+            using (var br = new JavaBinaryReader(ms))
             {
                 var messageHeader = br.ReadInt32();
                 var messageFlags = (int) ((messageHeader & 0xC0000000L) >> 30);

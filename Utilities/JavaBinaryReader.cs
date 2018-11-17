@@ -8,12 +8,12 @@ namespace Victoria.Utilities
     /// <summary>
     /// https://raw.githubusercontent.com/DSharpPlus/DSharpPlus/master/DSharpPlus.Lavalink/LavalinkUtil.cs
     /// </summary>
-    public class BinaryResolver : BinaryReader
+    public sealed class JavaBinaryReader : BinaryReader
     {
         private static readonly Encoding Utf8NoBom = new UTF8Encoding();
 
         /// <inheritdoc />
-        public BinaryResolver(Stream ms) : base(ms, Utf8NoBom)
+        public JavaBinaryReader(Stream ms) : base(ms, Utf8NoBom)
         {
         }
 

@@ -70,20 +70,18 @@ namespace Victoria
         public Func<LavaPlayer, LavaTrack, TrackReason, Task> TrackFinished;
 
 
-        internal Sockeon _sockeon;
+        internal SocketResolver _socket;
         private HttpClient _httpClient;
         private SocketVoiceState _socketVoiceState;
         private readonly Configuration _configuration;
-        private readonly VoiceChannelOptions _vcOptions;
         private readonly BaseDiscordClient _baseDiscordClient;
         private readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
 
         internal LavaNode(string name, BaseDiscordClient baseDiscordClient, Configuration configuration)
         {
             Name = name;
-            _baseDiscordClient = baseDiscordClient;
             _configuration = configuration;
-            _vcOptions = configuration.VoiceChannelOptions;
+            _baseDiscordClient = baseDiscordClient;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
 
             switch (baseDiscordClient)
@@ -101,26 +99,13 @@ namespace Victoria
                     break;
             }
 
-            Initialize(_configuration);
+            Initialize(configuration);
             IsConnected = true;
         }
 
-
         internal void Initialize(Configuration configuration)
         {
-            _sockeon = new Sockeon(Name, configuration);
-            _sockeon.OnClose += msg =>
-            {
-                Log?.Invoke(LogResolver.Error(_sockeon.Name, msg));
-                return true;
-            };
-            _sockeon.OnOpen += () =>
-            {
-                var mg = LogResolver.Error(Name, "Websocket connection established.");
-                Log?.Invoke(mg);
-                return true;
-            };
-            _sockeon.OnMessage += OnMessage;
+            _socket = new SocketResolver(Name, configuration);
             _httpClient = new HttpClient(new HttpClientHandler
             {
                 UseCookies = false,
@@ -128,7 +113,7 @@ namespace Victoria
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             })
             {
-                BaseAddress = new Uri($"http://{configuration.Host}:{configuration.Port}/loadtracks?identifier=")
+                BaseAddress = new Uri($"http://{configuration.Host}:{configuration.Port}")
             };
 
             _httpClient.DefaultRequestHeaders.Clear();
@@ -137,15 +122,28 @@ namespace Victoria
         }
 
         internal Task StartAsync()
-            => _sockeon.ConnectAsync();
+            => _socket.ConnectAsync().ContinueWith(_ =>
+            {
+                _socket.OnMessage += OnMessage;
+                _socket.OnClose += msg =>
+                {
+                    Log?.Invoke(LogResolver.Error(_socket.Name, msg));
+                    return true;
+                };
+                _socket.OnOpen += () =>
+                {
+                    Log?.Invoke(LogResolver.Error(Name, "Websocket connection established."));
+                    return true;
+                };
+            });
 
         internal async Task StopAsync()
         {
             foreach (var player in _players.Values)
                 await player.DisconnectAsync().ConfigureAwait(false);
 
-            await _sockeon.DisconnectAsync().ConfigureAwait(false);
-            _sockeon.Dispose();
+            await _socket.DisconnectAsync().ConfigureAwait(false);
+            _socket.Dispose();
             _httpClient.Dispose();
             IsConnected = false;
         }
@@ -162,7 +160,7 @@ namespace Victoria
                 return player;
 
             player = new LavaPlayer(this, voiceChannel, messageChannel);
-            await voiceChannel.ConnectAsync(_vcOptions.SelfDeaf, _vcOptions.SelfMute, true).ConfigureAwait(false);
+            await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true).ConfigureAwait(false);
             _players.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -274,13 +272,12 @@ namespace Victoria
         private async Task<LavaResult> ResolveRequestAsync(string query)
         {
             string json;
-            using (var req = await _httpClient.GetAsync(query).ConfigureAwait(false))
+            using (var req = await _httpClient.GetAsync($"/loadtracks?identifier={query}").ConfigureAwait(false))
             using (var res = await req.Content.ReadAsStreamAsync().ConfigureAwait(false))
             using (var sr = new StreamReader(res, Encoding.UTF8))
                 json = await sr.ReadToEndAsync().ConfigureAwait(false);
             var data = JToken.Parse(json);
             var tracks = new HashSet<LavaTrack>();
-
             switch (data)
             {
                 case JArray jArray:
@@ -380,8 +377,9 @@ namespace Victoria
             if (!socketVoiceServer.Guild.HasValue || !_players.TryGetValue(socketVoiceServer.Guild.Id, out _))
                 return;
             var voiceUpdate = new VoicePayload(socketVoiceServer, _socketVoiceState);
-            await _sockeon.SendPayloadAsync(voiceUpdate).ConfigureAwait(false);
-            Log?.Invoke(LogResolver.Debug(Name, $"Sent voice server payload. {JsonConvert.SerializeObject(voiceUpdate)}")).ConfigureAwait(false);
+            await _socket.SendPayloadAsync(voiceUpdate).ConfigureAwait(false);
+            Log?.Invoke(LogResolver.Debug(Name,
+                $"Sent voice server payload. {JsonConvert.SerializeObject(voiceUpdate)}")).ConfigureAwait(false);
         }
 
         private async Task OnVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
@@ -402,8 +400,10 @@ namespace Victoria
                     await oldPlayer.DisconnectAsync().ConfigureAwait(false);
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
                     var payload = new DestroyPayload(state.VoiceChannel.Guild.Id);
-                    await _sockeon.SendPayloadAsync(payload).ConfigureAwait(false);
-                    Log?.Invoke(LogResolver.Debug(Name, $"Sent destroy payload. {JsonConvert.SerializeObject(payload)}")).ConfigureAwait(false);
+                    await _socket.SendPayloadAsync(payload).ConfigureAwait(false);
+                    Log?.Invoke(
+                            LogResolver.Debug(Name, $"Sent destroy payload. {JsonConvert.SerializeObject(payload)}"))
+                        .ConfigureAwait(false);
                     break;
 
                 case var state when state.VoiceChannel?.Id != newState.VoiceChannel?.Id:
@@ -420,7 +420,7 @@ namespace Victoria
         {
             IsConnected = false;
             _players.Clear();
-            _sockeon.Dispose();
+            _socket.Dispose();
             _httpClient.Dispose();
         }
     }

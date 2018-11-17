@@ -44,8 +44,8 @@ namespace Victoria
         public LavaQueue<LavaTrack> Queue { get; }
 
         private readonly LavaNode _lavaNode;
-        private const string invalidOpMessage = "Can't perform this operation, player isn't being used.";
         private bool IsAvailable => IsPlaying && CurrentTrack != null;
+        private const string invalidOpMessage = "Can't perform this operation, player isn't being used.";
 
         internal LavaPlayer()
         {
@@ -70,13 +70,71 @@ namespace Victoria
                 throw new InvalidOperationException(invalidOpMessage);
 
             IsPlaying = false;
-            await _lavaNode._sockeon.SendPayloadAsync(new DestroyPayload(VoiceChannel.GuildId));
-            await VoiceChannel.DisconnectAsync();
+            CurrentTrack = null;
+            await _lavaNode._socket.SendPayloadAsync(new DestroyPayload(VoiceChannel.GuildId)).ConfigureAwait(false);
+            await VoiceChannel.DisconnectAsync().ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="track"></param>
+        /// <returns></returns>
         public async Task PlayAsync(LavaTrack track)
         {
             CurrentTrack = track;
+            await _lavaNode._socket.SendPayloadAsync(new PlayPayload(track.TrackString, VoiceChannel.GuildId))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="track"></param>
+        /// <param name="startTime"></param>
+        /// <param name="stopTime"></param>
+        /// <returns></returns>
+        public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan stopTime)
+        {
+            CurrentTrack = track;
+            await _lavaNode._socket
+                .SendPayloadAsync(new PlayPartialPayload(track.TrackString, startTime, stopTime, VoiceChannel.GuildId))
+                .ConfigureAwait(false);
+        }
+
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<LavaTrack> SkipAsync()
+        {
+            if (!IsAvailable)
+                throw new InvalidOperationException(invalidOpMessage);
+            
+            if (!Queue.TryDequeue(out var track))
+            {
+                await StopAsync().ConfigureAwait(false);
+                throw new InvalidOperationException("Couldn't find anything to play since queue was empty.");
+            }
+
+            await PlayAsync(track).ConfigureAwait(false);
+            return track;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task StopAsync()
+        {
+            if (!IsAvailable)
+                throw new InvalidOperationException(invalidOpMessage);
+            CurrentTrack = null;
+            IsPlaying = false;
+            await _lavaNode._socket.SendPayloadAsync(new StopPayload(VoiceChannel.GuildId)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -95,8 +153,17 @@ namespace Victoria
                 throw new ArgumentOutOfRangeException(nameof(volume), "Volume must be lower than 150.");
 
             Volume = volume;
-            await _lavaNode._sockeon.SendPayloadAsync(new VolumePayload(volume, VoiceChannel.GuildId))
+            await _lavaNode._socket.SendPayloadAsync(new VolumePayload(volume, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
+        }
+
+
+        internal void Dispose()
+        {
+            Volume = 0;
+            IsPlaying = false;
+            CurrentTrack = null;
+            Queue.Clear();
         }
     }
 }
