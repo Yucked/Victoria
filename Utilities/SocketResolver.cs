@@ -5,6 +5,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord;
 using Newtonsoft.Json;
 using Victoria.Entities.Payloads;
 
@@ -14,25 +15,25 @@ namespace Victoria.Utilities
     {
         private bool _isUseable;
         private TimeSpan _interval;
+        private readonly string _name;
         private int _reconnectAttempts;
         private readonly Encoding _encoding;
         private Configuration _configuration;
         private ClientWebSocket _clientWebSocket;
+        private readonly Func<LogMessage, Task> _log;
 
-        public string Name { get; }
-        public Func<bool> OnOpen;
-        public Func<string, bool> OnClose;
         public Func<string, bool> OnMessage;
 
-        public SocketResolver(string nodeName, Configuration configuration)
+        public SocketResolver(string nodeName, Configuration configuration, Func<LogMessage, Task> log)
         {
-            Name = $"{nodeName}_socket";
+            _name = $"{nodeName}_socket";
             _configuration = configuration;
+            _log = log;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
         }
 
-        public Task ConnectAsync()
+        public async Task ConnectAsync()
         {
             _clientWebSocket = new ClientWebSocket
             {
@@ -43,7 +44,15 @@ namespace Victoria.Utilities
             _clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_configuration.Shards}");
             _clientWebSocket.Options.SetRequestHeader("Authorization", _configuration.Authorization);
             var url = new Uri($"ws://{_configuration.Host}:{_configuration.Port}");
-            return _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
+            _log?.Invoke(LogResolver.Debug(_name, $"Connecting to {url}."));
+            try
+            {
+                await _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
+            }
+            catch
+            {
+                // Ignore all websocket exceptions.
+            }
         }
 
         public async Task DisconnectAsync()
@@ -70,14 +79,14 @@ namespace Victoria.Utilities
             if (task.IsCanceled || task.IsFaulted || task.Exception != null)
             {
                 _isUseable = false;
-                OnClose?.Invoke("Websocket connection lost.");
+                _log?.Invoke(LogResolver.Debug(_name, "Websocket connection failed."));
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
             else
             {
                 _isUseable = true;
                 _reconnectAttempts = 0;
-                OnOpen?.Invoke();
+                _log?.Invoke(LogResolver.Debug(_name, "Websocket connection established."));
                 await ReceiveAsync().ConfigureAwait(false);
             }
         }
@@ -90,7 +99,8 @@ namespace Victoria.Utilities
             if (_isUseable) return;
             _reconnectAttempts++;
             _interval += _configuration.ReconnectInterval;
-            OnClose?.Invoke($"Retry attempt #{_reconnectAttempts}. Waiting {_interval.Seconds}s...");
+            _log?.Invoke(LogResolver.Debug(_name,
+                $"Waiting {_interval.TotalMilliseconds}ms before try #{_reconnectAttempts + 1}."));
             await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
 
@@ -113,7 +123,6 @@ namespace Victoria.Utilities
                                 await RetryConnectionAsync().ConfigureAwait(false);
                                 break;
                             }
-
 
                         stream.Write(buffer, 0, result.Count);
                         if (result.EndOfMessage)

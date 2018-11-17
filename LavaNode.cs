@@ -47,6 +47,11 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
+        public Func<ResponseState, Task> StateRequested;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public Func<int, string, bool, Task> SocketClosed;
 
         /// <summary>
@@ -105,7 +110,7 @@ namespace Victoria
 
         internal void Initialize(Configuration configuration)
         {
-            _socket = new SocketResolver(Name, configuration);
+            _socket = new SocketResolver(Name, configuration, Log);
             _httpClient = new HttpClient(new HttpClientHandler
             {
                 UseCookies = false,
@@ -122,20 +127,7 @@ namespace Victoria
         }
 
         internal Task StartAsync()
-            => _socket.ConnectAsync().ContinueWith(_ =>
-            {
-                _socket.OnMessage += OnMessage;
-                _socket.OnClose += msg =>
-                {
-                    Log?.Invoke(LogResolver.Error(_socket.Name, msg));
-                    return true;
-                };
-                _socket.OnOpen += () =>
-                {
-                    Log?.Invoke(LogResolver.Error(Name, "Websocket connection established."));
-                    return true;
-                };
-            });
+            => _socket.ConnectAsync().ContinueWith(_ => { _socket.OnMessage += OnMessage; });
 
         internal async Task StopAsync()
         {
@@ -259,6 +251,11 @@ namespace Victoria
                             break;
                     }
 
+                    break;
+
+                case "resState":
+                    var responseState = JsonConvert.DeserializeObject<ResponseState>(data);
+                    StateRequested?.Invoke(responseState);
                     break;
 
                 default:
