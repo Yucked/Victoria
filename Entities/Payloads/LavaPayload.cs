@@ -2,8 +2,11 @@ using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
-    internal abstract partial class LavaPayload
+    internal abstract class LavaPayload
     {
+        [JsonProperty("op")]
+        public string Operation { get; set; }
+        
         [JsonProperty("guildId")] 
         public string GuildId { get; }
         
@@ -11,17 +14,6 @@ namespace Victoria.Entities.Payloads
         {
             Operation = op;
             GuildId = $"{guildId}";
-        }
-    }
-
-    internal abstract partial class LavaPayload
-    {
-        [JsonProperty("op")]
-        public string Operation { get; set; }
-
-        protected LavaPayload(string op)
-        {
-            Operation = op;
         }
     }
 }
