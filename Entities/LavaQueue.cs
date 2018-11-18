@@ -125,5 +125,49 @@ namespace Victoria.Entities
             foreach (var value in shadow)
                 _linky.AddLast(value);
         }
+
+        /// <summary>
+        /// Dequeues an item from the queue at a specific index.
+        /// </summary>
+        /// <param name="index">A 0-based index</param>
+        /// <returns><see cref="T"/></returns>
+        public T RemoveAt(int index)
+        {
+            var currentNode = _linky.First;
+            for (var i = 0; i <= index && currentNode != null; i++)
+            {
+                if (i != index)
+                {
+                    currentNode = currentNode.Next;
+                    continue;
+                }
+
+                _linky.Remove(currentNode);
+                return currentNode.Value;
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
+        /// <summary>
+        /// Dequeues multiple items from the queue based on the index range.
+        /// </summary>
+        /// <param name="from">A 0-based inclusive index</param>
+        /// <param name="to">A 0-based inclusive index</param>
+        public void RemoveRange(int from, int to)
+        {
+            var currentNode = _linky.First;
+            for (var i = 0; i <= to && currentNode != null; i++)
+            {
+                if (from <= i)
+                {
+                    _linky.Remove(currentNode);
+                    currentNode = currentNode.Next;
+                    continue;
+                }
+
+                _linky.Remove(currentNode);
+            }
+        }
     }
 }
