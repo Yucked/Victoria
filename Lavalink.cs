@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
+using Discord.WebSocket;
 using Victoria.Utilities;
 
 namespace Victoria
@@ -53,21 +54,22 @@ namespace Victoria
         {
             configuration = configuration.Equals(default(Configuration)) ? Configuration.Default : configuration;
             LogResolver.LogSeverity = configuration.Severity;
-            var node_name = $"{_prefix}{_counter}";
-            var node = new LavaNode(node_name, baseDiscordClient, configuration, Log);
+            var nodeName = $"{_prefix}{_counter}";
+            configuration.Shards = await GetShardsAsync(baseDiscordClient).ConfigureAwait(false);
+            var node = new LavaNode(nodeName, baseDiscordClient, configuration, Log);
             try
             {
                 await node.StartAsync().ConfigureAwait(false);
                 _nodes.TryAdd($"{_prefix}{_counter}", node);
                 Interlocked.Increment(ref _counter);
-                Log?.Invoke(LogResolver.Info(node_name, "Node added."));
+                Log?.Invoke(LogResolver.Info(nodeName, "Node added."));
             }
             catch
             {
                 await node.StopAsync().ConfigureAwait(false);
-                _nodes.TryRemove(node_name, out _);
+                _nodes.TryRemove(nodeName, out _);
                 Interlocked.Decrement(ref _counter);
-                Log?.Invoke(LogResolver.Info(node_name, "Node removed."));
+                Log?.Invoke(LogResolver.Info(nodeName, "Node removed."));
             }
 
             return node;
@@ -111,5 +113,17 @@ namespace Victoria
         /// <returns></returns>
         public LavaNode GetNode(string nodeName)
             => _nodes.TryGetValue(nodeName, out var node) ? node : null;
+                
+        private async Task<int> GetShardsAsync(BaseDiscordClient baseClient)
+        {
+            switch (baseClient)
+            {
+                case DiscordSocketClient client:
+                    return await client.GetRecommendedShardCountAsync();
+                case DiscordShardedClient shardedClient:
+                    return shardedClient.Shards.Count;
+                default: return 1;
+            }
+        }
     }
 }
