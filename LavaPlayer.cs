@@ -7,6 +7,9 @@ using Victoria.Entities.Payloads;
 
 namespace Victoria
 {
+    /// <summary>
+    /// Represents a voice channel connection.
+    /// </summary>
     public sealed class LavaPlayer
     {
         /// <summary>
@@ -46,7 +49,7 @@ namespace Victoria
 
         private readonly LavaNode _lavaNode;
         private bool IsAvailable => IsPlaying && CurrentTrack != null;
-        private const string invalidOpMessage = "Can't perform this operation, player isn't being used.";
+        private const string InvalidOpMessage = "Can't perform this operation, player isn't being used.";
 
         internal LavaPlayer()
         {
@@ -77,8 +80,8 @@ namespace Victoria
         /// <param name="track"><see cref="LavaTrack"/></param>
         public async Task PlayAsync(LavaTrack track)
         {
-            CurrentTrack = track;
             IsPlaying = true;
+            CurrentTrack = track;            
             await _lavaNode._socket.SendPayloadAsync(new PlayPayload(track.TrackString, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
         }
@@ -110,7 +113,7 @@ namespace Victoria
         public async Task<LavaTrack> SkipAsync()
         {
             if (!IsAvailable)
-                throw new InvalidOperationException(invalidOpMessage);
+                throw new InvalidOperationException(InvalidOpMessage);
 
             if (!Queue.TryDequeue(out var track))
             {
@@ -129,7 +132,7 @@ namespace Victoria
         public async Task StopAsync()
         {
             if (!IsAvailable)
-                throw new InvalidOperationException(invalidOpMessage);
+                throw new InvalidOperationException(InvalidOpMessage);
             CurrentTrack = null;
             IsPlaying = false;
             await _lavaNode._socket.SendPayloadAsync(new StopPayload(VoiceChannel.GuildId)).ConfigureAwait(false);
@@ -142,7 +145,7 @@ namespace Victoria
         public async Task PauseAsync()
         {
             if (!IsAvailable)
-                throw new InvalidOperationException(invalidOpMessage);
+                throw new InvalidOperationException(InvalidOpMessage);
 
             await _lavaNode._socket.SendPayloadAsync(new PausePayload(true, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
@@ -155,7 +158,7 @@ namespace Victoria
         public async Task ResumeAsync()
         {
             if (!IsAvailable)
-                throw new InvalidOperationException(invalidOpMessage);
+                throw new InvalidOperationException(InvalidOpMessage);
 
             await _lavaNode._socket.SendPayloadAsync(new PausePayload(false, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
@@ -169,7 +172,7 @@ namespace Victoria
         public async Task SeekAsync(TimeSpan position)
         {
             if (!IsAvailable)
-                throw new InvalidOperationException(invalidOpMessage);
+                throw new InvalidOperationException(InvalidOpMessage);
 
             await _lavaNode._socket.SendPayloadAsync(new SeekPayload(position, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
@@ -183,7 +186,7 @@ namespace Victoria
         public async Task EqualizerAsync(List<EqualizerBand> bands)
         {
             if (!IsAvailable)
-                throw new InvalidOperationException(invalidOpMessage);
+                throw new InvalidOperationException(InvalidOpMessage);
             await _lavaNode._socket.SendPayloadAsync(new EqualizerPayload(VoiceChannel.GuildId, bands))
                 .ConfigureAwait(false);
         }
@@ -196,7 +199,7 @@ namespace Victoria
         public async Task EqualizerAsync(params EqualizerBand[] bands)
         {
             if (!IsAvailable)
-                throw new InvalidOperationException(invalidOpMessage);
+                throw new InvalidOperationException(InvalidOpMessage);
             await _lavaNode._socket.SendPayloadAsync(new EqualizerPayload(VoiceChannel.GuildId, bands))
                 .ConfigureAwait(false);
         }
@@ -210,7 +213,7 @@ namespace Victoria
         public async Task SetVolumeAsync(ushort volume)
         {
             if (!IsAvailable)
-                throw new InvalidOperationException(invalidOpMessage);
+                throw new InvalidOperationException(InvalidOpMessage);
 
             if (volume > 150)
                 throw new ArgumentOutOfRangeException(nameof(volume), "Volume must be lower than 150.");
@@ -220,8 +223,7 @@ namespace Victoria
                 .ConfigureAwait(false);
         }
 
-
-        internal void Dispose()
+        private void Dispose()
         {
             Volume = 0;
             IsPlaying = false;
