@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>7.1</LangVersion>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
 
@@ -15,6 +16,7 @@
         <PackageReleaseNotes>Several breaking changes!
             Websocket has been rewritten to be efficient.
             AsyncEvents has been replaced with Func for faster performance since invoking AsyncEvents took extra memory.
+            All of the code has been turned into Async instead of void.
         </PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>

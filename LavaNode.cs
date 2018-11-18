@@ -196,7 +196,7 @@ namespace Victoria
         /// </summary>
         /// <param name="query">Search terms.</param>
         /// <returns><see cref="LavaResult"/></returns>
-        public Task<LavaResult> SearchYoutubeAsync(string query)
+        public Task<LavaResult> SearchYouTubeAsync(string query)
             => ResolveRequestAsync(WebUtility.UrlEncode($"ytsearch:{query}"));
 
         /// <summary>
