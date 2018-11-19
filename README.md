@@ -50,7 +50,8 @@ public sealed class AudioService {
         // JoinAsync returns a LavaPlayer that you can use to play music and stuff.
         var player = await _node.JoinAsync(voiceChannel);
         
-        // If you're already connected to a voice channel you can get the existing player via _node.GetPlayer(GUILD_ID);
+        // If you're already connected to a voice channel 
+        // you can get the existing player via _node.GetPlayer(GUILD_ID);
         var search = await _node.SearchYouTubeAsync(MY_QUERY);
         var track = search.Tracks.FirstOrDefault(); // via Linq.
         player.Play(track);        
