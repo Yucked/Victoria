@@ -159,21 +159,19 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Requests state of <see cref="LavaPlayer"/> for given guild.
+        /// Requests state of <see cref="LavaPlayer"/> for given guild and fires <see cref="StateRequested"/> when Lavalink sends completes request.
         /// </summary>
         /// <param name="guildId">Guild Id</param>
         public async Task GetPlayerInfoAsync(ulong guildId)
-        {
-            await _socket.SendPayloadAsync(new RequestPayload(guildId, false)).ConfigureAwait(false);
-        }
+            => await _socket.SendPayloadAsync(new RequestPayload(guildId, false)).ConfigureAwait(false);
+
 
         /// <summary>
-        /// Requests player state of all connected players.
+        /// Requests player state of all connected players and fires <see cref="StateRequested"/> when Lavalink sends completes request.
         /// </summary>
         public async Task GetAllPlayersInfoAsync()
-        {
-            await _socket.SendPayloadAsync(new RequestPayload(0, true)).ConfigureAwait(false);
-        }
+            => await _socket.SendPayloadAsync(new RequestPayload(0, true)).ConfigureAwait(false);
+
 
         /// <summary>
         /// Fetches <see cref="LavaPlayer"/> for given guild otherwise null.
@@ -230,29 +228,31 @@ namespace Victoria
 
                 case "event":
                     var evt = parsed.GetValue("type").ToObject<EventType>();
-                    var track = TrackResolver.DecodeTrack($"{parsed.GetValue("track")}");
                     switch (evt)
                     {
                         case EventType.TrackEndEvent:
                             var trackReason = parsed.GetValue("reason").ToObject<TrackReason>();
-                            TrackUpdateInfo(guildId, track, trackReason);
+                            TrackUpdateInfo(guildId, TrackResolver.DecodeTrack($"{parsed.GetValue("track")}"),
+                                trackReason);
                             break;
 
                         case EventType.TrackExceptionEvent:
                             var error = $"{parsed.GetValue("error")}";
-                            TrackExceptionInfo(guildId, track, error);
+                            TrackExceptionInfo(guildId, TrackResolver.DecodeTrack($"{parsed.GetValue("track")}"),
+                                error);
                             break;
 
                         case EventType.TrackStuckEvent:
                             var threshold = long.Parse($"{parsed.GetValue("thresholdMs")}");
-                            TrackStuckInfo(guildId, track, threshold);
+                            TrackStuckInfo(guildId, TrackResolver.DecodeTrack($"{parsed.GetValue("track")}"),
+                                threshold);
                             break;
 
                         case EventType.WebSocketClosedEvent:
                             var reason = $"{parsed.GetValue("reason")}";
                             var code = int.Parse($"{parsed.GetValue("code")}");
                             var byRemote = bool.Parse($"{parsed.GetValue("byRemote")}");
-                            SocketClosed(code, reason, byRemote);
+                            SocketClosed?.Invoke(code, reason, byRemote);
                             break;
 
                         default:
@@ -323,6 +323,7 @@ namespace Victoria
 
         private void UpdatePlayerInfo(ulong guildId, LavaState state)
         {
+            _log?.Invoke(LogResolver.Debug(Name, "Received player update."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack.Position = state.Position;
             old.LastUpdate = state.Time;
@@ -332,7 +333,7 @@ namespace Victoria
 
         private void TrackUpdateInfo(ulong guildId, LavaTrack track, TrackReason reason)
         {
-            _log(LogResolver.Debug(Name, "Track update received."));
+            _log?.Invoke(LogResolver.Debug(Name, "Track update received."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             if (reason != TrackReason.Replaced)
                 old.CurrentTrack = default;
@@ -342,7 +343,7 @@ namespace Victoria
 
         private void TrackStuckInfo(ulong guildId, LavaTrack track, long threshold)
         {
-            _log(LogResolver.Debug(Name, $"{track.Title} timed out after {threshold}ms."));
+            _log.Invoke(LogResolver.Debug(Name, $"{track.Title} timed out after {threshold}ms."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
@@ -351,7 +352,7 @@ namespace Victoria
 
         private void TrackExceptionInfo(ulong guildId, LavaTrack track, string reason)
         {
-            _log(LogResolver.Debug(Name, $"{track.Title} threw an exception because {reason}."));
+            _log.Invoke(LogResolver.Debug(Name, $"{track.Title} threw an exception because {reason}."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
