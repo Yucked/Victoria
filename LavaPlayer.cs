@@ -65,18 +65,6 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Disconnects from the voicechannel and disposes the player completely.
-        /// </summary>
-        public async Task DisconnectAsync()
-        {
-            Dispose();
-            await _lavaNode._socket.SendPayloadAsync(new DestroyPayload(VoiceChannel.GuildId)).ConfigureAwait(false);
-            VoiceChannel?.DisconnectAsync();
-            VoiceChannel = null;
-            TextChannel = null;
-        }
-
-        /// <summary>
         /// Plays the given track.
         /// </summary>
         /// <param name="track"><see cref="LavaTrack"/></param>
@@ -225,7 +213,7 @@ namespace Victoria
                 .ConfigureAwait(false);
         }
 
-        private void Dispose()
+        internal void Dispose()
         {
             Volume = 0;
             IsPlaying = false;

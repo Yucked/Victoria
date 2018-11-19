@@ -86,7 +86,7 @@ namespace Victoria
             _configuration = configuration;
             _baseDiscordClient = baseDiscordClient;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
-
+            Initialize(configuration);
             switch (baseDiscordClient)
             {
                 case DiscordSocketClient socketClient:
@@ -102,7 +102,6 @@ namespace Victoria
                     break;
             }
 
-            Initialize(configuration);
             IsConnected = true;
         }
 
@@ -126,14 +125,17 @@ namespace Victoria
 
         internal async Task StartAsync()
         {
-            await _socket.ConnectAsync().ConfigureAwait(false);
             _socket.OnMessage += OnMessage;
+            await _socket.ConnectAsync().ConfigureAwait(false);
         }
 
         internal async Task StopAsync()
         {
             foreach (var player in _players.Values)
-                await player.DisconnectAsync().ConfigureAwait(false);
+            {
+                await player.VoiceChannel.DisconnectAsync().ConfigureAwait(false);
+                player.Dispose();
+            }
 
             await _socket.DisconnectAsync().ConfigureAwait(false);
             _socket.Dispose();
@@ -152,22 +154,23 @@ namespace Victoria
             if (_players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
 
-            player = new LavaPlayer(this, voiceChannel, messageChannel);
+            var newPlayer = new LavaPlayer(this, voiceChannel, messageChannel);
             await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true).ConfigureAwait(false);
-            _players.TryAdd(voiceChannel.GuildId, player);
-            return player;
+            _players.TryAdd(voiceChannel.GuildId, newPlayer);
+            return newPlayer;
         }
 
         /// <summary>
-        /// Tries to disconnect player and remove it.
+        /// Disconnects the player from voice channel and lavalink then removes it.
         /// </summary>
-        /// <param name="guildId">Id of the guild.</param>
-        /// <returns><see cref="Boolean"/></returns>
-        public async Task<bool> TryRemovePlayerAsync(ulong guildId)
+        /// <param name="guildId"></param>
+        /// <returns></returns>
+        public async Task<bool> DisconnectAsync(ulong guildId)
         {
             if (!_players.TryGetValue(guildId, out var player))
                 return false;
-            await player.DisconnectAsync().ConfigureAwait(false);
+            player.VoiceChannel?.DisconnectAsync().ConfigureAwait(false);
+            await _socket.SendPayloadAsync(new DestroyPayload(guildId)).ConfigureAwait(false);
             return _players.TryRemove(guildId, out _);
         }
 
@@ -245,7 +248,7 @@ namespace Victoria
                     {
                         case EventType.TrackEndEvent:
                             var trackReason = parsed.GetValue("reason").ToObject<TrackReason>();
-                            TrackUpdateInfo(guildId, TrackResolver.DecodeTrack($"{parsed.GetValue("track")}"),
+                            TrackFinishedInfo(guildId, TrackResolver.DecodeTrack($"{parsed.GetValue("track")}"),
                                 trackReason);
                             break;
 
@@ -345,7 +348,7 @@ namespace Victoria
             PlayerUpdated?.Invoke(old, old.CurrentTrack, state.Position);
         }
 
-        private void TrackUpdateInfo(ulong guildId, LavaTrack track, TrackReason reason)
+        private void TrackFinishedInfo(ulong guildId, LavaTrack track, TrackReason reason)
         {
             _log?.Invoke(LogResolver.Debug(Name, "Track update received."));
             if (!_players.TryGetValue(guildId, out var old)) return;
@@ -376,7 +379,11 @@ namespace Victoria
         private async Task OnSocketDisconnected(Exception exception)
         {
             foreach (var player in _players.Values)
-                await player.DisconnectAsync().ConfigureAwait(false);
+            {
+                await player.VoiceChannel.DisconnectAsync().ConfigureAwait(false);
+                player.Dispose();
+            }
+
             _players.Clear();
             _log?.Invoke(LogResolver.Error(Name, "Socket disconnected.", exception)).ConfigureAwait(false);
         }
@@ -385,8 +392,10 @@ namespace Victoria
         {
             foreach (var guild in socketClient.Guilds)
             {
-                if (!_players.ContainsKey(guild.Id)) continue;
-                await _players[guild.Id].DisconnectAsync().ConfigureAwait(false);
+                if (!_players.TryGetValue(guild.Id, out var player))
+                    continue;
+                await player.VoiceChannel.DisconnectAsync().ConfigureAwait(false);
+                player.Dispose();
                 _players.TryRemove(guild.Id, out _);
             }
 
@@ -395,7 +404,9 @@ namespace Victoria
 
         private async Task OnVoiceServerUpdated(SocketVoiceServer socketVoiceServer)
         {
-            if (!socketVoiceServer.Guild.HasValue || !_players.TryGetValue(socketVoiceServer.Guild.Id, out _))
+            if (!socketVoiceServer.Guild.HasValue)
+                return;
+            if (!_players.TryGetValue(socketVoiceServer.Guild.Id, out _))
                 return;
             var voiceUpdate = new VoicePayload(socketVoiceServer, _socketVoiceState);
             await _socket.SendPayloadAsync(voiceUpdate).ConfigureAwait(false);
@@ -418,7 +429,8 @@ namespace Victoria
                 case var state when !(state.VoiceChannel is null) && newState.VoiceChannel is null:
                     if (!_players.TryGetValue(state.VoiceChannel.Guild.Id, out var oldPlayer))
                         return;
-                    await oldPlayer.DisconnectAsync().ConfigureAwait(false);
+                    oldPlayer?.VoiceChannel.DisconnectAsync().ConfigureAwait(false);
+                    oldPlayer.Dispose();
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
                     var payload = new DestroyPayload(state.VoiceChannel.Guild.Id);
                     await _socket.SendPayloadAsync(payload).ConfigureAwait(false);
