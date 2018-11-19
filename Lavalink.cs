@@ -55,6 +55,7 @@ namespace Victoria
             configuration = configuration.Equals(default(Configuration)) ? Configuration.Default : configuration;
             LogResolver.LogSeverity = configuration.Severity;
             var nodeName = $"{_prefix}{_counter}";
+            configuration.UserId = baseDiscordClient.CurrentUser.Id;
             configuration.Shards = await GetShardsAsync(baseDiscordClient).ConfigureAwait(false);
             var node = new LavaNode(nodeName, baseDiscordClient, configuration, Log);
             try
