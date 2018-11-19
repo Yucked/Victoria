@@ -15,7 +15,7 @@ namespace Victoria
         /// <summary>
         /// Volume of current player.
         /// </summary>
-        public ushort Volume { get; private set; }
+        public int Volume { get; private set; }
 
         /// <summary>
         /// Whether this player is playing any tracks.
@@ -81,7 +81,7 @@ namespace Victoria
         public async Task PlayAsync(LavaTrack track)
         {
             IsPlaying = true;
-            CurrentTrack = track;            
+            CurrentTrack = track;
             await _lavaNode._socket.SendPayloadAsync(new PlayPayload(track.TrackString, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
         }
@@ -210,7 +210,7 @@ namespace Victoria
         /// <param name="volume"></param>
         /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Throws if volume is greater than 150.</exception>
-        public async Task SetVolumeAsync(ushort volume)
+        public async Task SetVolumeAsync(int volume)
         {
             if (!IsAvailable)
                 throw new InvalidOperationException(InvalidOpMessage);
