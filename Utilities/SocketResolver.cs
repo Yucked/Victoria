@@ -72,8 +72,9 @@ namespace Victoria.Utilities
         {
             if (!_isUseable)
                 return Task.CompletedTask;
-            var data = _encoding.GetBytes(JsonConvert.SerializeObject(payload, Formatting.None));
-            var segment = new ArraySegment<byte>(data);
+            var convert = JsonConvert.SerializeObject(payload);
+            var bytes = _encoding.GetBytes(convert);
+            var segment = new ArraySegment<byte>(bytes);
             return _clientWebSocket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 

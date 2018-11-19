@@ -75,7 +75,7 @@ namespace Victoria
                 Host = "127.0.0.1",
                 Port = 2333,
                 Severity = LogSeverity.Verbose,
-                SelfDeaf = true
+                SelfDeaf = false
             };
     }
 }
