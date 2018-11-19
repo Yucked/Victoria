@@ -24,7 +24,7 @@ namespace Victoria
         public Func<LogMessage, Task> Log;
 
         /// <summary>
-        /// Returns the very first node (Lavalink_Node_#0) if any.
+        /// Returns the very first node (LavaNode__#0) if any.
         /// </summary>
         public LavaNode DefaultNode => _nodes[$"{_prefix}0"];
 
@@ -36,10 +36,10 @@ namespace Victoria
         /// <summary>
         /// Initialize Lavalink.
         /// </summary>
-        /// <param name="prefix">By default it's Lavalink_Node_#{Node Num}.</param>
+        /// <param name="prefix">By default it's LavaNode__#{Node Num}.</param>
         public Lavalink(string prefix = null)
         {
-            _prefix = prefix ?? "Lavalink_Node_#";
+            _prefix = prefix ?? "LavaNode_#";
             _nodes = new ConcurrentDictionary<string, LavaNode>();
         }
 
@@ -78,7 +78,7 @@ namespace Victoria
         /// <summary>
         /// Disconnects and removes node.
         /// </summary>
-        /// <param name="nodeName">Name of the node i.e: Lavalink_Node_0.</param>
+        /// <param name="nodeName">Name of the node i.e: LavaNode__0.</param>
         /// <returns><see cref="Boolean"/></returns>
         public async Task<bool> RemoveNodeAsync(string nodeName)
         {
@@ -94,7 +94,7 @@ namespace Victoria
         /// <summary>
         /// Moves a node AKA connect to a different lavalink server while preserving node's state.
         /// </summary>
-        /// <param name="nodeName">Name of the node i.e: Lavalink_Node_0.</param>
+        /// <param name="nodeName">Name of the node i.e: LavaNode__0.</param>
         /// <param name="configuration">File containing different configurations.</param>
         public async Task MoveNodeAsync(string nodeName, Configuration configuration)
         {
@@ -109,11 +109,11 @@ namespace Victoria
         /// <summary>
         /// Returns the specified node from connected nodes.
         /// </summary>
-        /// <param name="nodeName">Name of the node i.e: Lavalink_Node_0.</param>
+        /// <param name="nodeName">Name of the node i.e: LavaNode__0.</param>
         /// <returns></returns>
         public LavaNode GetNode(string nodeName)
             => _nodes.TryGetValue(nodeName, out var node) ? node : null;
-                
+
         private async Task<int> GetShardsAsync(BaseDiscordClient baseClient)
         {
             switch (baseClient)

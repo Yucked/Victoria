@@ -25,7 +25,7 @@ private async Task OnReady(){
     // LavaConfig is optional
     await Lavalink.ConnectAsync(socketClient, myOptionalLavaConfig).ConfigureAwait(false);
     
-    // Connect async returns the node. You can pass that to your Audio Service like so:
+    // ConnectAsync returns the node. You can pass that to your Audio Service like so:
     var node = await Lavalink.ConnectAsync(....).ConfigureAwait(false);
     myAudioService.Initialize(node);    
 }
@@ -72,7 +72,7 @@ private async Task OnReady(){
 In your AudioService or AudioModule
 ```cs
 var player = await node.ConnectAsync(MY_VOICE_CHANNEL, MY_OPTIONAL_TEXT_CHANNEL);
-// You can get an existing player the same was as 2.x
+// You can get an existing player the same way as 2.x
 
 var search = node.GetTracksAsync(MY_QUERY);
 var track = search.FirstOrDefault();
@@ -81,7 +81,7 @@ await player.PlayAsync(track);
 
 > #### Things to keep in mind:
 
-- Since Lavalink constructor is public in 3.x you can specify a custom prefix for nodes. By default it's `Lavalink_Node_#`
+- Since Lavalink constructor is public in 3.x you can specify a custom prefix for nodes. By default it's `LavaNode_#`
 - There needs to be only a **single** instance of Lavalink in both versions.
 - As of 3.x there are no `events`. Events have been replaced with `Func<T>` and they are a lot simpler. You just need to match `Func<T>` signature.
 All of the `Func<T>` return a Task so for example:
