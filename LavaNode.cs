@@ -159,6 +159,19 @@ namespace Victoria
         }
 
         /// <summary>
+        /// Tries to disconnect player and remove it.
+        /// </summary>
+        /// <param name="guildId">Id of the guild.</param>
+        /// <returns><see cref="Boolean"/></returns>
+        public async Task<bool> TryRemovePlayerAsync(ulong guildId)
+        {
+            if (!_players.TryGetValue(guildId, out var player))
+                return false;
+            await player.DisconnectAsync().ConfigureAwait(false);
+            return _players.TryRemove(guildId, out _);
+        }
+
+        /// <summary>
         /// Requests state of <see cref="LavaPlayer"/> for given guild and fires <see cref="StateRequested"/> when Lavalink sends completes request.
         /// </summary>
         /// <param name="guildId">Guild Id</param>
@@ -283,6 +296,7 @@ namespace Victoria
             using (var sr = new StreamReader(res, Encoding.UTF8))
                 json = await sr.ReadToEndAsync().ConfigureAwait(false);
             var data = JToken.Parse(json);
+            _log?.Invoke(LogResolver.Debug(Name, json));
             var tracks = new HashSet<LavaTrack>();
             switch (data)
             {
@@ -343,7 +357,7 @@ namespace Victoria
 
         private void TrackStuckInfo(ulong guildId, LavaTrack track, long threshold)
         {
-            _log.Invoke(LogResolver.Debug(Name, $"{track.Title} timed out after {threshold}ms."));
+            _log.Invoke(LogResolver.Debug(Name, "Track stuck update received."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
@@ -352,7 +366,7 @@ namespace Victoria
 
         private void TrackExceptionInfo(ulong guildId, LavaTrack track, string reason)
         {
-            _log.Invoke(LogResolver.Debug(Name, $"{track.Title} threw an exception because {reason}."));
+            _log.Invoke(LogResolver.Debug(Name, "Received track exception update."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);

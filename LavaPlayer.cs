@@ -40,7 +40,7 @@ namespace Victoria
         /// <summary>
         /// Text channel this player is bound to.
         /// </summary>
-        public IMessageChannel MessageChannel { get; }
+        public IMessageChannel TextChannel { get; set; }
 
         /// <summary>
         /// Default queue.
@@ -60,7 +60,7 @@ namespace Victoria
             Volume = 100;
             _lavaNode = lavaNode;
             VoiceChannel = voiceChannel;
-            MessageChannel = messageChannel;
+            TextChannel = messageChannel;
             Queue = new LavaQueue<LavaTrack>();
         }
 
@@ -71,7 +71,9 @@ namespace Victoria
         {
             Dispose();
             await _lavaNode._socket.SendPayloadAsync(new DestroyPayload(VoiceChannel.GuildId)).ConfigureAwait(false);
-            await VoiceChannel.DisconnectAsync().ConfigureAwait(false);
+            VoiceChannel?.DisconnectAsync();
+            VoiceChannel = null;
+            TextChannel = null;
         }
 
         /// <summary>
