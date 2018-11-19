@@ -21,20 +21,23 @@ namespace Victoria.Utilities
         private Configuration _configuration;
         private ClientWebSocket _clientWebSocket;
         private readonly Func<LogMessage, Task> _log;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public Func<string, bool> OnMessage;
 
         public SocketResolver(string nodeName, Configuration configuration, Func<LogMessage, Task> log)
         {
+            _log = log;
             _name = $"{nodeName}_Socket";
             _configuration = configuration;
-            _log = log;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
         }
 
         public async Task ConnectAsync()
         {
+            _cancellationTokenSource = new CancellationTokenSource();
+
             _clientWebSocket = new ClientWebSocket
             {
                 Options = {Proxy = _configuration.Proxy}
@@ -44,7 +47,7 @@ namespace Victoria.Utilities
             _clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_configuration.Shards}");
             _clientWebSocket.Options.SetRequestHeader("Authorization", _configuration.Authorization);
             var url = new Uri($"ws://{_configuration.Host}:{_configuration.Port}");
-            _log?.Invoke(LogResolver.Debug(_name, $"Connecting to {url}."));
+            _log?.Invoke(LogResolver.Info(_name, $"Connecting to {url}."));
             try
             {
                 await _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
@@ -79,24 +82,34 @@ namespace Victoria.Utilities
             if (task.IsCanceled || task.IsFaulted || task.Exception != null)
             {
                 _isUseable = false;
-                _log?.Invoke(LogResolver.Debug(_name, "Websocket connection failed."));
+                _log?.Invoke(LogResolver.Info(_name, "Websocket connection failed."));
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
             else
             {
                 _isUseable = true;
                 _reconnectAttempts = 0;
-                _log?.Invoke(LogResolver.Debug(_name, "Websocket connection established."));
-                await ReceiveAsync().ConfigureAwait(false);
+                _log?.Invoke(LogResolver.Info(_name, "Websocket connection established."));
+                await ReceiveAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
             }
         }
 
         private async Task RetryConnectionAsync()
         {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+            }
+            catch
+            {
+                // Ignored.
+            }
+
             if (_reconnectAttempts > _configuration.ReconnectAttempts && _configuration.ReconnectAttempts != -1)
                 return;
 
-            if (_isUseable) return;
+            if (_isUseable)
+                return;
             _reconnectAttempts++;
             _interval += _configuration.ReconnectInterval;
             _log?.Invoke(LogResolver.Debug(_name,
@@ -104,39 +117,47 @@ namespace Victoria.Utilities
             await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
 
-        private async Task ReceiveAsync()
+        private async Task ReceiveAsync(CancellationToken cancellationToken)
         {
-            while (true)
+            try
             {
-                byte[] bytes;
-                using (var stream = new MemoryStream())
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    var buffer = new byte[_configuration.BufferSize];
-                    var segment = new ArraySegment<byte>(buffer);
-                    while (_clientWebSocket.State == WebSocketState.Open)
+                    byte[] bytes;
+                    using (var stream = new MemoryStream())
                     {
-                        var result = await _clientWebSocket.ReceiveAsync(segment, CancellationToken.None)
-                            .ConfigureAwait(false);
-                        if (result.MessageType == WebSocketMessageType.Close)
-                            if (result.CloseStatus == WebSocketCloseStatus.EndpointUnavailable)
-                            {
-                                await RetryConnectionAsync().ConfigureAwait(false);
-                                break;
-                            }
+                        var buffer = new byte[_configuration.BufferSize];
+                        var segment = new ArraySegment<byte>(buffer);
+                        while (_clientWebSocket.State == WebSocketState.Open)
+                        {
+                            var result = await _clientWebSocket.ReceiveAsync(segment, CancellationToken.None)
+                                .ConfigureAwait(false);
+                            if (result.MessageType == WebSocketMessageType.Close)
+                                if (result.CloseStatus == WebSocketCloseStatus.EndpointUnavailable)
+                                {
+                                    await RetryConnectionAsync().ConfigureAwait(false);
+                                    break;
+                                }
 
-                        stream.Write(buffer, 0, result.Count);
-                        if (result.EndOfMessage)
-                            break;
+                            stream.Write(buffer, 0, result.Count);
+                            if (result.EndOfMessage)
+                                break;
+                        }
+
+                        bytes = stream.ToArray();
                     }
 
-                    bytes = stream.ToArray();
+                    if (bytes.Length <= 0)
+                        continue;
+
+                    var parse = _encoding.GetString(bytes).Trim('\0');
+                    OnMessage(parse);
                 }
-
-                if (bytes.Length <= 0)
-                    continue;
-
-                var parse = _encoding.GetString(bytes).Trim('\0');
-                OnMessage(parse);
+            }
+            catch (Exception ex) when (ex.HResult == -2147467259)
+            {
+                _isUseable = false;
+                await RetryConnectionAsync().ConfigureAwait(false);
             }
         }
 
