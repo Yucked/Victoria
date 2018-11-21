@@ -42,6 +42,7 @@ namespace Victoria
         /// <summary>
         /// Fires when state is requested via <see cref="GetPlayerInfoAsync"/> or <see cref="GetAllPlayersInfoAsync"/>.
         /// </summary>
+        [Obsolete("Won't work until Lavalink Resume is implemented.")]
         public Func<ResponseState, Task> StateRequested;
 
         /// <summary>
@@ -178,6 +179,7 @@ namespace Victoria
         /// Requests state of <see cref="LavaPlayer"/> for given guild and fires <see cref="StateRequested"/> when Lavalink sends completes request.
         /// </summary>
         /// <param name="guildId">Guild Id</param>
+        [Obsolete("Won't work until Lavalink Resume is implemented.")]
         public async Task GetPlayerInfoAsync(ulong guildId)
             => await _socket.SendPayloadAsync(new RequestPayload(guildId, false)).ConfigureAwait(false);
 
@@ -185,6 +187,7 @@ namespace Victoria
         /// <summary>
         /// Requests player state of all connected players and fires <see cref="StateRequested"/> when Lavalink sends completes request.
         /// </summary>
+        [Obsolete("Won't work until Lavalink Resume is implemented.")]
         public async Task GetAllPlayersInfoAsync()
             => await _socket.SendPayloadAsync(new RequestPayload(0, true)).ConfigureAwait(false);
 
