@@ -12,7 +12,7 @@ Victoria is a Lavalink wrapper for Discord.NET library. It uses Emzi's code styl
 Even though Sharplink is great, there were constant internal exceptions and weird code style. Victoria aims to solve that and also provide full support of Lavalink.
 
 ## 🤔 `How To Use It?`
-- Add `https://www.myget.org/F/discord-net/api/v3/index.json` to your package sources ([instructions](https://discord.foxbot.me/latest/guides/getting_started/installing.html?tabs=vs-install%2Ccore2-1#installing-with-nuget)).
+- Add `https://www.myget.org/F/discord-net/api/v3/index.json` to your package sources ([instructions](https://discord.foxbot.me/latest/guides/getting_started/nightlies.html?tabs=vs)).
 
 - Grab the latest version of [Java SDK](https://www.oracle.com/technetwork/java/javase/downloads/jdk11-downloads-5066655.html).
 
