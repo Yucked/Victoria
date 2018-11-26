@@ -12,8 +12,13 @@ Victoria is a Lavalink wrapper for Discord.NET library. It uses Emzi's code styl
 Even though Sharplink is great, there were constant internal exceptions and weird code style. Victoria aims to solve that and also provide full support of Lavalink.
 
 ## 🤔 `How To Use It?`
-Make sure you've latest version of Java installed (10 /11) and follow Lavalink [instructions](https://github.com/Frederikam/Lavalink#server-configuration).
-Grab the latest release from [Nuget](https://www.nuget.org/packages/Victoria/). Add `Lavalink` to your `ServiceCollection` or make a global static property of `Lavalink` since it's not a heavy object.
+- Add `https://www.myget.org/F/discord-net/api/v3/index.json` to your package sources ([instructions](https://discord.foxbot.me/latest/guides/getting_started/installing.html?tabs=vs-install%2Ccore2-1#installing-with-nuget)).
+
+- Grab the latest version of [Java SDK](https://www.oracle.com/technetwork/java/javase/downloads/jdk11-downloads-5066655.html).
+
+- Grab latest version of [Lavalink](https://github.com/Frederikam/Lavalink/releases) and follow Lavalink [instructions](https://github.com/Frederikam/Lavalink/#server-configuration).
+
+- Install Victoria from nuget and add `Lavalink` to your `ServiceCollection` or make a global property of `Lavalink` since it's not a heavy object.
 
 > #### Version 2.x
 
@@ -75,7 +80,7 @@ In your AudioService or AudioModule
 var player = await node.ConnectAsync(MY_VOICE_CHANNEL, MY_OPTIONAL_TEXT_CHANNEL);
 // You can get an existing player the same way as 2.x
 
-var search = node.GetTracksAsync(MY_QUERY);
+var search = await node.GetTracksAsync(MY_QUERY);
 var track = search.FirstOrDefault();
 await player.PlayAsync(track); 
 ```
