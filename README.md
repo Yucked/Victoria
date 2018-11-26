@@ -20,7 +20,7 @@ Even though Sharplink is great, there were constant internal exceptions and weir
 
 - Install Victoria from nuget and add `Lavalink` to your `ServiceCollection` or make a global property of `Lavalink` since it's not a heavy object.
 
-> #### Version 2.x
+### Version 2.x
 
 ```cs
 // In the ready event of your DiscordSocketClient or DiscordShardedClient add the following code.
@@ -64,7 +64,7 @@ public sealed class AudioService {
 }
 ```
 
-> #### Version 3.x
+### Version 3.x
 
 Since version 3.x is a major rewrite most of the code is somewhat similar and follows the same logic as before except a few things.
 
@@ -85,12 +85,11 @@ var track = search.FirstOrDefault();
 await player.PlayAsync(track); 
 ```
 
-> #### Things to keep in mind:
+### 🔰 Things to keep in mind:
 
-- Since Lavalink constructor is public in 3.x you can specify a custom prefix for nodes. By default it's `LavaNode_#`
-- There needs to be only a **single** instance of Lavalink in both versions.
-- As of 3.x there are no `events`. Events have been replaced with `Func<T>` and they are a lot simpler. You just need to match `Func<T>` signature.
-All of the `Func<T>` return a Task so for example:
+- Since Lavalink constructor is public in 3.x you can specify a custom prefix for nodes. By default it's `LavaNode_#`.
+- There needs to be only a **single** instance of Lavalink in both versions so either make a global property or add it as a `Singleton` in your service collection.
+- As of 3.x there are no `events`. Events have been replaced with `Func<T>` and they are a lot simpler. You just need to match `Func<T>` signature. All of the `Func<T>` return a Task so for example:
 ```cs
 Lavalink.Log = log => Task.Run(() => Console.WriteLine(log.Message));
 
