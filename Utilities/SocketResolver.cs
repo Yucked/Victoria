@@ -83,7 +83,7 @@ namespace Victoria.Utilities
             if (task.IsCanceled || task.IsFaulted || task.Exception != null)
             {
                 _isUseable = false;
-                _log?.Invoke(LogResolver.Info(_name, "Websocket connection failed."));
+                _log?.Invoke(LogResolver.Error(_name, "Websocket connection failed."));
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
             else
@@ -113,7 +113,7 @@ namespace Victoria.Utilities
                 return;
             _reconnectAttempts++;
             _interval += _configuration.ReconnectInterval;
-            _log?.Invoke(LogResolver.Debug(_name,
+            _log?.Invoke(LogResolver.Info(_name,
                 $"Retry attempt #{_reconnectAttempts}. Next retry in {_interval.Seconds}s."));
             await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
@@ -131,11 +131,12 @@ namespace Victoria.Utilities
                         var segment = new ArraySegment<byte>(buffer);
                         while (_clientWebSocket.State == WebSocketState.Open)
                         {
-                            var result = await _clientWebSocket.ReceiveAsync(segment, CancellationToken.None)
+                            var result = await _clientWebSocket.ReceiveAsync(segment, cancellationToken)
                                 .ConfigureAwait(false);
                             if (result.MessageType == WebSocketMessageType.Close)
                                 if (result.CloseStatus == WebSocketCloseStatus.EndpointUnavailable)
                                 {
+                                    _isUseable = false;
                                     await RetryConnectionAsync().ConfigureAwait(false);
                                     break;
                                 }
@@ -158,6 +159,7 @@ namespace Victoria.Utilities
             catch (Exception ex) when (ex.HResult == -2147467259)
             {
                 _isUseable = false;
+                _log?.Invoke(LogResolver.Error(_name, ex.Message, ex));
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
         }

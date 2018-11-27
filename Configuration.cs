@@ -58,14 +58,19 @@ namespace Victoria
         public LogSeverity Severity { get; set; }
 
         /// <summary>
-        /// 
+        /// If you want your bot to not hear anything.
         /// </summary>
         public bool SelfDeaf { get; set; }
 
         /// <summary>
+        /// Specify prefix for nodes.
+        /// </summary>
+        public string NodePrefix { get; set; }
+
+        /// <summary>
         /// Default configuration.
         /// </summary>
-        internal static Configuration Default
+        private static Configuration Default
             => new Configuration
             {
                 ReconnectAttempts = 10,
@@ -75,7 +80,38 @@ namespace Victoria
                 Host = "127.0.0.1",
                 Port = 2333,
                 Severity = LogSeverity.Verbose,
-                SelfDeaf = false
+                SelfDeaf = true,
+                NodePrefix = "LavaNode_",
+                Proxy = default
             };
+
+        internal static Configuration Verify(Configuration configuration)
+        {
+            if (configuration.ReconnectAttempts is 0)
+                configuration.ReconnectAttempts = Default.ReconnectAttempts;
+
+            if (configuration.ReconnectInterval.TotalMilliseconds is 0)
+                configuration.ReconnectInterval = Default.ReconnectInterval;
+
+            if (configuration.BufferSize is 0)
+                configuration.BufferSize = Default.BufferSize;
+
+            if (string.IsNullOrWhiteSpace(configuration.Authorization))
+                configuration.Authorization = Default.Authorization;
+
+            if (string.IsNullOrWhiteSpace(configuration.Host))
+                configuration.Host = Default.Host;
+
+            if (configuration.Port is 0)
+                configuration.Port = Default.Port;
+
+            if (configuration.Severity is default(LogSeverity))
+                configuration.Severity = LogSeverity.Info;
+
+            if (string.IsNullOrWhiteSpace(configuration.NodePrefix))
+                configuration.NodePrefix = Default.NodePrefix;
+            
+            return configuration;
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace Victoria
     public sealed class Lavalink
     {
         private int _counter;
-        private readonly string _prefix;
+        private string _prefix;
         private readonly ConcurrentDictionary<string, LavaNode> _nodes;
 
         /// <summary>
@@ -36,10 +36,8 @@ namespace Victoria
         /// <summary>
         /// Initialize Lavalink.
         /// </summary>
-        /// <param name="prefix">By default it's LavaNode__#{Node Num}.</param>
-        public Lavalink(string prefix = null)
+        public Lavalink()
         {
-            _prefix = prefix ?? "LavaNode_#";
             _nodes = new ConcurrentDictionary<string, LavaNode>();
         }
 
@@ -52,12 +50,13 @@ namespace Victoria
         public async Task<LavaNode> AddNodeAsync(BaseDiscordClient baseDiscordClient,
             Configuration configuration = default)
         {
-            configuration = configuration.Equals(default(Configuration)) ? Configuration.Default : configuration;
+            configuration = Configuration.Verify(configuration);
+            _prefix = configuration.NodePrefix;
             LogResolver.LogSeverity = configuration.Severity;
             var nodeName = $"{_prefix}{_counter}";
             configuration.UserId = baseDiscordClient.CurrentUser.Id;
             configuration.Shards = await GetShardsAsync(baseDiscordClient).ConfigureAwait(false);
-            var node = new LavaNode(nodeName, baseDiscordClient, configuration, Log);
+            var node = new LavaNode(nodeName, baseDiscordClient, configuration, HandleLog);
             try
             {
                 await node.StartAsync().ConfigureAwait(false);
@@ -103,6 +102,7 @@ namespace Victoria
                 return;
             await node.StopAsync().ConfigureAwait(false);
             node.Initialize(configuration);
+            await node.StartAsync().ConfigureAwait(false);
             _nodes.TryUpdate(nodeName, node, node);
             Log?.Invoke(LogResolver.Info(nodeName, "Node moved."));
         }
@@ -114,6 +114,13 @@ namespace Victoria
         /// <returns></returns>
         public LavaNode GetNode(string nodeName)
             => _nodes.TryGetValue(nodeName, out var node) ? node : null;
+
+        private Task HandleLog(LogMessage message)
+        {
+            if (string.IsNullOrWhiteSpace(message.Message) && message.Exception is null)
+                return Task.CompletedTask;
+            return Log?.Invoke(message);
+        }
 
         private async Task<int> GetShardsAsync(BaseDiscordClient baseClient)
         {

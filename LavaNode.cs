@@ -363,7 +363,7 @@ namespace Victoria
 
         private void TrackStuckInfo(ulong guildId, LavaTrack track, long threshold)
         {
-            _log.Invoke(LogResolver.Debug(Name, "Track stuck update received."));
+            _log?.Invoke(LogResolver.Debug(Name, "Track stuck update received."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
@@ -372,7 +372,7 @@ namespace Victoria
 
         private void TrackExceptionInfo(ulong guildId, LavaTrack track, string reason)
         {
-            _log.Invoke(LogResolver.Debug(Name, "Received track exception update."));
+            _log?.Invoke(LogResolver.Debug(Name, "Received track exception update."));
             if (!_players.TryGetValue(guildId, out var old)) return;
             old.CurrentTrack = track;
             _players.TryUpdate(guildId, old, old);
