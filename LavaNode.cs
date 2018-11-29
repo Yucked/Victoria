@@ -40,12 +40,6 @@ namespace Victoria
         public Func<Server, Task> StatsUpdated;
 
         /// <summary>
-        /// Fires when state is requested via <see cref="GetPlayerInfoAsync"/> or <see cref="GetAllPlayersInfoAsync"/>.
-        /// </summary>
-        [Obsolete("Won't work until Lavalink Resume is implemented.")]
-        public Func<ResponseState, Task> StateRequested;
-
-        /// <summary>
         /// Fires when websocket is closed.
         /// </summary>
         public Func<int, string, bool, Task> SocketClosed;
@@ -176,23 +170,6 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Requests state of <see cref="LavaPlayer"/> for given guild and fires <see cref="StateRequested"/> when Lavalink sends completes request.
-        /// </summary>
-        /// <param name="guildId">Guild Id</param>
-        [Obsolete("Won't work until Lavalink Resume is implemented.")]
-        public async Task GetPlayerInfoAsync(ulong guildId)
-            => await _socket.SendPayloadAsync(new RequestPayload(guildId, false)).ConfigureAwait(false);
-
-
-        /// <summary>
-        /// Requests player state of all connected players and fires <see cref="StateRequested"/> when Lavalink sends completes request.
-        /// </summary>
-        [Obsolete("Won't work until Lavalink Resume is implemented.")]
-        public async Task GetAllPlayersInfoAsync()
-            => await _socket.SendPayloadAsync(new RequestPayload(0, true)).ConfigureAwait(false);
-
-
-        /// <summary>
         /// Fetches <see cref="LavaPlayer"/> for given guild otherwise null.
         /// </summary>
         /// <param name="guildId"></param>
@@ -279,11 +256,6 @@ namespace Victoria
                             break;
                     }
 
-                    break;
-
-                case "resState":
-                    var responseState = JsonConvert.DeserializeObject<ResponseState>(data);
-                    StateRequested?.Invoke(responseState);
                     break;
 
                 default:
@@ -433,7 +405,7 @@ namespace Victoria
                     if (!_players.TryGetValue(state.VoiceChannel.Guild.Id, out var oldPlayer))
                         return;
                     oldPlayer?.VoiceChannel.DisconnectAsync().ConfigureAwait(false);
-                    oldPlayer.Dispose();
+                    oldPlayer?.Dispose();
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
                     var payload = new DestroyPayload(state.VoiceChannel.Guild.Id);
                     await _socket.SendPayloadAsync(payload).ConfigureAwait(false);
@@ -442,10 +414,12 @@ namespace Victoria
                         .ConfigureAwait(false);
                     break;
 
-                case var state when state.VoiceChannel?.Id != newState.VoiceChannel?.Id:
+                case var state when !(state.VoiceChannel is null && newState.VoiceChannel is null) &&
+                                    state.VoiceChannel.Id != newState.VoiceChannel.Id:
                     if (!_players.TryGetValue(state.VoiceChannel.Guild.Id, out var updatePlayer))
                         return;
                     updatePlayer.VoiceChannel = newState.VoiceChannel;
+                    await newState.VoiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true);
                     _players.TryUpdate(state.VoiceChannel.Guild.Id, updatePlayer, updatePlayer);
                     _log?.Invoke(LogResolver.Debug(Name, "Voice channel moved.")).ConfigureAwait(false);
                     break;

@@ -106,11 +106,11 @@ namespace Victoria
                 configuration.Port = Default.Port;
 
             if (configuration.Severity is default(LogSeverity))
-                configuration.Severity = LogSeverity.Info;
+                configuration.Severity = Default.Severity;
 
             if (string.IsNullOrWhiteSpace(configuration.NodePrefix))
                 configuration.NodePrefix = Default.NodePrefix;
-            
+
             return configuration;
         }
     }
