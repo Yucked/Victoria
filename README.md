@@ -70,7 +70,7 @@ Since version 3.x is a major rewrite most of the code is somewhat similar and fo
 
 ```cs
 private async Task OnReady(){
-    var node = Lavalink.AddNodeAsync(socketClient, myOptionalConfiguration).ConfigureAwait(false); 
+    var node = await Lavalink.AddNodeAsync(socketClient, myOptionalConfiguration).ConfigureAwait(false); 
     // Pass the above node to your AudioService or call Lavalink.GetNode(MY_NODE_NAME);
 }
 ```
