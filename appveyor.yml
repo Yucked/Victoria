@@ -17,3 +17,9 @@ deploy:
   api_key:
     secure: 2ERjvGaKjBby9aE8IHGo0uBHqXuosD3em2isgwubNPD9Zwt1q+y1WOopXW2dmH6j
   artifact: Victoria
+on_success:
+- ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
+- ps: ./VeyorHook.ps1 success $env:WEBHOOK_URL Veyor https://i.imgur.com/C0bWW20.png
+on_failure:
+- ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
+- ps: ./VeyorHook.ps1 failure $env:WEBHOOK_URL Veyor https://i.imgur.com/C0bWW20.png  
