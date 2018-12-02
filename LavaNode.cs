@@ -159,7 +159,6 @@ namespace Victoria
         /// Disconnects the player from voice channel and lavalink then removes it.
         /// </summary>
         /// <param name="guildId"></param>
-        /// <returns></returns>
         public async Task<bool> DisconnectAsync(ulong guildId)
         {
             if (!_players.TryGetValue(guildId, out var player))
@@ -167,6 +166,22 @@ namespace Victoria
             player.VoiceChannel?.DisconnectAsync().ConfigureAwait(false);
             await _socket.SendPayloadAsync(new DestroyPayload(guildId)).ConfigureAwait(false);
             return _players.TryRemove(guildId, out _);
+        }
+
+        /// <summary>
+        /// Moves a voice channel.
+        /// </summary>
+        /// <param name="guildId"></param>
+        /// <param name="voiceChannel"></param>
+        public async Task<LavaPlayer> MoveAsync(ulong guildId, IVoiceChannel voiceChannel)
+        {
+            if (!_players.TryGetValue(guildId, out var old))
+                return null;
+            await old.VoiceChannel.DisconnectAsync().ConfigureAwait(false);
+            await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true).ConfigureAwait(false);
+            old.VoiceChannel = voiceChannel;
+            _players.TryUpdate(guildId, old, old);
+            return old;
         }
 
         /// <summary>
@@ -412,16 +427,6 @@ namespace Victoria
                     _log?.Invoke(
                             LogResolver.Debug(Name, $"Sent destroy payload. {JsonConvert.SerializeObject(payload)}"))
                         .ConfigureAwait(false);
-                    break;
-
-                case var state when !(state.VoiceChannel is null && newState.VoiceChannel is null) &&
-                                    state.VoiceChannel.Id != newState.VoiceChannel.Id:
-                    if (!_players.TryGetValue(state.VoiceChannel.Guild.Id, out var updatePlayer))
-                        return;
-                    updatePlayer.VoiceChannel = newState.VoiceChannel;
-                    await newState.VoiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true);
-                    _players.TryUpdate(state.VoiceChannel.Guild.Id, updatePlayer, updatePlayer);
-                    _log?.Invoke(LogResolver.Debug(Name, "Voice channel moved.")).ConfigureAwait(false);
                     break;
             }
         }
