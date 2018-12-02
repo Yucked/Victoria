@@ -22,4 +22,4 @@ on_success:
 - ps: ./VeyorHook.ps1 success $env:WEBHOOK_URL Veyor https://i.imgur.com/C0bWW20.png
 on_failure:
 - ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
-- ps: ./VeyorHook.ps1 success $env:WEBHOOK_URL Veyor https://i.imgur.com/C0bWW20.png  
+- ps: ./VeyorHook.ps1 failure $env:WEBHOOK_URL Veyor https://i.imgur.com/C0bWW20.png  
