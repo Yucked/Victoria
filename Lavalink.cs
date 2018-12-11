@@ -115,12 +115,9 @@ namespace Victoria
         public LavaNode GetNode(string nodeName)
             => _nodes.TryGetValue(nodeName, out var node) ? node : null;
 
-        private Task HandleLog(LogMessage message)
-        {
-            if (string.IsNullOrWhiteSpace(message.Message) && message.Exception is null)
-                return Task.CompletedTask;
-            return Log?.Invoke(message);
-        }
+        private Task HandleLog(LogMessage message)        
+            => string.IsNullOrWhiteSpace(message.Message) && message.Exception is null
+                ? Task.CompletedTask : Log?.Invoke(message);        
 
         private async Task<int> GetShardsAsync(BaseDiscordClient baseClient)
         {

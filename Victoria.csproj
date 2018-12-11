@@ -13,7 +13,7 @@
         <Authors>Yucked</Authors>
         <Description>Lavalink wrapper written for Discord.NET.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Removed unnecessary code related to Websocket Resuming. Checking logging messages before invoking Lavalink#Log. Func<T> null checks here and there.</PackageReleaseNotes>
+        <PackageReleaseNotes>Removed unnecessary code related to Websocket Resuming. Checking logging messages before invoking Lavalink#Log. Func null checks here and there.</PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
         <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
