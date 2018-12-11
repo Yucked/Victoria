@@ -23,6 +23,11 @@ namespace Victoria
         public bool IsPlaying { get; private set; }
 
         /// <summary>
+        /// Checks if the player is paused or resumed.
+        /// </summary>
+        public bool IsPaused { get; private set; }
+
+        /// <summary>
         /// Current track that is being played.
         /// </summary>
         public LavaTrack CurrentTrack { get; internal set; }
@@ -129,7 +134,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Pauses the player.
+        /// Pauses or resumes toe player.
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws if player isn't playing anything and current track is null.</exception>
         public async Task PauseAsync()
@@ -137,21 +142,18 @@ namespace Victoria
             if (!IsAvailable)
                 throw new InvalidOperationException(InvalidOpMessage);
 
-            await _lavaNode._socket.SendPayloadAsync(new PausePayload(true, VoiceChannel.GuildId))
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Resumes the player.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Throws if player isn't playing anything and current track is null.</exception>
-        public async Task ResumeAsync()
-        {
-            if (!IsAvailable)
-                throw new InvalidOperationException(InvalidOpMessage);
-
-            await _lavaNode._socket.SendPayloadAsync(new PausePayload(false, VoiceChannel.GuildId))
-                .ConfigureAwait(false);
+            if (IsPaused)
+            {
+                await _lavaNode._socket.SendPayloadAsync(new PausePayload(true, VoiceChannel.GuildId))
+                    .ConfigureAwait(false);
+                IsPaused = true;
+            }
+            else
+            {
+                await _lavaNode._socket.SendPayloadAsync(new PausePayload(false, VoiceChannel.GuildId))
+                    .ConfigureAwait(false);
+                IsPaused = false;
+            }
         }
 
         /// <summary>
