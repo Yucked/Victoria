@@ -14,7 +14,7 @@ using Newtonsoft.Json.Linq;
 using Victoria.Entities;
 using Victoria.Entities.Enums;
 using Victoria.Entities.Payloads;
-using Victoria.Entities.Stats;
+using Victoria.Entities.Statistics;
 using Victoria.Utilities;
 
 namespace Victoria
@@ -35,9 +35,14 @@ namespace Victoria
         public bool IsConnected { get; private set; }
 
         /// <summary>
+        /// Keeps up to date with <see cref="StatsUpdated"/>.
+        /// </summary>
+        public Stats Stats { get; private set; }
+
+        /// <summary>
         /// Fires when stats are sent from Lavalink server.
         /// </summary>
-        public Func<Server, Task> StatsUpdated;
+        public Func<Stats, Task> StatsUpdated;
 
         /// <summary>
         /// Fires when websocket is closed.
@@ -233,8 +238,9 @@ namespace Victoria
                     break;
 
                 case "stats":
-                    var server = parsed.ToObject<Server>();
-                    StatsUpdated?.Invoke(server);
+                    var stats = parsed.ToObject<Stats>();
+                    StatsUpdated?.Invoke(stats);
+                    Stats = stats;
                     break;
 
                 case "event":
