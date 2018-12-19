@@ -6,7 +6,6 @@ Lavalink wrapper for Discord.NET that aims to be better than Sharplink and Laval
 
 [![](https://img.shields.io/badge/Discord-Support-%237289DA.svg?logo=discord&style=for-the-badge&logoWidth=20)](https://discord.gg/ZJaVXK8)
 
-
 [![](https://img.shields.io/appveyor/ci/gruntjs/grunt.svg?label=Appveyor&logo=appveyor&style=for-the-badge&logoWidth=20)](https://ci.appveyor.com/project/Yucked/victoria)
 
 ---
