@@ -141,9 +141,6 @@ namespace Victoria
         {
             if (!IsAvailable)
                 throw new InvalidOperationException(InvalidOpMessage);
-
-            if (!IsAvailable)
-                throw new InvalidOperationException(InvalidOpMessage);
             await _lavaNode._socket.SendPayloadAsync(new PausePayload(!IsPaused, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
             IsPaused = !IsPaused;
