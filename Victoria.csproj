@@ -8,12 +8,12 @@
 
 
     <PropertyGroup>
-        <Version>3.1.2</Version>
+        <Version>3.1.3</Version>
         <Title>Victoria</Title>
         <Authors>Yucked</Authors>
         <Description>Lavalink wrapper written for Discord.NET.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Added Lavalink frame stats, removed LavaNode#ResumeAsync, Added LavaNode#IsPaused property, combined ResumeAsync within PauseAsync.</PackageReleaseNotes>
+        <PackageReleaseNotes>Fixed PauseAsync. Thanks to Drax.</PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
         <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
