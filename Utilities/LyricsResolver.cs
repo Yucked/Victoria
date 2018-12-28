@@ -34,36 +34,26 @@ namespace Victoria.Utilities
             }
         }
 
-        private static (string Author, string Title) GetSongInfo(string trackAuthor, string title)
+        private static (string Author, string Title) GetSongInfo(string trackAuthor, string trackTitle)
         {
-            (string Author, string Song) SanitizeTitle()
-            {
-                var split = title.Split('-');
-                if (split.Length is 1)
-                    return (string.Empty, title);
+            var split = trackTitle.Split('-');
+            if (split.Length is 1)
+                return (string.Empty, trackTitle);
 
-                var possAuthor = split[0];
-                var possTitle = split[1];
+            var author = split[0];
+            var title = Regex.Replace(split[1], @" ?\(.*?\) \|(.*)", string.Empty);
 
-                var cleanTitle = Regex.Replace(possTitle, @" ?\(.*?\) \|(.*)", string.Empty);
-
-                return (possAuthor, cleanTitle);
-            }
-
-            var getInfo = SanitizeTitle();
-            var check = string.Equals(getInfo.Author, trackAuthor, StringComparison.CurrentCultureIgnoreCase);
-
-            switch (getInfo.Author)
+            switch (author)
             {
                 case "":
                 case null:
-                    return (trackAuthor, getInfo.Song);
+                    return (trackAuthor, title);
 
-                case var _ when check:
-                    return (trackAuthor, getInfo.Song);
+                case var _ when string.Equals(author, trackAuthor, StringComparison.CurrentCultureIgnoreCase):
+                    return (trackAuthor, title);
 
                 default:
-                    return getInfo;
+                    return (author, title);
             }
         }
     }
