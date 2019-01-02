@@ -71,7 +71,7 @@ namespace Victoria
 
 
         private HttpClient _httpClient;
-        internal SocketResolver _socket;
+        internal SocketResolver Socket;
         private SocketVoiceState _socketVoiceState;
         private readonly Configuration _configuration;
         private readonly Func<LogMessage, Task> _log;
@@ -107,7 +107,7 @@ namespace Victoria
 
         internal void Initialize(Configuration configuration)
         {
-            _socket = new SocketResolver(Name, configuration, _log);
+            Socket = new SocketResolver(Name, configuration, _log);
             _httpClient = new HttpClient(new HttpClientHandler
             {
                 UseCookies = false,
@@ -125,8 +125,8 @@ namespace Victoria
 
         internal async Task StartAsync()
         {
-            _socket.OnMessage += OnMessage;
-            await _socket.ConnectAsync().ConfigureAwait(false);
+            Socket.OnMessage += OnMessage;
+            await Socket.ConnectAsync().ConfigureAwait(false);
         }
 
         internal async Task StopAsync()
@@ -137,8 +137,8 @@ namespace Victoria
                 player.Dispose();
             }
 
-            await _socket.DisconnectAsync().ConfigureAwait(false);
-            _socket.Dispose();
+            await Socket.DisconnectAsync().ConfigureAwait(false);
+            Socket.Dispose();
             _httpClient.Dispose();
             IsConnected = false;
         }
@@ -169,7 +169,7 @@ namespace Victoria
             if (!_players.TryGetValue(guildId, out var player))
                 return false;
             player.VoiceChannel?.DisconnectAsync().ConfigureAwait(false);
-            await _socket.SendPayloadAsync(new DestroyPayload(guildId)).ConfigureAwait(false);
+            await Socket.SendPayloadAsync(new DestroyPayload(guildId)).ConfigureAwait(false);
             return _players.TryRemove(guildId, out _);
         }
 
@@ -405,7 +405,7 @@ namespace Victoria
             if (!_players.TryGetValue(socketVoiceServer.Guild.Id, out _))
                 return;
             var voiceUpdate = new VoicePayload(socketVoiceServer, _socketVoiceState);
-            await _socket.SendPayloadAsync(voiceUpdate).ConfigureAwait(false);
+            await Socket.SendPayloadAsync(voiceUpdate).ConfigureAwait(false);
             _log?.Invoke(LogResolver.Debug(Name,
                 $"Sent voice server payload. {JsonConvert.SerializeObject(voiceUpdate)}")).ConfigureAwait(false);
         }
@@ -429,7 +429,7 @@ namespace Victoria
                     oldPlayer?.Dispose();
                     _players.TryRemove(state.VoiceChannel.Guild.Id, out _);
                     var payload = new DestroyPayload(state.VoiceChannel.Guild.Id);
-                    await _socket.SendPayloadAsync(payload).ConfigureAwait(false);
+                    await Socket.SendPayloadAsync(payload).ConfigureAwait(false);
                     _log?.Invoke(
                             LogResolver.Debug(Name, $"Sent destroy payload. {JsonConvert.SerializeObject(payload)}"))
                         .ConfigureAwait(false);
@@ -441,7 +441,7 @@ namespace Victoria
         {
             IsConnected = false;
             _players.Clear();
-            _socket.Dispose();
+            Socket.Dispose();
             _httpClient.Dispose();
         }
     }

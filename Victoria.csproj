@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <LangVersion>7.1</LangVersion>
+        <LangVersion>latest</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
@@ -13,7 +13,7 @@
         <Authors>Yucked</Authors>
         <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>PR #18 By WorkingRobot Regarding  LyricsResolver!</PackageReleaseNotes>
+        <PackageReleaseNotes>Minor changes here and there.</PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
         <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>

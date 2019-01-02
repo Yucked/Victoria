@@ -10,59 +10,64 @@ namespace Victoria.Utilities
 {
     public sealed class LyricsResolver
     {
-        private static HttpClient http = new HttpClient
+        private static async Task<string> MakeRequestAsync(string url)
         {
-            BaseAddress = new Uri("https://api.lyrics.ovh/")
-        };
-        
-        public static async Task<string> SearchAsync(string searchText)
-        {
-            var info = await SuggestAsync(searchText).ConfigureAwait(false);
-            return await SearchExactAsync(info.Author, info.Title).ConfigureAwait(false);
+            using (var http = new HttpClient {BaseAddress = new Uri("https://api.lyrics.ovh/")})
+            {
+                var get = await http.GetAsync(url).ConfigureAwait(false);
+                if (!get.IsSuccessStatusCode)
+                    return string.Empty;
+
+                using (var content = get.Content)
+                    return await content.ReadAsStringAsync().ConfigureAwait(false);
+            }
         }
 
-        public static Task<string> SearchAsync(LavaTrack track) => SearchAsync(track.Author, track.Title);
+        public static async Task<string> SearchAsync(string searchText)
+        {
+            var (author, title) = await SuggestAsync(searchText).ConfigureAwait(false);
+            return await SearchExactAsync(author, title).ConfigureAwait(false);
+        }
+
+        public static Task<string> SearchAsync(LavaTrack track)
+            => SearchAsync(track.Author, track.Title);
 
         public static Task<string> SearchAsync(string trackAuthor, string trackTitle)
         {
-            var info = GetSongInfo(trackAuthor, trackTitle);
-            return SearchExactAsync(info.Author, info.Title);
+            var (author, title) = GetSongInfo(trackAuthor, trackTitle);
+            return SearchExactAsync(author, title);
         }
 
         private static async Task<(string Author, string Title)> SuggestAsync(string searchText)
         {
-            using (var get = await http.GetAsync($"suggest/{HttpUtility.UrlEncode(searchText)}").ConfigureAwait(false))
-            {
-                if (!get.IsSuccessStatusCode)
-                    return default;
-                using (var content = get.Content)
-                {
-                    var parse = JObject.Parse(await content.ReadAsStringAsync());
-                    if (!parse.TryGetValue("total", out var count) || count.ToObject<int>() == 0)
-                        return default;
+            var request = await MakeRequestAsync($"suggest/{HttpUtility.UrlEncode(searchText)}").ConfigureAwait(false);
 
-                    var songInfo = parse["data"][0];
-                    return ($"{songInfo["artist"]["name"]}", $"{songInfo["title"]}");
-                }
-            }
+            if (string.IsNullOrWhiteSpace(request))
+                return default;
+
+            var parse = JObject.Parse(request);
+            if (!parse.TryGetValue("total", out var count) || count.ToObject<int>() == 0)
+                return default;
+
+            var songInfo = parse["data"][0];
+            return ($"{songInfo["artist"]["name"]}", $"{songInfo["title"]}");
         }
 
         private static async Task<string> SearchExactAsync(string trackAuthor, string trackTitle)
         {
-            using (var get = await http.GetAsync($"v1/{HttpUtility.UrlEncode(trackAuthor)}/{HttpUtility.UrlEncode(trackTitle)}").ConfigureAwait(false))
-            {
-                if (!get.IsSuccessStatusCode)
-                    return string.Empty;
-                using (var content = get.Content)
-                {
-                    var parse = JObject.Parse(await content.ReadAsStringAsync());
-                    if (!parse.TryGetValue("lyrics", out var result))
-                        return $"{parse.GetValue("error")}";
+            var request =
+                await MakeRequestAsync($"v1/{HttpUtility.UrlEncode(trackAuthor)}/{HttpUtility.UrlEncode(trackTitle)}")
+                    .ConfigureAwait(false);
 
-                    var clean = Regex.Replace($"{result}", @"[\r\n]{2,}", "\n");
-                    return clean;
-                }
-            }
+            if (string.IsNullOrWhiteSpace(request))
+                return default;
+
+            var parse = JObject.Parse(request);
+            if (!parse.TryGetValue("lyrics", out var result))
+                return $"{parse.GetValue("error")}";
+
+            var clean = Regex.Replace($"{result}", @"[\r\n]{2,}", "\n");
+            return clean;
         }
 
         private static (string Author, string Title) GetSongInfo(string trackAuthor, string trackTitle)

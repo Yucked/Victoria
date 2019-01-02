@@ -77,7 +77,7 @@ namespace Victoria
         {
             IsPlaying = true;
             CurrentTrack = track;
-            await _lavaNode._socket.SendPayloadAsync(new PlayPayload(track.TrackString, VoiceChannel.GuildId))
+            await _lavaNode.Socket.SendPayloadAsync(new PlayPayload(track.TrackString, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
         }
 
@@ -96,7 +96,7 @@ namespace Victoria
                 throw new InvalidOperationException("Stop time must be greater than start time.");
 
             CurrentTrack = track;
-            await _lavaNode._socket
+            await _lavaNode.Socket
                 .SendPayloadAsync(new PlayPartialPayload(track.TrackString, startTime, stopTime, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
         }
@@ -130,7 +130,7 @@ namespace Victoria
                 throw new InvalidOperationException(InvalidOpMessage);
             CurrentTrack = null;
             IsPlaying = false;
-            await _lavaNode._socket.SendPayloadAsync(new StopPayload(VoiceChannel.GuildId)).ConfigureAwait(false);
+            await _lavaNode.Socket.SendPayloadAsync(new StopPayload(VoiceChannel.GuildId)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace Victoria
             if (!IsAvailable)
                 throw new InvalidOperationException(InvalidOpMessage);
             IsPaused = !IsPaused;
-            await _lavaNode._socket.SendPayloadAsync(new PausePayload(IsPaused, VoiceChannel.GuildId)).ConfigureAwait(false);
+            await _lavaNode.Socket.SendPayloadAsync(new PausePayload(IsPaused, VoiceChannel.GuildId)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace Victoria
             if (!IsAvailable)
                 throw new InvalidOperationException(InvalidOpMessage);
 
-            await _lavaNode._socket.SendPayloadAsync(new SeekPayload(position, VoiceChannel.GuildId))
+            await _lavaNode.Socket.SendPayloadAsync(new SeekPayload(position, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
         }
 
@@ -168,7 +168,7 @@ namespace Victoria
         {
             if (!IsAvailable)
                 throw new InvalidOperationException(InvalidOpMessage);
-            await _lavaNode._socket.SendPayloadAsync(new EqualizerPayload(VoiceChannel.GuildId, bands))
+            await _lavaNode.Socket.SendPayloadAsync(new EqualizerPayload(VoiceChannel.GuildId, bands))
                 .ConfigureAwait(false);
         }
 
@@ -181,7 +181,7 @@ namespace Victoria
         {
             if (!IsAvailable)
                 throw new InvalidOperationException(InvalidOpMessage);
-            await _lavaNode._socket.SendPayloadAsync(new EqualizerPayload(VoiceChannel.GuildId, bands))
+            await _lavaNode.Socket.SendPayloadAsync(new EqualizerPayload(VoiceChannel.GuildId, bands))
                 .ConfigureAwait(false);
         }
 
@@ -200,7 +200,7 @@ namespace Victoria
                 throw new ArgumentOutOfRangeException(nameof(volume), "Volume must be lower than 150.");
 
             Volume = volume;
-            await _lavaNode._socket.SendPayloadAsync(new VolumePayload(volume, VoiceChannel.GuildId))
+            await _lavaNode.Socket.SendPayloadAsync(new VolumePayload(volume, VoiceChannel.GuildId))
                 .ConfigureAwait(false);
         }
 
