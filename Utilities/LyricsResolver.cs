@@ -18,16 +18,15 @@ namespace Victoria.Utilities
         public static async Task<string> SearchAsync(string searchText)
         {
             var info = await SuggestAsync(searchText).ConfigureAwait(false);
-            Console.WriteLine(info.Author);
             return await SearchExactAsync(info.Author, info.Title).ConfigureAwait(false);
         }
 
-        public static async Task<string> SearchAsync(LavaTrack track) => await SearchAsync(track.Author, track.Title).ConfigureAwait(false);
+        public static Task<string> SearchAsync(LavaTrack track) => SearchAsync(track.Author, track.Title);
 
-        public static async Task<string> SearchAsync(string trackAuthor, string trackTitle)
+        public static Task<string> SearchAsync(string trackAuthor, string trackTitle)
         {
             var info = GetSongInfo(trackAuthor, trackTitle);
-            return await SearchExactAsync(info.Author, info.Title).ConfigureAwait(false);
+            return SearchExactAsync(info.Author, info.Title);
         }
 
         private static async Task<(string Author, string Title)> SuggestAsync(string searchText)
@@ -42,8 +41,8 @@ namespace Victoria.Utilities
                     if (!parse.TryGetValue("total", out var count) || count.ToObject<int>() == 0)
                         return default;
 
-                    JToken song = parse["data"][0];
-                    return ($"{song["artist"]["name"]}", $"{song["title"]}");
+                    var songInfo = parse["data"][0];
+                    return ($"{songInfo["artist"]["name"]}", $"{songInfo["title"]}");
                 }
             }
         }
