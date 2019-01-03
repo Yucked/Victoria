@@ -1,5 +1,10 @@
-version: Build-{build}
-image: Visual Studio 2017 Preview
+version: Victoria-{build}
+
+image:
+- Visual Studio 2019 Preview
+- Visual Studio 2017 Preview
+
+shallow_clone: true
 clone_folder: C:\Projects\Victoria
 
 skip_commits:
@@ -16,6 +21,7 @@ before_build:
 - cmd: dotnet restore
 
 build:
+  parallel: true
   verbosity: minimal
   
 after_build:
