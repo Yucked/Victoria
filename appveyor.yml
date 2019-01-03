@@ -1,4 +1,4 @@
-version: 2.3.{build}
+version: Build-{build}
 image: Visual Studio 2017 Preview
 clone_folder: C:\Projects\Victoria
 
