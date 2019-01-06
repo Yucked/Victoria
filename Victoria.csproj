@@ -1,22 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
 
     <PropertyGroup>
-        <Version>3.2.1</Version>
         <Title>Victoria</Title>
+        <Version>3.3.0</Version>
         <Authors>Yucked</Authors>
-        <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Minor changes here and there.</PackageReleaseNotes>
+        <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
-        <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
+        <PackageReleaseNotes>Minor changes here and there.</PackageReleaseNotes>
+        <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
