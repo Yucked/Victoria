@@ -414,7 +414,7 @@ namespace Victoria
         {
             if (user.Id != _baseDiscordClient.CurrentUser.Id) return;
 
-            switch (oldState)
+            switch (_socketVoiceState)
             {
                 case var state when state.VoiceChannel is null && !(newState.VoiceChannel is null):
                     _socketVoiceState = newState;
