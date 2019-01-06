@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
-    internal sealed class SeekPayload : LavaPayload
+    internal sealed class SeekPayload : PlayerPayload
     {
         [JsonProperty("position")] 
         public long Position { get; }

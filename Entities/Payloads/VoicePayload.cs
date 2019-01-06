@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
-    internal sealed class VoicePayload : LavaPayload
+    internal sealed class VoicePayload : PlayerPayload
     {        
         [JsonProperty("sessionId")] 
         public string SessionId { get; }

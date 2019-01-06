@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
-    internal sealed class RequestPayload : LavaPayload
+    internal sealed class RequestPayload : PlayerPayload
     {
         [JsonProperty("getAll")]
         public bool GetAll { get; set; }

@@ -214,7 +214,7 @@ namespace Victoria
             => ResolveRequestAsync(WebUtility.UrlEncode($"ytsearch:{query}"));
 
         /// <summary>
-        /// Performs a Soundcloud search for your query.
+        /// Performs a SoundCloud search for your query.
         /// </summary>
         /// <param name="query">Search terms.</param>
         /// <returns><see cref="LavaResult"/></returns>

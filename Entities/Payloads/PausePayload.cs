@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
-    internal sealed class PausePayload : LavaPayload
+    internal sealed class PausePayload : PlayerPayload
     {
         [JsonProperty("pause")] 
         public bool Pause { get; }

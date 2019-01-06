@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
-    internal sealed class EqualizerPayload : LavaPayload
+    internal sealed class EqualizerPayload : PlayerPayload
     {
         [JsonProperty("bands")] 
         public List<EqualizerBand> Bands { get; set; }

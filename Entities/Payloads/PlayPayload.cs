@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
-    internal sealed class PlayPayload : LavaPayload
+    internal sealed class PlayPayload : PlayerPayload
     {
         [JsonProperty("track")] 
         public string Track { get; }
