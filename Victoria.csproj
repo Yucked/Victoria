@@ -8,12 +8,12 @@
 
 
     <PropertyGroup>
-        <Version>3.2.1</Version>
+        <Version>3.2.2</Version>
         <Title>Victoria</Title>
         <Authors>Yucked</Authors>
         <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
         <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Minor changes here and there.</PackageReleaseNotes>
+        <PackageReleaseNotes>Fixes issues related to socket voice update, thanks to WorkingRobot. </PackageReleaseNotes>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
         <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
