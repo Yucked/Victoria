@@ -434,6 +434,19 @@ namespace Victoria
                             LogResolver.Debug(Name, $"Sent destroy payload. {JsonConvert.SerializeObject(payload)}"))
                         .ConfigureAwait(false);
                     break;
+
+                case var state when !(state.VoiceChannel is null) && !(newState.VoiceChannel is null)
+                && state.VoiceChannel.Id == newState.VoiceChannel.Id:
+                    _socketVoiceState = newState;
+                    break;
+
+                case var state when !(state.VoiceChannel is null) && !(newState.VoiceChannel is null)
+                    && state.VoiceChannel.Id != newState.VoiceChannel.Id:
+                    if (!_players.TryGetValue(state.VoiceChannel.Guild.Id, out var lavaPlayer))
+                        return;
+                    lavaPlayer.VoiceChannel = newState.VoiceChannel;
+                    _players.TryUpdate(state.VoiceChannel.Guild.Id, lavaPlayer, lavaPlayer);
+                    break;
             }
         }
 
