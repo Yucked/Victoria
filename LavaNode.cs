@@ -72,8 +72,8 @@ namespace Victoria
 
         private HttpClient _httpClient;
         internal SocketResolver Socket;
+        private Configuration _configuration;
         private SocketVoiceState _socketVoiceState;
-        private readonly Configuration _configuration;
         private readonly Func<LogMessage, Task> _log;
         private readonly BaseDiscordClient _baseDiscordClient;
         private readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
@@ -220,6 +220,18 @@ namespace Victoria
         /// <returns><see cref="LavaResult"/></returns>
         public Task<LavaResult> SearchSoundcloudAsync(string query)
             => ResolveRequestAsync(WebUtility.UrlEncode($"scsearch:{query}"));
+
+        /// <summary>
+        /// Enables/Disables websocket resuming if client disconnects.
+        /// </summary>
+        /// <param name="enable">Self explanatory.</param>
+        /// <param name="timeout">Timeout for resuming.</param>
+        public async Task ConfigureResuming(bool enable, TimeSpan timeout)
+        {
+            _configuration.EnableResuming = enable;
+            var resume = new ResumePayload($"{Name}-Resume", timeout);
+            await Socket.SendPayloadAsync(resume).ConfigureAwait(false);
+        }
 
         private bool OnMessage(string data)
         {
@@ -436,12 +448,12 @@ namespace Victoria
                     break;
 
                 case var state when !(state.VoiceChannel is null) && !(newState.VoiceChannel is null)
-                && state.VoiceChannel.Id == newState.VoiceChannel.Id:
+                                                                  && state.VoiceChannel.Id == newState.VoiceChannel.Id:
                     _socketVoiceState = newState;
                     break;
 
                 case var state when !(state.VoiceChannel is null) && !(newState.VoiceChannel is null)
-                    && state.VoiceChannel.Id != newState.VoiceChannel.Id:
+                                                                  && state.VoiceChannel.Id != newState.VoiceChannel.Id:
                     if (!_players.TryGetValue(state.VoiceChannel.Guild.Id, out var lavaPlayer))
                         return;
                     lavaPlayer.VoiceChannel = newState.VoiceChannel;
