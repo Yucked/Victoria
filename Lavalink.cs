@@ -26,7 +26,10 @@ namespace Victoria
         /// <summary>
         /// Returns the very first node (LavaNode__#0) if any.
         /// </summary>
-        public LavaNode DefaultNode => _nodes[$"{_prefix}0"];
+        public LavaNode DefaultNode
+            => _nodes.TryGetValue($"{_prefix}0", out var node)
+                ? node
+                : default;
 
         /// <summary>
         /// Returns the count of connected nodes.
@@ -78,7 +81,7 @@ namespace Victoria
         /// <summary>
         /// Disconnects and removes node.
         /// </summary>
-        /// <param name="nodeName">Name of the node i.e: LavaNode__0.</param>
+        /// <param name="nodeName">Name of the node i.e: LavaNode-0.</param>
         /// <returns><see cref="Boolean"/></returns>
         public async Task<bool> RemoveNodeAsync(string nodeName)
         {
@@ -115,9 +118,10 @@ namespace Victoria
         public LavaNode GetNode(string nodeName)
             => _nodes.TryGetValue(nodeName, out var node) ? node : null;
 
-        private Task HandleLog(LogMessage message)        
+        private Task HandleLog(LogMessage message)
             => string.IsNullOrWhiteSpace(message.Message) && message.Exception is null
-                ? Task.CompletedTask : Log?.Invoke(message);        
+                ? Task.CompletedTask
+                : Log?.Invoke(message);
 
         private async Task<int> GetShardsAsync(BaseDiscordClient baseClient)
         {

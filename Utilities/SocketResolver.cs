@@ -69,6 +69,7 @@ namespace Victoria.Utilities
             await _clientWebSocket
                 .CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed called.", CancellationToken.None)
                 .ConfigureAwait(false);
+            _cancellationTokenSource.Cancel(false);
             _isUseable = false;
         }
 
@@ -172,7 +173,7 @@ namespace Victoria.Utilities
         {
             _isUseable = false;
             _reconnectAttempts = 0;
-            _clientWebSocket.Dispose();
+            _clientWebSocket?.Dispose();
             _clientWebSocket = null;
             _configuration = default;
         }
