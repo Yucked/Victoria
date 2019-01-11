@@ -73,7 +73,7 @@ namespace Victoria
         private HttpClient _httpClient;
         internal SocketResolver Socket;
         private SocketVoiceState _socketVoiceState;
-        private Configuration _configuration;
+        private readonly Configuration _configuration;
         private readonly Func<LogMessage, Task> _log;
         private readonly BaseDiscordClient _baseDiscordClient;
         private readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
@@ -214,24 +214,12 @@ namespace Victoria
             => ResolveRequestAsync(WebUtility.UrlEncode($"ytsearch:{query}"));
 
         /// <summary>
-        /// Performs a SoundCloud search for your query.
+        /// Performs a Soundcloud search for your query.
         /// </summary>
         /// <param name="query">Search terms.</param>
         /// <returns><see cref="LavaResult"/></returns>
         public Task<LavaResult> SearchSoundcloudAsync(string query)
             => ResolveRequestAsync(WebUtility.UrlEncode($"scsearch:{query}"));
-
-        /// <summary>
-        /// Enables/Disables websocket resuming if client disconnects.
-        /// </summary>
-        /// <param name="enable">Self explanatory.</param>
-        /// <param name="timeout">Timeout for resuming.</param>
-        public async Task ConfigureResuming(bool enable, TimeSpan timeout)
-        {
-            _configuration.EnableResuming = enable;
-            var resume = new ResumePayload($"{Name}-Resume", timeout);
-            await Socket.SendPayloadAsync(resume).ConfigureAwait(false);
-        }
 
         private bool OnMessage(string data)
         {
@@ -447,11 +435,9 @@ namespace Victoria
                         .ConfigureAwait(false);
                     break;
 
-                case var state when !(state.VoiceChannel is null) && !(newState.VoiceChannel is null) 
+                case var state when !(state.VoiceChannel is null) && !(newState.VoiceChannel is null)
                 && state.VoiceChannel.Id == newState.VoiceChannel.Id:
                     _socketVoiceState = newState;
-                    _log?.Invoke(LogResolver.Debug(Name, $"Reconnected. Voice state updated."))
-                        .ConfigureAwait(false);
                     break;
 
                 case var state when !(state.VoiceChannel is null) && !(newState.VoiceChannel is null)
@@ -460,8 +446,6 @@ namespace Victoria
                         return;
                     lavaPlayer.VoiceChannel = newState.VoiceChannel;
                     _players.TryUpdate(state.VoiceChannel.Guild.Id, lavaPlayer, lavaPlayer);
-                    _log?.Invoke(LogResolver.Debug(Name, $"Channel moved. Voice state updated."))
-                        .ConfigureAwait(false);
                     break;
             }
         }
