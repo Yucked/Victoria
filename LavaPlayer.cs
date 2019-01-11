@@ -73,12 +73,14 @@ namespace Victoria
         /// Plays the given track.
         /// </summary>
         /// <param name="track"><see cref="LavaTrack"/></param>
-        public async Task PlayAsync(LavaTrack track)
+        /// <param name="replace">If set to true, this operation will be ignored if a track is already playing or paused</param>
+        public async Task PlayAsync(LavaTrack track, bool replace = true)
         {
             IsPlaying = true;
             CurrentTrack = track;
-            await _lavaNode.Socket.SendPayloadAsync(new PlayPayload(track.TrackString, VoiceChannel.GuildId))
-                .ConfigureAwait(false);
+            var payload = new PlayPayload(track.TrackString, TimeSpan.Zero, track.Length, replace,
+                VoiceChannel.GuildId);
+            await _lavaNode.Socket.SendPayloadAsync(payload).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -87,7 +89,8 @@ namespace Victoria
         /// <param name="track"><see cref="LavaTrack"/></param>
         /// <param name="startTime">Start time of the track.</param>
         /// <param name="stopTime">Stop time of the track.</param>
-        public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan stopTime)
+        /// <param name="replace">If set to true, this operation will be ignored if a track is already playing or paused</param>
+        public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan stopTime, bool replace = true)
         {
             if (startTime.TotalMilliseconds < 0 || stopTime.TotalMilliseconds < 0)
                 throw new InvalidOperationException("Start and stop must be greater than 0.");
@@ -96,9 +99,9 @@ namespace Victoria
                 throw new InvalidOperationException("Stop time must be greater than start time.");
 
             CurrentTrack = track;
-            await _lavaNode.Socket
-                .SendPayloadAsync(new PlayPartialPayload(track.TrackString, startTime, stopTime, VoiceChannel.GuildId))
-                .ConfigureAwait(false);
+            var payload = new PlayPayload(track.TrackString, startTime, stopTime, replace,
+                VoiceChannel.GuildId);
+            await _lavaNode.Socket.SendPayloadAsync(payload).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -142,7 +145,8 @@ namespace Victoria
             if (!IsAvailable)
                 throw new InvalidOperationException(InvalidOpMessage);
             IsPaused = !IsPaused;
-            await _lavaNode.Socket.SendPayloadAsync(new PausePayload(IsPaused, VoiceChannel.GuildId)).ConfigureAwait(false);
+            await _lavaNode.Socket.SendPayloadAsync(new PausePayload(IsPaused, VoiceChannel.GuildId))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
