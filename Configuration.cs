@@ -68,6 +68,11 @@ namespace Victoria
         public string NodePrefix { get; set; }
 
         /// <summary>
+        /// Configure websocket resuming.
+        /// </summary>
+        public bool EnableResuming { get; set; }
+
+        /// <summary>
         /// Default configuration.
         /// </summary>
         private static Configuration Default
@@ -81,7 +86,7 @@ namespace Victoria
                 Port = 2333,
                 Severity = LogSeverity.Verbose,
                 SelfDeaf = true,
-                NodePrefix = "LavaNode_",
+                NodePrefix = "LavaNode-",
                 Proxy = default
             };
 

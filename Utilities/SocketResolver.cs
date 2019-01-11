@@ -15,12 +15,12 @@ namespace Victoria.Utilities
     {
         private bool _isUseable;
         private TimeSpan _interval;
-        private readonly string _name;
         private int _reconnectAttempts;
         private readonly Encoding _encoding;
         private Configuration _configuration;
         private ClientWebSocket _clientWebSocket;
         private readonly Func<LogMessage, Task> _log;
+        private readonly (string socket, string node) _name;
         private CancellationTokenSource _cancellationTokenSource;
 
         public Func<string, bool> OnMessage;
@@ -28,8 +28,9 @@ namespace Victoria.Utilities
         public SocketResolver(string nodeName, Configuration configuration, Func<LogMessage, Task> log)
         {
             _log = log;
-            _name = $"{nodeName}_Socket";
+            _name.node = nodeName;
             _configuration = configuration;
+            _name.socket = $"{nodeName}-Socket";
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
         }
@@ -43,11 +44,14 @@ namespace Victoria.Utilities
                 Options = {Proxy = _configuration.Proxy}
             };
 
+            if (_configuration.EnableResuming)
+                _clientWebSocket.Options.SetRequestHeader("Resume-Key", $"{_name.node}-Resume");
+
             _clientWebSocket.Options.SetRequestHeader("User-Id", $"{_configuration.UserId}");
             _clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_configuration.Shards}");
             _clientWebSocket.Options.SetRequestHeader("Authorization", _configuration.Authorization);
             var url = new Uri($"ws://{_configuration.Host}:{_configuration.Port}");
-            _log?.Invoke(LogResolver.Info(_name, $"Connecting to {url}."));
+            _log?.Invoke(LogResolver.Info(_name.socket, $"Connecting to {url}."));
             try
             {
                 await _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
@@ -83,14 +87,14 @@ namespace Victoria.Utilities
             if (task.IsCanceled || task.IsFaulted || task.Exception != null)
             {
                 _isUseable = false;
-                _log?.Invoke(LogResolver.Error(_name, "Websocket connection failed."));
+                _log?.Invoke(LogResolver.Error(_name.socket, "Websocket connection failed."));
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
             else
             {
                 _isUseable = true;
                 _reconnectAttempts = 0;
-                _log?.Invoke(LogResolver.Info(_name, "Websocket connection established."));
+                _log?.Invoke(LogResolver.Info(_name.socket, "Websocket connection established."));
                 await ReceiveAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
             }
         }
@@ -113,7 +117,7 @@ namespace Victoria.Utilities
                 return;
             _reconnectAttempts++;
             _interval += _configuration.ReconnectInterval;
-            _log?.Invoke(LogResolver.Info(_name,
+            _log?.Invoke(LogResolver.Info(_name.socket,
                 $"Retry attempt #{_reconnectAttempts}. Next retry in {_interval.Seconds}s."));
             await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
@@ -159,7 +163,7 @@ namespace Victoria.Utilities
             catch (Exception ex) when (ex.HResult == -2147467259)
             {
                 _isUseable = false;
-                _log?.Invoke(LogResolver.Error(_name, ex.Message, ex));
+                _log?.Invoke(LogResolver.Error(_name.socket, ex.Message, ex));
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
         }

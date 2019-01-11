@@ -11,10 +11,10 @@ namespace Victoria.Entities.Payloads
         [JsonProperty("timeout")]
         public int Timeout { get; }
         
-        public ResumePayload(string key, TimeSpan timeSpan) : base("configureResuming")
+        public ResumePayload(string key, TimeSpan? timeSpan) : base("configureResuming")
         {
             Key = key;
-            Timeout = timeSpan.Seconds;
+            Timeout = timeSpan?.Seconds ?? TimeSpan.FromSeconds(60).Seconds;
         }        
     }
 }

@@ -7,6 +7,11 @@ namespace Victoria.Utilities
 {
     public sealed class ThumbnailResolver
     {
+        /// <summary>
+        /// Finds the proper thumbnail of the specified track. Currently supports: youtube, twitch, soundcloud, vimeo.
+        /// </summary>
+        /// <param name="track"><see cref="LavaTrack"/></param>
+        /// <returns>Url of the thumbnail.</returns>
         public static async Task<string> FetchAsync(LavaTrack track)
         {
             JObject result;

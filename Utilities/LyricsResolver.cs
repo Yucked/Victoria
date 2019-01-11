@@ -10,6 +10,36 @@ namespace Victoria.Utilities
 {
     public sealed class LyricsResolver
     {
+        /// <summary>
+        /// Searches lyrics for your query.
+        /// </summary>
+        /// <param name="searchText">Search query of your lyrics.</param>
+        public static async Task<string> SearchAsync(string searchText)
+        {
+            var (author, title) = await SuggestAsync(searchText).ConfigureAwait(false);
+            return await SearchExactAsync(author, title).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Tries to find lyrics of the specified track.
+        /// </summary>
+        /// <param name="track"><see cref="LavaTrack"/></param>
+        public static Task<string> SearchAsync(LavaTrack track)
+        {
+            return SearchAsync(track.Author, track.Title);
+        }
+
+        /// <summary>
+        /// Tries to find lyrics.
+        /// </summary>
+        /// <param name="trackAuthor">Name of artist.</param>
+        /// <param name="trackTitle">Name of track.</param>
+        public static Task<string> SearchAsync(string trackAuthor, string trackTitle)
+        {
+            var (author, title) = GetSongInfo(trackAuthor, trackTitle);
+            return SearchExactAsync(author, title);
+        }
+
         private static async Task<string> MakeRequestAsync(string url)
         {
             using (var http = new HttpClient {BaseAddress = new Uri("https://api.lyrics.ovh/")})
@@ -23,21 +53,6 @@ namespace Victoria.Utilities
             }
         }
 
-        public static async Task<string> SearchAsync(string searchText)
-        {
-            var (author, title) = await SuggestAsync(searchText).ConfigureAwait(false);
-            return await SearchExactAsync(author, title).ConfigureAwait(false);
-        }
-
-        public static Task<string> SearchAsync(LavaTrack track)
-            => SearchAsync(track.Author, track.Title);
-
-        public static Task<string> SearchAsync(string trackAuthor, string trackTitle)
-        {
-            var (author, title) = GetSongInfo(trackAuthor, trackTitle);
-            return SearchExactAsync(author, title);
-        }
-
         private static async Task<(string Author, string Title)> SuggestAsync(string searchText)
         {
             var request = await MakeRequestAsync($"suggest/{HttpUtility.UrlEncode(searchText)}").ConfigureAwait(false);
@@ -45,12 +60,14 @@ namespace Victoria.Utilities
             if (string.IsNullOrWhiteSpace(request))
                 return default;
 
-            var parse = JObject.Parse(request);
-            if (!parse.TryGetValue("total", out var count) || count.ToObject<int>() == 0)
+            var parseRequest = JObject.Parse(request);
+            if (!parseRequest.TryGetValue("total", out var total) || total.ToObject<int>() == 0)
                 return default;
 
-            var songInfo = parse["data"][0];
-            return ($"{songInfo["artist"]["name"]}", $"{songInfo["title"]}");
+            parseRequest.TryGetValue("data", out var data);
+            var artist = data.First.SelectToken("artist").SelectToken("name").ToObject<string>();
+            var title = data.First.SelectToken("title").ToObject<string>();
+            return (artist, title);
         }
 
         private static async Task<string> SearchExactAsync(string trackAuthor, string trackTitle)
