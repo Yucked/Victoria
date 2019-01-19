@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <LangVersion>latest</LangVersion>
@@ -9,13 +9,13 @@
 
     <PropertyGroup>
         <Title>Victoria</Title>
-        <Version>3.2.2</Version>
+        <Version>3.3.0</Version>
         <Authors>Yucked</Authors>
         <Copyright>2018 - 2019 Yucked. All rights reserved.</Copyright>
         <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
-        <PackageReleaseNotes>Fixes issues related to socket voice update, thanks to WorkingRobot.</PackageReleaseNotes>
+        <PackageReleaseNotes>Resume implemented 98%. AddNodeAsync related issues resolved. Added noReplace from Lavalink's api (Requires latest Lavalink build).</PackageReleaseNotes>
         <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     </PropertyGroup>
 
@@ -33,7 +33,6 @@
 
     <ItemGroup>
         <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0"/>
-        <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
     </ItemGroup>
 
 </Project>

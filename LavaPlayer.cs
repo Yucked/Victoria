@@ -8,53 +8,13 @@ using Victoria.Entities.Payloads;
 namespace Victoria
 {
     /// <summary>
-    /// Represents a voice channel connection.
+    ///     Represents a voice channel connection.
     /// </summary>
     public sealed class LavaPlayer
     {
-        /// <summary>
-        /// Volume of current player.
-        /// </summary>
-        public int Volume { get; private set; }
-
-        /// <summary>
-        /// Whether this player is playing any tracks.
-        /// </summary>
-        public bool IsPlaying { get; private set; }
-
-        /// <summary>
-        /// Checks if the player is paused or resumed.
-        /// </summary>
-        public bool IsPaused { get; private set; }
-
-        /// <summary>
-        /// Current track that is being played.
-        /// </summary>
-        public LavaTrack CurrentTrack { get; internal set; }
-
-        /// <summary>
-        /// Last time this player was updated.
-        /// </summary>
-        public DateTimeOffset LastUpdate { get; internal set; }
-
-        /// <summary>
-        /// Voice channel this player is connected to.
-        /// </summary>
-        public IVoiceChannel VoiceChannel { get; internal set; }
-
-        /// <summary>
-        /// Text channel this player is bound to.
-        /// </summary>
-        public IMessageChannel TextChannel { get; set; }
-
-        /// <summary>
-        /// Default queue.
-        /// </summary>
-        public LavaQueue<LavaTrack> Queue { get; }
+        private const string InvalidOpMessage = "Can't perform this operation, player isn't being used.";
 
         private readonly LavaNode _lavaNode;
-        private bool IsAvailable => IsPlaying && CurrentTrack != null;
-        private const string InvalidOpMessage = "Can't perform this operation, player isn't being used.";
 
         internal LavaPlayer()
         {
@@ -70,10 +30,54 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Plays the given track.
+        ///     Volume of current player.
         /// </summary>
-        /// <param name="track"><see cref="LavaTrack"/></param>
-        /// <param name="replace">If set to true, this operation will be ignored if a track is already playing or paused</param>
+        public int Volume { get; private set; }
+
+        /// <summary>
+        ///     Whether this player is playing any tracks.
+        /// </summary>
+        public bool IsPlaying { get; private set; }
+
+        /// <summary>
+        ///     Checks if the player is paused or resumed.
+        /// </summary>
+        public bool IsPaused { get; private set; }
+
+        /// <summary>
+        ///     Current track that is being played.
+        /// </summary>
+        public LavaTrack CurrentTrack { get; internal set; }
+
+        /// <summary>
+        ///     Last time this player was updated.
+        /// </summary>
+        public DateTimeOffset LastUpdate { get; internal set; }
+
+        /// <summary>
+        ///     Voice channel this player is connected to.
+        /// </summary>
+        public IVoiceChannel VoiceChannel { get; internal set; }
+
+        /// <summary>
+        ///     Text channel this player is bound to.
+        /// </summary>
+        public IMessageChannel TextChannel { get; set; }
+
+        /// <summary>
+        ///     Default queue.
+        /// </summary>
+        public LavaQueue<LavaTrack> Queue { get; }
+
+        private bool IsAvailable => IsPlaying && CurrentTrack != null;
+
+        /// <summary>
+        ///     Plays the given track.
+        /// </summary>
+        /// <param name="track">
+        ///     <see cref="LavaTrack" />
+        /// </param>
+        /// <param name="replace">If set to true, this operation will be ignored if a track is already playing or paused.</param>
         public async Task PlayAsync(LavaTrack track, bool replace = true)
         {
             IsPlaying = true;
@@ -84,12 +88,14 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Partially plays the given track.
+        ///     Partially plays the given track.
         /// </summary>
-        /// <param name="track"><see cref="LavaTrack"/></param>
+        /// <param name="track">
+        ///     <see cref="LavaTrack" />
+        /// </param>
         /// <param name="startTime">Start time of the track.</param>
         /// <param name="stopTime">Stop time of the track.</param>
-        /// <param name="replace">If set to true, this operation will be ignored if a track is already playing or paused</param>
+        /// <param name="replace">If set to true, this operation will be ignored if a track is already playing or paused.</param>
         public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan stopTime, bool replace = true)
         {
             if (startTime.TotalMilliseconds < 0 || stopTime.TotalMilliseconds < 0)
@@ -105,7 +111,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Skips the current track that is playing and plays the next song from <see cref="Queue"/>.
+        ///     Skips the current track that is playing and plays the next song from <see cref="Queue" />.
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws if player isn't playing anything and current track is null.</exception>
         public async Task<LavaTrack> SkipAsync()
@@ -124,7 +130,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Stops playing the current track.
+        ///     Stops playing the current track.
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws if player isn't playing anything and current track is null.</exception>
         public async Task StopAsync()
@@ -137,7 +143,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Pauses or resumes toe player.
+        ///     Pauses or resumes toe player.
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws if player isn't playing anything and current track is null.</exception>
         public async Task PauseAsync()
@@ -150,9 +156,11 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Make the player seek to a certain position.
+        ///     Make the player seek to a certain position.
         /// </summary>
-        /// <param name="position"><see cref="TimeSpan"/></param>
+        /// <param name="position">
+        ///     <see cref="TimeSpan" />
+        /// </param>
         /// <exception cref="InvalidOperationException">Throws if player isn't playing anything and current track is null.</exception>
         public async Task SeekAsync(TimeSpan position)
         {
@@ -164,7 +172,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Changes the player equalizer bands.
+        ///     Changes the player equalizer bands.
         /// </summary>
         /// <param name="bands">List of bands ranging from 0 - 14.</param>
         /// <exception cref="InvalidOperationException">Throws if player isn't playing anything and current track is null.</exception>
@@ -177,7 +185,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Changes the player equalizer bands.
+        ///     Changes the player equalizer bands.
         /// </summary>
         /// <param name="bands">List of bands ranging from 0 - 14.</param>
         /// <exception cref="InvalidOperationException">Throws if player isn't playing anything and current track is null.</exception>
@@ -190,7 +198,7 @@ namespace Victoria
         }
 
         /// <summary>
-        /// Changes player volume.
+        ///     Changes player volume.
         /// </summary>
         /// <param name="volume"></param>
         /// <exception cref="InvalidOperationException">Throws if player isn't connected.</exception>
