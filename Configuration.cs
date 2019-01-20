@@ -111,7 +111,7 @@ namespace Victoria
             if (configuration.Port is 0)
                 configuration.Port = 2333;
 
-            if (configuration.Severity is default)
+            if (configuration.Severity is default(LogSeverity))
                 configuration.Severity = LogSeverity.Info;
 
             if (string.IsNullOrWhiteSpace(configuration.NodePrefix))
