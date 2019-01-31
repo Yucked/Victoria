@@ -1,19 +1,38 @@
-version: 2.3.{build}
-image: Visual Studio 2017 Preview
-clone_folder: C:\Projects\Victoria
-skip_commits:
-  message: /Update/
+version: 4.0.0-alpha-
+
+pull_requests:
+  do_not_increment_build_number: true
+
+clone_depth: 1
+
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}{build}'
+  package_version: '{version}{build}'
+
 before_build:
 - cmd: dotnet restore
+
 build:
+  parallel: true
   verbosity: minimal
-after_build:
-- cmd: dotnet build
+
 artifacts:
 - path: '**\*.nupkg'
   name: Victoria
+
 deploy:
 - provider: NuGet
   api_key:
     secure: 2ERjvGaKjBby9aE8IHGo0uBHqXuosD3em2isgwubNPD9Zwt1q+y1WOopXW2dmH6j
-  artifact: Victoria
+
+on_success:
+- ps: >-
+    - ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
+    - ps: ./VeyorHook.ps1 success $env:WEBHOOK_URL
+
+on_failure:
+- ps: >-
+    - ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
+    - ps: ./VeyorHook.ps1 failure $env:WEBHOOK_URL

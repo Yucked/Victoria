@@ -1,34 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
     <PropertyGroup>
-        <NoWarn>1591, 1571</NoWarn>
         <LangVersion>latest</LangVersion>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>2.3.7</Version>
         <Title>Victoria</Title>
         <Authors>Yucked</Authors>
-        <Description>Lavalink wrapper written for Discord.NET.</Description>
-        <Copyright>2018 Yucked. All rights reserved.</Copyright>
-        <PackageReleaseNotes>Merged PR#7. Removed concurrentdictionary in Lavalink and replaced it with a list which fixes everything related to nodes.</PackageReleaseNotes>
+        <Copyright>2018 - 2019 Yucked. All rights reserved.</Copyright>
+        <PackageIconUrl>https://i.imgur.com/OKfy9Jk.png</PackageIconUrl>
         <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
         <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
-        <PackageIconUrl>https://i.imgur.com/F34NrfQ.png</PackageIconUrl>
-    </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <DocumentationFile>bin\Debug\netstandard2.0\Victoria.xml</DocumentationFile>
-    </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <DocumentationFile>bin\Release\netstandard2.0\Victoria.xml</DocumentationFile>
+        <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Discord.Net" Version="2.0.0-beta2-01001"/>
-        <PackageReference Include="HyperEx" Version="1.0.9"/>
+        <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0"/>
     </ItemGroup>
 
 </Project>
