@@ -1,15 +1,19 @@
-version: 4.0.0-alpha-
+version: 4.0.0-alpha-{build}
 
 pull_requests:
   do_not_increment_build_number: true
 
-clone_depth: 1
+shallow_clone: true
+clone_folder: C:\Projects\Victoria
+
+skip_commits:
+  message: /Update/
 
 dotnet_csproj:
   patch: true
   file: '**\*.csproj'
-  version: '{version}{build}'
-  package_version: '{version}{build}'
+  version: '{version}'
+  package_version: '{version}'
 
 before_build:
 - cmd: dotnet restore
