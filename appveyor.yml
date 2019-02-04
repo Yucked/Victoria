@@ -1,5 +1,7 @@
 version: 4.0.0-alpha-{build}
 
+image: Visual Studio 2019 Preview
+
 pull_requests:
   do_not_increment_build_number: true
 
