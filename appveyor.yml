@@ -34,11 +34,9 @@ deploy:
     secure: 2ERjvGaKjBby9aE8IHGo0uBHqXuosD3em2isgwubNPD9Zwt1q+y1WOopXW2dmH6j
 
 on_success:
-- ps: >-
-    - ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
-    - ps: ./VeyorHook.ps1 success $env:WEBHOOK_URL
+  - ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
+  - ps: ./VeyorHook.ps1 success $env:WEBHOOK_URL
 
 on_failure:
-- ps: >-
-    - ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
-    - ps: ./VeyorHook.ps1 failure $env:WEBHOOK_URL
+  - ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
+  - ps: ./VeyorHook.ps1 failure $env:WEBHOOK_URL
