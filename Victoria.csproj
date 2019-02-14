@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <LangVersion>latest</LangVersion>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>8.0</LangVersion>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -15,7 +15,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0"/>
-        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.0-preview.18571.3"/>
+        <PackageReference Include="Discord.Net.WebSocket" Version="2.0.1" />
+        <PackageReference Include="System.Text.JsonLab.Serialization" Version="0.1.1-e190213-1" />
     </ItemGroup>
 </Project>

@@ -1,23 +1,23 @@
+using Discord;
 using System;
 using System.Threading.Tasks;
 
 namespace Victoria
 {
-    public sealed class LavaNode : IDisposable
+    public sealed class LavaNode : IAsyncDisposable
     {
+        public event Func<LogMessage, ValueTask> Log;
+
+
+
         internal LavaNode()
         {
+
         }
 
-        /// <summary>
-        ///     Node info such as name and id.
-        /// </summary>
-        public (string Name, int Num) Id { get; private set; }
-
-        public void Dispose()
+        public ValueTask DisposeAsync()
         {
+            throw new NotImplementedException();
         }
-
-        private event Func<ValueTask> _log;
     }
 }

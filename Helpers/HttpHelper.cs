@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Victoria.Entities.Payloads;
 
 namespace Victoria.Helpers
 {
@@ -24,36 +22,32 @@ namespace Victoria.Helpers
             _client = new HttpClient();
         }
 
-        public void SetHeaders(IReadOnlyDictionary<string, string> headers = null)
-        {
-            CheckClient();
-            _client.DefaultRequestHeaders.Clear();
-            foreach (var header in headers)
-                _client.DefaultRequestHeaders.Add(header.Key, header.Value);
-        }
-
-        public void ClearHeaders()
-        {
-            CheckClient();
-            _client.DefaultRequestHeaders.Clear();
-        }
-
         public async ValueTask<string> GetStringAsync(string url)
         {
             CheckClient();
 
-            var get = await _client.GetAsync(url);
+            var get = await _client.GetAsync(url).ConfigureAwait(false);
             if (!get.IsSuccessStatusCode)
                 return string.Empty;
 
             using (var content = get.Content)
             {
-                return await content.ReadAsStringAsync();
+                return await content.ReadAsStringAsync().ConfigureAwait(false);
             }
         }
 
-        public async Task SendPayloadAsync(BasePayload payload)
+        public async ValueTask<string> HeadersRequestAsync(string url)
         {
+            CheckClient();
+
+            var get = await _client.GetAsync(url).ConfigureAwait(false);
+            if (!get.IsSuccessStatusCode)
+                return string.Empty;
+
+            using (var content = get.Content)
+            {
+                return await content.ReadAsStringAsync().ConfigureAwait(false);
+            }
         }
     }
 }

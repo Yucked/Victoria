@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace Victoria.Queue
 {
     /// <summary>
-    ///     Queue based on <see cref="LinkedList{T}" />. Follows FIFO.
+    /// Queue based on <see cref="LinkedList{T}" />. Follows FIFO.
     /// </summary>
     /// <typeparam name="T">
-    ///     <see cref="IQueueObject" />
+    /// <see cref="IQueueObject" />
     /// </typeparam>
     public sealed class LavaQueue<T> where T : IQueueObject
     {
@@ -22,7 +22,7 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Returns the total count of items.
+        /// Returns the total count of items.
         /// </summary>
         public int Count
             => _linked.Count;
@@ -38,10 +38,10 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Adds an object.
+        /// Adds an object.
         /// </summary>
         /// <param name="value">
-        ///     <see cref="IQueueObject" />
+        /// <see cref="IQueueObject" />
         /// </param>
         public void Enqueue(T value)
         {
@@ -49,10 +49,10 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Removes the first item from queue.
+        /// Removes the first item from queue.
         /// </summary>
         /// <returns>
-        ///     <see cref="IQueueObject" />
+        /// <see cref="IQueueObject" />
         /// </returns>
         public T Dequeue()
         {
@@ -62,10 +62,10 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Safely removes the first item from queue.
+        /// Safely removes the first item from queue.
         /// </summary>
         /// <param name="value">
-        ///     <see cref="IQueueObject" />
+        /// <see cref="IQueueObject" />
         /// </param>
         /// <returns><see cref="bool" /> based on if dequeue-ing was successful.</returns>
         public bool TryDequeue(out T value)
@@ -84,10 +84,10 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Sneaky peaky the first time in list.
+        /// Sneaky peaky the first time in list.
         /// </summary>
         /// <returns>
-        ///     <see cref="IQueueObject" />
+        /// <see cref="IQueueObject" />
         /// </returns>
         public T Peek()
         {
@@ -95,10 +95,10 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Removes an item from queue.
+        /// Removes an item from queue.
         /// </summary>
         /// <param name="value">
-        ///     <see cref="IQueueObject" />
+        /// <see cref="IQueueObject" />
         /// </param>
         public void Remove(T value)
         {
@@ -106,7 +106,7 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Clears the queue.
+        /// Clears the queue.
         /// </summary>
         public void Clear()
         {
@@ -114,7 +114,7 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Shuffles the queue.
+        /// Shuffles the queue.
         /// </summary>
         public void Shuffle()
         {
@@ -138,11 +138,11 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Removes an item based on the given index.
+        /// Removes an item based on the given index.
         /// </summary>
         /// <param name="index">Index of item.</param>
         /// <returns>
-        ///     <see cref="IQueueObject" />
+        /// <see cref="IQueueObject" />
         /// </returns>
         public T RemoveAt(int index)
         {
@@ -164,7 +164,7 @@ namespace Victoria.Queue
         }
 
         /// <summary>
-        ///     Removes a item from given range.
+        /// Removes a item from given range.
         /// </summary>
         /// <param name="from">Start index.</param>
         /// <param name="to">End index.</param>

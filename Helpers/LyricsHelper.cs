@@ -8,7 +8,7 @@ using Victoria.Entities;
 namespace Victoria.Helpers
 {
     /// <summary>
-    ///     Helper class for fetching track lyrics.
+    /// Helper class for fetching track lyrics.
     /// </summary>
     public sealed class LyricsHelper
     {
@@ -33,7 +33,8 @@ namespace Victoria.Helpers
         /// <returns></returns>
         public static Task<string> SearchAsync(LavaTrack track)
         {
-            return SearchAsync(track.Author, track.Title);
+            //return SearchAsync(track.Author, track.Title);
+            return Task.FromResult(string.Empty);
         }
 
         /// <summary>

@@ -7,15 +7,16 @@ namespace Victoria.Helpers
     public sealed class ThumbnailHelper
     {
         /// <summary>
-        ///     Finds the thumbnail of <see cref="LavaTrack" />. Supports YouTube, Twitch, Soundcloud and Vimeo.
+        /// Finds the thumbnail of <see cref="LavaTrack" />. Supports YouTube, Twitch, Soundcloud and Vimeo.
         /// </summary>
         /// <param name="track">
-        ///     <see cref="LavaTrack" />
+        /// <see cref="LavaTrack" />
         /// </param>
         /// <returns>Returns the url of the track.</returns>
         public static async Task<string> FetchAsync(LavaTrack track)
         {
             var url = string.Empty;
+
             switch ($"{track.Url}".ToLower())
             {
                 case var yt when yt.Contains("youtube"):
