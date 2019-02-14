@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Victoria.Entities.Responses.LoadTracks
 {
-    public sealed class LoadInfo
+    public sealed class LoadResult
     {
         [JsonPropertyName("playlistInfo")]
         public PlaylistInfo PlaylistInfo { get; set; }

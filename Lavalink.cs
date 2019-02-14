@@ -22,12 +22,43 @@ namespace Victoria
             _nodes = new ConcurrentDictionary<int, LavaNode>();
         }
 
-        public async Task<LavaNode> AddNodeAsync(BaseDiscordClient baseDiscordClient)
+        public async Task<LavaNode> AddNodeAsync(BaseDiscordClient baseDiscordClient, LavaNodeSettings nodeSettings = default)
         {
-            
-            var shards = await GetShardsAsync(baseDiscordClient);
+            var node = default(LavaNode);
+            nodeSettings ??= _settings.LavaNodeSettings;
+            int hashCode;
 
-            return null;
+            switch (baseDiscordClient)
+            {
+                case DiscordSocketClient socketClient:
+                    hashCode = socketClient.GetHashCode();
+
+                    if (_nodes.TryGetValue(hashCode, out node))
+                        break;
+
+                    node = new LavaNode(nodeSettings);
+                    _nodes.TryAdd(hashCode, node);
+                    Interlocked.Increment(ref NodeNum);
+                    break;
+
+
+                case DiscordShardedClient shardedClient:
+
+                    foreach (var shard in shardedClient.Shards)
+                    {
+                        hashCode = shard.GetHashCode();
+                        if (_nodes.TryGetValue(hashCode, out node))
+                            continue;
+
+                        node = new LavaNode(nodeSettings);
+                        _nodes.TryAdd(hashCode, node);
+                        Interlocked.Increment(ref NodeNum);
+                    }
+
+                    break;
+            }
+
+            return node;
         }
 
         private async ValueTask<int> GetShardsAsync(BaseDiscordClient baseDiscordClient)
