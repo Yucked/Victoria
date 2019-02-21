@@ -1,22 +1,22 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace Victoria.Entities.Responses.LoadTracks
-{    
+{
     public enum LoadType
     {
-        [JsonPropertyName("TRACK_LOADED")]
+        [EnumMember(Value = "TRACK_LOADED")]
         TrackLoaded,
 
-        [JsonPropertyName("PLAYLIST_LOADED")]
+        [EnumMember(Value = "PLAYLIST_LOADED")]
         PlaylistLoaded,
 
-        [JsonPropertyName("SEARCH_RESULT")]
+        [EnumMember(Value = "SEARCH_RESULT")]
         SearchResult,
 
-        [JsonPropertyName("NO_MATCHES")]
+        [EnumMember(Value = "NO_MATCHES")]
         NoMatches,
 
-        [JsonPropertyName("LOAD_FAILED")]
+        [EnumMember(Value = "LOAD_FAILED")]
         LoadFailed
     }
 }

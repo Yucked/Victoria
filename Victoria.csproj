@@ -16,6 +16,6 @@
 
     <ItemGroup>
         <PackageReference Include="Discord.Net.WebSocket" Version="2.0.1" />
-        <PackageReference Include="System.Text.JsonLab.Serialization" Version="0.1.1-e190213-1" />
+        <PackageReference Include="System.Text.JsonLab.Serialization" Version="0.1.1-e190220-2" />
     </ItemGroup>
 </Project>

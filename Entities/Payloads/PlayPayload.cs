@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using Victoria.Entities.Responses.LoadTracks;
 
 namespace Victoria.Entities.Payloads
 {
     internal sealed class PlayPayload : LavaPayload
     {
         [JsonPropertyName("track")]
-        public LavaTrack Track { get; }
+        public Track Track { get; }
 
         [JsonPropertyName("startTime")]
         public int StartTime { get; }
@@ -17,7 +18,7 @@ namespace Victoria.Entities.Payloads
         [JsonPropertyName("noReplace")]
         public bool NoReplace { get; }
 
-        public PlayPayload(ulong guildId, LavaTrack track,
+        public PlayPayload(ulong guildId, Track track,
                               TimeSpan start, TimeSpan end,
                               bool noReplace) : base(guildId, "play")
         {

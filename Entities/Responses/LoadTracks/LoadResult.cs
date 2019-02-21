@@ -8,7 +8,7 @@ namespace Victoria.Entities.Responses.LoadTracks
         [JsonPropertyName("playlistInfo")]
         public PlaylistInfo PlaylistInfo { get; set; }
 
-        [JsonPropertyName("loadType"), JsonEnumConverter]
+        [JsonPropertyName("loadType"), JsonEnumConverter(true)]
         public LoadType LoadType { get; set; }
 
         [JsonPropertyName("tracks")]

@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using Victoria.Entities;
+using Victoria.Entities.Responses.LoadTracks;
 
 namespace Victoria.Helpers
 {
@@ -13,25 +13,25 @@ namespace Victoria.Helpers
         /// <see cref="LavaTrack" />
         /// </param>
         /// <returns>Returns the url of the track.</returns>
-        public static async Task<string> FetchAsync(LavaTrack track)
+        public static async Task<string> FetchAsync(Track track)
         {
             var url = string.Empty;
 
-            switch ($"{track.Url}".ToLower())
+            switch ($"{track.Uri}".ToLower())
             {
                 case var yt when yt.Contains("youtube"):
                     return $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg";
 
                 case var twich when twich.Contains("twitch"):
-                    url = $"https://api.twitch.tv/v4/oembed?url={track.Url}";
+                    url = $"https://api.twitch.tv/v4/oembed?url={track.Uri}";
                     break;
 
                 case var sc when sc.Contains("soundcloud"):
-                    url = $"https://soundcloud.com/oembed?url={track.Url}&format=json";
+                    url = $"https://soundcloud.com/oembed?url={track.Uri}&format=json";
                     break;
 
                 case var vim when vim.Contains("vimeo"):
-                    url = $"https://vimeo.com/api/oembed.json?url={track.Url}";
+                    url = $"https://vimeo.com/api/oembed.json?url={track.Uri}";
                     break;
             }
 

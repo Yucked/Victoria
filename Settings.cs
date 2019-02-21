@@ -1,5 +1,7 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using System;
+using System.Threading.Tasks;
 
 namespace Victoria
 {
@@ -18,11 +20,21 @@ namespace Victoria
         /// </summary>
         public LavaNodeSettings LavaNodeSettings { get; set; }
 
-        /// <inheritdoc cref="Settings" />
-        public Settings()
+        public LavaNodeSettings VerifyNodeSettings(LavaNodeSettings settings)
         {
-            LavalinkSettings ??= new LavalinkSettings();
-            LavaNodeSettings ??= new LavaNodeSettings();
+            settings ??= new LavaNodeSettings();
+
+
+            return settings;
+        }
+
+        public async ValueTask<int> GetShardsAsync(BaseSocketClient baseClient)
+        {
+            baseClient switch
+            {
+                DiscordSocketClient socketClient
+                    => await socketClient.GetRecommendedShardCountAsync().ConfigureAwait(false);;
+            };
         }
     }
 
@@ -86,6 +98,23 @@ namespace Victoria
         /// 
         /// </summary>
         public string Authorization { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal int? Shards { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal ulong? UserId { get; set; }
+
+
+        internal void With(int shards = default, ulong userId = default)
+        {
+            Shards = shards;
+            UserId = userId;
+        }
 
         /// <inheritdoc cref="LavaNodeSettings" />
         public LavaNodeSettings()

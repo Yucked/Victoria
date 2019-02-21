@@ -1,74 +1,60 @@
 using System;
 using System.Collections.Concurrent;
-using System.Net;
-using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Rest;
 using Discord.WebSocket;
 
 namespace Victoria
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public sealed class Lavalink : IAsyncDisposable
     {
         private int NodeNum;
         private readonly ConcurrentDictionary<int, LavaNode> _nodes;
         private readonly Settings _settings;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<LogMessage, Task> Log;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="settings"></param>
         public Lavalink(Settings settings = null)
         {
             _settings = settings ?? new Settings();
-
             _nodes = new ConcurrentDictionary<int, LavaNode>();
         }
 
-        public async Task<LavaNode> AddNodeAsync(BaseDiscordClient baseDiscordClient, LavaNodeSettings nodeSettings = default)
+        public async Task<LavaNode> AddNodeAsync(DiscordSocketClient socketClient,
+            LavaNodeSettings settings)
         {
-            var node = default(LavaNode);
-            nodeSettings ??= _settings.LavaNodeSettings;
-            int hashCode;
+            var hash = socketClient.GetHashCode();
+            if (_nodes.TryGetValue(hash, out LavaNode node))
+                return node;
 
-            switch (baseDiscordClient)
-            {
-                case DiscordSocketClient socketClient:
-                    hashCode = socketClient.GetHashCode();
+            settings.Shards = settings.Shards is null ?
+                await socketClient.GetRecommendedShardCountAsync().ConfigureAwait(false)
+                : 1;
 
-                    if (_nodes.TryGetValue(hashCode, out node))
-                        break;
-
-                    node = new LavaNode(nodeSettings);
-                    _nodes.TryAdd(hashCode, node);
-                    Interlocked.Increment(ref NodeNum);
-                    break;
-
-
-                case DiscordShardedClient shardedClient:
-
-                    foreach (var shard in shardedClient.Shards)
-                    {
-                        hashCode = shard.GetHashCode();
-                        if (_nodes.TryGetValue(hashCode, out node))
-                            continue;
-
-                        node = new LavaNode(nodeSettings);
-                        _nodes.TryAdd(hashCode, node);
-                        Interlocked.Increment(ref NodeNum);
-                    }
-
-                    break;
-            }
-
+            node = new LavaNode(settings);
+            await node.InitializeAsync().ConfigureAwait(false);
             return node;
         }
 
-        private async ValueTask<int> GetShardsAsync(BaseDiscordClient baseDiscordClient)
+        public async Task<IEnumerable<LavaNode>> AddNodesAsync(DiscordShardedClient shardedClient,
+            LavaNodeSettings settings)
         {
-            return baseDiscordClient switch
-            {
-                DiscordSocketClient socketClient => (await socketClient.GetRecommendedShardCountAsync()),
-                DiscordShardedClient shardedClient => shardedClient.Shards.Count,
-                _ => 1
-            };
+            settings.With(shardedClient.Shards.Count, shardedClient.CurrentUser.Id);
+            var add = shardedClient.Shards.Select(x => AddNodeAsync(x, settings));
+            var nodes = await Task.WhenAll(add).ConfigureAwait(false);
+            return nodes;
         }
 
         public async ValueTask DisposeAsync()

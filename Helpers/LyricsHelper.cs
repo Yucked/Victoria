@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json.Linq;
-using Victoria.Entities;
+using Victoria.Entities.Responses.LoadTracks;
 
 namespace Victoria.Helpers
 {
@@ -31,10 +31,9 @@ namespace Victoria.Helpers
         /// </summary>
         /// <param name="track"></param>
         /// <returns></returns>
-        public static Task<string> SearchAsync(LavaTrack track)
+        public static Task<string> SearchAsync(Track track)
         {
-            //return SearchAsync(track.Author, track.Title);
-            return Task.FromResult(string.Empty);
+            return SearchAsync(track.Author, track.Title);
         }
 
         /// <summary>

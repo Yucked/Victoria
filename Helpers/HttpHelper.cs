@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Victoria.Helpers
 {
-    internal sealed class HttpHelper
+    public sealed class HttpHelper
     {
         private static readonly Lazy<HttpHelper> LazyHelper
             = new Lazy<HttpHelper>(() => new HttpHelper());
@@ -17,10 +17,7 @@ namespace Victoria.Helpers
 
         private void CheckClient()
         {
-            if (!(_client is null))
-                return;
-
-            _client = new HttpClient();
+            _client ??= new HttpClient();
             _client.DefaultRequestHeaders.Clear();
             _client.DefaultRequestHeaders.Add("User-Agent", "Victoria");
         }
@@ -33,13 +30,12 @@ namespace Victoria.Helpers
             if (!get.IsSuccessStatusCode)
                 return string.Empty;
 
-            using (var content = get.Content)
-            {
-                return await content.ReadAsStringAsync().ConfigureAwait(false);
-            }
+            using var content = get.Content;
+            var read = await content.ReadAsStringAsync().ConfigureAwait(false);
+            return read;
         }
 
-        public async ValueTask<Stream> HeadersRequestAsync(string url, params (string name, string value)[] headers)
+        public async ValueTask<string> HeadersRequestAsync(string url, params (string name, string value)[] headers)
         {
             CheckClient();
 
@@ -51,10 +47,9 @@ namespace Victoria.Helpers
             if (!get.IsSuccessStatusCode)
                 return default;
 
-            using (var content = get.Content)
-            {
-                return await content.ReadAsStreamAsync().ConfigureAwait(false);
-            }
+            using var content = get.Content;
+            var read = await content.ReadAsStringAsync().ConfigureAwait(false);
+            return read;
         }
     }
 }

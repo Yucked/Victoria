@@ -15,19 +15,33 @@ namespace Victoria.Entities.Responses.LoadTracks
         [JsonPropertyName("author")]
         public string Author { get; internal set; }
 
-        [JsonPropertyName("length")]
-        public long Length { get; internal set; }
-
         [JsonPropertyName("isStream")]
         public bool IsStream { get; internal set; }
 
+        public TimeSpan Position
+        {
+            get => new TimeSpan(TrackPosition);
+            internal set => Position = value;
+        }
+
         [JsonPropertyName("position")]
-        public long Position { get; internal set; }
+        internal long TrackPosition { get; set; }
+
+        public TimeSpan Length
+            => new TimeSpan(TrackLength);
+
+        [JsonPropertyName("length")]
+        internal long TrackLength { get; set; }
 
         [JsonPropertyName("title")]
         public string Title { get; internal set; }
 
         [JsonPropertyName("uri")]
         public Uri Uri { get; internal set; }
+
+        public void ResetPosition()
+        {
+            Position = TimeSpan.Zero;
+        }
     }
 }
