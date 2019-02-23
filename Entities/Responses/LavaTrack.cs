@@ -1,44 +1,49 @@
-﻿using System;
-using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System;
 using Victoria.Queue;
 
-namespace Victoria.Entities.Responses.LoadTracks
+namespace Victoria.Entities.Responses
 {
-    public sealed class Track : IQueueObject
+    public sealed class LavaTrack : IQueueObject
     {
-        [JsonPropertyName("identifier")]
+        [JsonProperty("identifier")]
         public string Id { get; internal set; }
 
-        [JsonPropertyName("isSeekable")]
+        [JsonProperty("isSeekable")]
         public bool IsSeekable { get; internal set; }
 
-        [JsonPropertyName("author")]
+        [JsonProperty("author")]
         public string Author { get; internal set; }
 
-        [JsonPropertyName("isStream")]
+        [JsonProperty("isStream")]
         public bool IsStream { get; internal set; }
 
+        [JsonIgnore]
         public TimeSpan Position
         {
             get => new TimeSpan(TrackPosition);
             internal set => Position = value;
         }
 
-        [JsonPropertyName("position")]
+        [JsonProperty("position")]
         internal long TrackPosition { get; set; }
 
+        [JsonIgnore]
         public TimeSpan Length
             => new TimeSpan(TrackLength);
 
-        [JsonPropertyName("length")]
+        [JsonProperty("length")]
         internal long TrackLength { get; set; }
 
-        [JsonPropertyName("title")]
+        [JsonProperty("title")]
         public string Title { get; internal set; }
 
-        [JsonPropertyName("uri")]
+        [JsonProperty("uri")]
         public Uri Uri { get; internal set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void ResetPosition()
         {
             Position = TimeSpan.Zero;

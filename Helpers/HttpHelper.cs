@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -17,7 +16,10 @@ namespace Victoria.Helpers
 
         private void CheckClient()
         {
-            _client ??= new HttpClient();
+            if (!(_client is null))
+                return;
+
+            _client = new HttpClient();
             _client.DefaultRequestHeaders.Clear();
             _client.DefaultRequestHeaders.Add("User-Agent", "Victoria");
         }
@@ -35,21 +37,14 @@ namespace Victoria.Helpers
             return read;
         }
 
-        public async ValueTask<string> HeadersRequestAsync(string url, params (string name, string value)[] headers)
+        public HttpHelper WithCustomHeaders(params (string name, string value)[] headers)
         {
             CheckClient();
 
             foreach (var (name, value) in headers)
                 _client.DefaultRequestHeaders.Add(name, value);
 
-            var get = await _client.GetAsync(url).ConfigureAwait(false);
-
-            if (!get.IsSuccessStatusCode)
-                return default;
-
-            using var content = get.Content;
-            var read = await content.ReadAsStringAsync().ConfigureAwait(false);
-            return read;
+            return this;
         }
     }
 }

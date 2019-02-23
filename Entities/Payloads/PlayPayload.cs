@@ -1,21 +1,21 @@
 ﻿using System;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using Victoria.Entities.Responses.LoadTracks;
 
 namespace Victoria.Entities.Payloads
 {
     internal sealed class PlayPayload : LavaPayload
     {
-        [JsonPropertyName("track")]
+        [JsonProperty("track")]
         public Track Track { get; }
 
-        [JsonPropertyName("startTime")]
+        [JsonProperty("startTime")]
         public int StartTime { get; }
 
-        [JsonPropertyName("endTime")]
+        [JsonProperty("endTime")]
         public int EndTime { get; }
 
-        [JsonPropertyName("noReplace")]
+        [JsonProperty("noReplace")]
         public bool NoReplace { get; }
 
         public PlayPayload(ulong guildId, Track track,

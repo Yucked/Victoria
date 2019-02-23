@@ -1,7 +1,6 @@
 using Discord;
 using System;
 using System.Threading.Tasks;
-using Victoria.Entities.Responses.LoadTracks;
 using Victoria.Queue;
 
 namespace Victoria

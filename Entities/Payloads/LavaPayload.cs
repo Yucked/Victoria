@@ -1,10 +1,10 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
     internal class LavaPayload : BasePayload
     {
-        [JsonPropertyName("guildId")]
+        [JsonProperty("guildId")]
         public ulong GuildId { get; }
 
         protected LavaPayload(ulong guildId, string op) : base(op)

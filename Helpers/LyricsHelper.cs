@@ -3,21 +3,23 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json.Linq;
-using Victoria.Entities.Responses.LoadTracks;
 
 namespace Victoria.Helpers
 {
     /// <summary>
-    /// Helper class for fetching track lyrics.
+    /// 
     /// </summary>
     public sealed class LyricsHelper
     {
+        internal LyricsHelper() { }
+
         private static Regex Compiled(string pattern)
         {
             return new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(500));
         }
 
         /// <summary>
+        /// 
         /// </summary>
         /// <param name="searchText"></param>
         /// <returns></returns>
@@ -28,15 +30,7 @@ namespace Victoria.Helpers
         }
 
         /// <summary>
-        /// </summary>
-        /// <param name="track"></param>
-        /// <returns></returns>
-        public static Task<string> SearchAsync(Track track)
-        {
-            return SearchAsync(track.Author, track.Title);
-        }
-
-        /// <summary>
+        /// 
         /// </summary>
         /// <param name="trackAuthor"></param>
         /// <param name="trackTitle"></param>

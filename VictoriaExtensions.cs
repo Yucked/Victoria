@@ -1,19 +1,18 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using Victoria.Entities.Responses.LoadTracks;
+using Victoria.Entities;
+using Victoria.Helpers;
 
-namespace Victoria.Helpers
+namespace Victoria
 {
-    public sealed class ThumbnailHelper
+    public static class VictoriaExtensions
     {
         /// <summary>
-        /// Finds the thumbnail of <see cref="LavaTrack" />. Supports YouTube, Twitch, Soundcloud and Vimeo.
+        /// 
         /// </summary>
-        /// <param name="track">
-        /// <see cref="LavaTrack" />
-        /// </param>
-        /// <returns>Returns the url of the track.</returns>
-        public static async Task<string> FetchAsync(Track track)
+        /// <param name="track"></param>
+        /// <returns></returns>
+        public static async Task<string> FetchThumbnailAsync(this LavaTrack track)
         {
             var url = string.Empty;
 
@@ -40,6 +39,16 @@ namespace Victoria.Helpers
             return !parse.TryGetValue("thumbnail_url", out var thumb)
                 ? "https://i.imgur.com/YPCEUDK.gif"
                 : $"{thumb}";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="track"></param>
+        /// <returns></returns>
+        public static Task<string> FetchLyricsAsync(this LavaTrack track)
+        {
+            return LyricsHelper.SearchAsync(track.Author, track.Title);
         }
     }
 }

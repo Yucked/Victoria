@@ -1,14 +1,14 @@
 ﻿using Discord.WebSocket;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
     internal sealed class VoiceServerPayload : LavaPayload
     {
-        [JsonPropertyName("sessionId")]
+        [JsonProperty("sessionId")]
         public string SessionId { get; }
 
-        [JsonPropertyName("event")]
+        [JsonProperty("event")]
         public VoiceServerUpdate VoiceServerUpdate { get; }
 
         public VoiceServerPayload(SocketVoiceServer server, string voiceSessionId)

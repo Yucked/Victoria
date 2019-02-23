@@ -1,20 +1,20 @@
 ﻿using Discord.WebSocket;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Entities
 {
     internal sealed class VoiceServerUpdate
     {
-        [JsonPropertyName("token")]
+        [JsonProperty("token")]
         public string Token { get; }
 
-        [JsonPropertyName("guildid")]
+        [JsonProperty("guildid")]
         public string GuildId { get; }
 
-        [JsonPropertyName("endpoint")]
+        [JsonProperty("endpoint")]
         public string Endpoint { get; }
 
-        internal VoiceServerUpdate(SocketVoiceServer server)
+        public VoiceServerUpdate(SocketVoiceServer server)
         {
             Token = server.Token;
             Endpoint = server.Endpoint;

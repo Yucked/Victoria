@@ -1,10 +1,10 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Entities.Payloads
 {
     internal abstract class BasePayload
     {
-        [JsonPropertyName("op")]
+        [JsonProperty("op")]
         public string Op { get; }
 
         protected BasePayload(string op)
