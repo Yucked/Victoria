@@ -1,6 +1,7 @@
 using Discord;
 using System;
 using System.Threading.Tasks;
+using Victoria.Entities.Responses;
 using Victoria.Queue;
 
 namespace Victoria
@@ -15,7 +16,7 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
-        public Track CurrentTrack { get; }
+        public LavaTrack CurrentTrack { get; }
 
         /// <summary>
         /// 
@@ -43,7 +44,7 @@ namespace Victoria
         /// </summary>
         /// <param name="track"></param>
         /// <returns></returns>
-        public async Task PlayAsync(Track track)
+        public async Task PlayAsync(LavaTrack track)
         {
 
         }
@@ -60,12 +61,12 @@ namespace Victoria
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual async ValueTask<Track> SkipAsync()
+        public virtual async ValueTask<LavaTrack> SkipAsync()
         {
             if (!Queue.TryDequeue(out var item))
                 throw new InvalidOperationException("");
 
-            if (!(item is Track track))
+            if (!(item is LavaTrack track))
                 throw new ArgumentException("");
 
             await StopAsync();

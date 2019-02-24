@@ -1,5 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using Discord.WebSocket;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using Victoria.Configs;
 
 namespace Victoria
 {
@@ -8,7 +10,6 @@ namespace Victoria
     /// </summary>
     public sealed class SocketPool
     {
-        private int? shards;
         private readonly ConcurrentDictionary<int, LavaSocket> _connections;
 
         /// <summary>
@@ -17,9 +18,8 @@ namespace Victoria
         public int TotalConnections
             => _connections.Count;
 
-        public SocketPool(int shards)
+        public SocketPool()
         {
-            this.shards = shards;
             _connections = new ConcurrentDictionary<int, LavaSocket>();
         }
 
@@ -27,7 +27,7 @@ namespace Victoria
         /// 
         /// </summary>
         /// <returns></returns>
-        public async Task AddConnectionAsync()
+        public async Task AddConnectionAsync(BaseSocketClient baseSocketClient, EndpointConfig endpoint = null)
         {
 
         }
