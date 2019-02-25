@@ -13,14 +13,7 @@ using Victoria.Helpers;
 namespace Victoria
 {
     public abstract class BaseLavaClient
-        :
-#if C3
-        IAsyncDisposable
-#else
-        IDisposable
-#endif
     {
-
         #region EVENTS
         /// <summary>
         /// Fires when stats are sent from Lavalink server.
@@ -46,15 +39,14 @@ namespace Victoria
         /// Fires when any of the <see cref="TrackReason"/> 's are met.
         /// </summary>
         public event Func<LavaPlayer, LavaTrack, TrackEndReason, Task> TrackFinished;
-
         #endregion
 
         public ServerStats ServerStats { get; private set; }
 
-        protected readonly BaseSocketClient _baseSocketClient;
+        private readonly BaseSocketClient _baseSocketClient;
         protected readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
         private readonly SocketHelper _socketHelper;
-        protected SocketVoiceState cachedStated;
+        private SocketVoiceState cachedStated;
 
         /// <summary>
         /// 
@@ -82,27 +74,9 @@ namespace Victoria
             if (_players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
 
-            player = new LavaPlayer();
+            player = new LavaPlayer(voiceChannel, textChannel, _socketHelper);
 
             return player;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="guildId"></param>
-        /// <returns></returns>
-        public async Task<bool> DisconnectAsync(ulong guildId)
-        {
-            if (!_players.TryRemove(guildId, out var player))
-                return false;
-
-#if C3
-            await player.DisposeAsync().ConfigureAwait(false);
-#else
-            player.Dispose();
-#endif
-            return true;
         }
 
         private bool OnMessage(string message)
@@ -155,13 +129,22 @@ namespace Victoria
             return true;
         }
 
-        private Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState currentState)
+        private async Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState currentState)
         {
             if (user.Id != _baseSocketClient.CurrentUser.Id)
-                return Task.CompletedTask;
+                return;
 
             cachedStated = currentState;
-            return Task.CompletedTask;
+
+            if (oldState.VoiceChannel != null && currentState.VoiceChannel is null)
+            {
+                if (!_players.TryGetValue(oldState.VoiceChannel.Id, out var player))
+                    return;
+
+                await player.DisposeAsync().ConfigureAwait(false);
+                var destroy = new DestroyPayload(oldState.VoiceChannel.Guild.Id);
+                await _socketHelper.SendPayloadAsync(destroy).ConfigureAwait(false);
+            }
         }
 
         private Task OnVoiceServerUpdated(SocketVoiceServer server)
@@ -173,20 +156,9 @@ namespace Victoria
             return _socketHelper.SendPayloadAsync(update);
         }
 
-#if C3
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
-            throw new NotImplementedException();
+            GC.SuppressFinalize(this);
         }
-#else
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-#endif
     }
 }

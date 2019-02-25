@@ -1,28 +1,31 @@
 using Discord;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Victoria.Entities.Payloads;
 using Victoria.Entities.Responses;
+using Victoria.Helpers;
 using Victoria.Queue;
 
 namespace Victoria
 {
-    public class LavaPlayer :
-#if C3
-        IAsyncDisposable
-#else
-          IDisposable
-#endif
-
+    public class LavaPlayer
     {
         /// <summary>
         /// 
         /// </summary>
-        public bool IsPaused { get; }
+        public bool IsPaused => isPaused;
+        private bool isPaused;
 
         /// <summary>
         /// 
         /// </summary>
-        public LavaTrack CurrentTrack { get; }
+        public bool IsPlaying { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public LavaTrack CurrentTrack { get; private set; }
 
         /// <summary>
         /// 
@@ -39,28 +42,67 @@ namespace Victoria
         /// </summary>
         public LavaQueue<IQueueObject> Queue { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int CurrentVolume { get; private set; }
 
-        internal LavaPlayer()
+        private readonly SocketHelper _socketHelper;
+
+        internal LavaPlayer(IVoiceChannel voiceChannel, ITextChannel textChannel,
+            SocketHelper socketHelper)
         {
+            VoiceChannel = voiceChannel;
+            TextChannel = textChannel;
+            _socketHelper = socketHelper;
             Queue = new LavaQueue<IQueueObject>();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="track"></param>
-        /// <returns></returns>
-        public async Task PlayAsync(LavaTrack track)
+        public Task PlayAsync(LavaTrack track, bool noReplace = false)
         {
-
+            IsPlaying = true;
+            CurrentTrack = track;
+            var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, noReplace);
+            return _socketHelper.SendPayloadAsync(payload);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public async Task StopAsync()
+        public Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan stopTime, bool noReplace = false)
         {
+            if (startTime.TotalMilliseconds < 0 || stopTime.TotalMilliseconds < 0)
+                throw new InvalidOperationException("Start and stop must be greater than 0.");
+
+            if (startTime <= stopTime)
+                throw new InvalidOperationException("Stop time must be greater than start time.");
+
+            IsPlaying = true;
+            CurrentTrack = track;
+            var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, stopTime, noReplace);
+            return _socketHelper.SendPayloadAsync(payload);
+        }
+
+        public Task StopAsync()
+        {
+            if (!IsPlaying)
+                throw new InvalidOperationException();
+
+            IsPlaying = false;
+            CurrentTrack = null;
+            var payload = new StopPayload(VoiceChannel.GuildId);
+            return _socketHelper.SendPayloadAsync(payload);
+        }
+
+        public Task ResumeAsync()
+        {
+            Volatile.Write(ref isPaused, false);
+            var payload = new PausePayload(VoiceChannel.GuildId, IsPaused);
+            return _socketHelper.SendPayloadAsync(payload);
+        }
+
+        public Task PauseAsync()
+        {
+            Volatile.Write(ref isPaused, true);
+            var payload = new PausePayload(VoiceChannel.GuildId, IsPaused);
+            return _socketHelper.SendPayloadAsync(payload);
         }
 
         /// <summary>
@@ -80,26 +122,11 @@ namespace Victoria
             return track;
         }
 
-
-        #region DISPOSE
-        private async Task DisposeResources()
+        public async ValueTask DisposeAsync()
         {
             Queue.Clear();
             await VoiceChannel.DisconnectAsync().ConfigureAwait(false);
             GC.SuppressFinalize(this);
         }
-
-#if C3
-        public ValueTask DisposeAsync()
-        {
-            return new ValueTask(DisposeResources());
-        }
-#else
-        public void Dispose()
-        {
-            DisposeResources().GetAwaiter().GetResult();
-        }
-#endif
-        #endregion
     }
 }

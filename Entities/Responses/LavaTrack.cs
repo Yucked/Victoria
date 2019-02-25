@@ -6,6 +6,9 @@ namespace Victoria.Entities.Responses
 {
     public sealed class LavaTrack : IQueueObject
     {
+        [JsonIgnore]
+        internal string Hash { get; set; }
+
         [JsonProperty("identifier")]
         public string Id { get; internal set; }
 

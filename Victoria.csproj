@@ -21,6 +21,9 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net.WebSocket" Version="2.0.1" />
+    <PackageReference Condition="'$(TargetFramework)' == 'netstandard2.0'"
+                      Include="System.Threading.Tasks.Extensions"
+                      Version="4.6.0-preview.18571.3" />
   </ItemGroup>
 
 </Project>

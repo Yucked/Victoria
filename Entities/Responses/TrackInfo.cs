@@ -7,9 +7,19 @@ namespace Victoria.Entities.Responses
         internal TrackInfo() { }
 
         [JsonProperty("track")]
-        public string EncryptedId { get; private set; }
+        public string Hash { get; private set; }
 
         [JsonProperty("info")]
-        public LavaTrack Track { get; private set; }
+        private LavaTrack IncompleteTrack { get; set; }
+
+        [JsonIgnore]
+        public LavaTrack Track
+        {
+            get
+            {
+                IncompleteTrack.Hash = Hash;
+                return IncompleteTrack;
+            }
+        }
     }
 }

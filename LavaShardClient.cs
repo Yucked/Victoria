@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 
@@ -15,9 +13,15 @@ namespace Victoria
             shardedClient.ShardDisconnected += OnShardDisconnected;
         }
 
-        private Task OnShardDisconnected(Exception arg1, DiscordSocketClient arg2)
+        private async Task OnShardDisconnected(Exception exception, DiscordSocketClient socketClient)
         {
-            throw new NotImplementedException();
+            foreach (var guild in socketClient.Guilds)
+            {
+                if (!_players.TryRemove(guild.Id, out var player))
+                    continue;
+
+                await player.DisposeAsync().ConfigureAwait(false);
+            }
         }
     }
 }

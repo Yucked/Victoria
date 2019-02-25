@@ -1,10 +1,6 @@
 ﻿using Discord.WebSocket;
 using System;
 using System.Threading.Tasks;
-using Victoria.Entities;
-using Victoria.Entities.Enums;
-using Victoria.Entities.Responses;
-using Victoria.Helpers;
 
 namespace Victoria
 {
@@ -20,9 +16,13 @@ namespace Victoria
             socketClient.Disconnected += OnDisconnected;
         }
 
-        private Task OnDisconnected(Exception arg)
+        public async Task OnDisconnected(Exception exception)
         {
-            throw new NotImplementedException();
+            foreach (var player in _players.Values)
+            {
+                await player.DisposeAsync().ConfigureAwait(false);
+            }
+            _players.Clear();
         }
     }
 }

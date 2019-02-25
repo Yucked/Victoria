@@ -6,7 +6,7 @@ namespace Victoria.Entities.Payloads
     internal sealed class PlayPayload : LavaPayload
     {
         [JsonProperty("track")]
-        public string EncryptedId { get; }
+        public string Hash { get; }
 
         [JsonProperty("startTime")]
         public int StartTime { get; }
@@ -17,13 +17,19 @@ namespace Victoria.Entities.Payloads
         [JsonProperty("noReplace")]
         public bool NoReplace { get; }
 
-        public PlayPayload(ulong guildId, string encryptedId,
+        public PlayPayload(ulong guildId, string trackHash,
                               TimeSpan start, TimeSpan end,
                               bool noReplace) : base(guildId, "play")
         {
-            EncryptedId = encryptedId;
+            Hash = trackHash;
             StartTime = (int)start.TotalMilliseconds;
             EndTime = (int)end.TotalMilliseconds;
+            NoReplace = noReplace;
+        }
+
+        public PlayPayload(ulong guildId, string trackHash, bool noReplace) : base(guildId, "play")
+        {
+            Hash = trackHash;
             NoReplace = noReplace;
         }
     }

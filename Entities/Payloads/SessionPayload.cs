@@ -3,7 +3,7 @@ using System;
 
 namespace Victoria.Entities.Payloads
 {
-    internal sealed class ResumePayload : BasePayload
+    internal sealed class SessionPayload : BasePayload
     {
         [JsonProperty("key")]
         public string Key { get; set; }
@@ -11,7 +11,7 @@ namespace Victoria.Entities.Payloads
         [JsonProperty("timeout")]
         public int Timeout { get; set; }
 
-        public ResumePayload(string key, TimeSpan time) : base("configureResuming")
+        public SessionPayload(string key, TimeSpan time) : base("configureResuming")
         {
             Key = key;
             Timeout = (int)time.TotalMilliseconds;
