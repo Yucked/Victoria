@@ -7,7 +7,7 @@ namespace Victoria.Entities.Responses
         internal TrackInfo() { }
 
         [JsonProperty("track")]
-        public string Encrypted { get; private set; }
+        public string EncryptedId { get; private set; }
 
         [JsonProperty("info")]
         public LavaTrack Track { get; private set; }

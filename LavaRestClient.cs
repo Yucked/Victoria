@@ -1,23 +1,24 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
-using Victoria.Configs;
 using Victoria.Helpers;
 using Victoria.Entities;
 
 namespace Victoria
 {
-    public sealed class LavaRest
+    public sealed class LavaRestClient
     {
-        private readonly EndpointConfig _config;
+        private readonly (string Host, int Port, string Password) _rest;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="nodeSettings"></param>
-        public LavaRest(EndpointConfig config = null)
+        public LavaRestClient(string host = default, int? port = default, string password = default)
         {
-            _config = config is null ? new EndpointConfig() : config;
+            _rest.Host = host ?? "127.0.0.1";
+            _rest.Port = port ?? 2333;
+            _rest.Password = password ?? "youshallnotpass";
         }
 
         /// <summary>
@@ -25,7 +26,7 @@ namespace Victoria
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public ValueTask<SearchResult> SearchSoundcloudAsync(string query)
+        public Task<SearchResult> SearchSoundcloudAsync(string query)
         {
             return TracksRequestAsync($"scsearch:{query}");
         }
@@ -35,7 +36,7 @@ namespace Victoria
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public ValueTask<SearchResult> SearchYoutubeAsync(string query)
+        public Task<SearchResult> SearchYoutubeAsync(string query)
         {
             return TracksRequestAsync($"ytsearch:{query}");
         }
@@ -45,11 +46,11 @@ namespace Victoria
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public async ValueTask<SearchResult> TracksRequestAsync(string query)
+        public async Task<SearchResult> TracksRequestAsync(string query)
         {
-            var url = $"http://{_config.Host}:{_config.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}";
+            var url = $"http://{_rest.Host}:{_rest.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}";
             var request = await HttpHelper.Instance
-                .WithCustomHeaders(("Authorization", _config.Authorization))
+                .WithCustomHeaders(("Authorization", _rest.Password))
                 .GetStringAsync(url).ConfigureAwait(false);
             return JsonConvert.DeserializeObject<SearchResult>(request);
         }

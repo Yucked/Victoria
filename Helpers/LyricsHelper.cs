@@ -41,7 +41,7 @@ namespace Victoria.Helpers
             return SearchExactAsync(author, title);
         }
 
-        private static ValueTask<string> MakeRequestAsync(string url)
+        private static Task<string> MakeRequestAsync(string url)
         {
             return HttpHelper.Instance.GetStringAsync($"https://api.lyrics.ovh/{url}");
         }

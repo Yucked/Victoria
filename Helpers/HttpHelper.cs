@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -19,12 +20,16 @@ namespace Victoria.Helpers
             if (!(_client is null))
                 return;
 
-            _client = new HttpClient();
+            _client = new HttpClient(new HttpClientHandler
+            {
+                UseCookies = false,
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            });
             _client.DefaultRequestHeaders.Clear();
             _client.DefaultRequestHeaders.Add("User-Agent", "Victoria");
         }
 
-        public async ValueTask<string> GetStringAsync(string url)
+        public async Task<string> GetStringAsync(string url)
         {
             CheckClient();
 

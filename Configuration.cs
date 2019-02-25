@@ -1,13 +1,28 @@
 ﻿using Discord;
 using System;
 
-namespace Victoria.Configs
+namespace Victoria
 {
     /// <summary>
     /// 
     /// </summary>
-    public sealed class SocketConfig
+    public sealed class Configuration
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Host { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Port { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Password { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -28,9 +43,21 @@ namespace Victoria.Configs
         /// </summary>
         public TimeSpan ReconnectInterval { get; set; }
 
-        /// <inheritdoc cref="SocketConfig" />
-        public SocketConfig()
+        /// <summary>
+        /// 
+        /// </summary>
+        internal ulong UserId { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal int Shards { get; set; }
+
+        public Configuration()
         {
+            Host ??= "127.0.0.1";
+            Port = Port is 0 ? 2333 : Port;
+            Password ??= "youshallnotpass";
             BufferSize = BufferSize == default ? (ushort)512 : BufferSize;
             LogSeverity = LogSeverity is default(LogSeverity) ? LogSeverity.Info : LogSeverity;
             ReconnectAttempts = ReconnectAttempts == default ? 10 : ReconnectAttempts;

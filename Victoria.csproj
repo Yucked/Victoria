@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <LangVersion>8.0</LangVersion>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -15,7 +15,12 @@
     <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants Condition="'$(TargetFramework)' == 'netcoreapp3.0'">C3</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Discord.Net.WebSocket" Version="2.0.1" />
   </ItemGroup>
+
 </Project>

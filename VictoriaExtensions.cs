@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using Victoria.Entities;
+using Victoria.Entities.Responses;
 using Victoria.Helpers;
 
 namespace Victoria

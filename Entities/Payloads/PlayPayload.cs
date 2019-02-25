@@ -1,13 +1,12 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Victoria.Entities.Responses.LoadTracks;
 
 namespace Victoria.Entities.Payloads
 {
     internal sealed class PlayPayload : LavaPayload
     {
         [JsonProperty("track")]
-        public Track Track { get; }
+        public string EncryptedId { get; }
 
         [JsonProperty("startTime")]
         public int StartTime { get; }
@@ -18,11 +17,11 @@ namespace Victoria.Entities.Payloads
         [JsonProperty("noReplace")]
         public bool NoReplace { get; }
 
-        public PlayPayload(ulong guildId, Track track,
+        public PlayPayload(ulong guildId, string encryptedId,
                               TimeSpan start, TimeSpan end,
                               bool noReplace) : base(guildId, "play")
         {
-            Track = track;
+            EncryptedId = encryptedId;
             StartTime = (int)start.TotalMilliseconds;
             EndTime = (int)end.TotalMilliseconds;
             NoReplace = noReplace;

@@ -6,7 +6,13 @@ using Victoria.Queue;
 
 namespace Victoria
 {
-    public class LavaPlayer : IAsyncDisposable
+    public class LavaPlayer :
+#if C3
+        IAsyncDisposable
+#else
+          IDisposable
+#endif
+
     {
         /// <summary>
         /// 
@@ -61,7 +67,7 @@ namespace Victoria
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual async ValueTask<LavaTrack> SkipAsync()
+        public virtual async Task<LavaTrack> SkipAsync()
         {
             if (!Queue.TryDequeue(out var item))
                 throw new InvalidOperationException("");
@@ -74,15 +80,26 @@ namespace Victoria
             return track;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public async ValueTask DisposeAsync()
+
+        #region DISPOSE
+        private async Task DisposeResources()
         {
             Queue.Clear();
             await VoiceChannel.DisconnectAsync().ConfigureAwait(false);
             GC.SuppressFinalize(this);
         }
+
+#if C3
+        public ValueTask DisposeAsync()
+        {
+            return new ValueTask(DisposeResources());
+        }
+#else
+        public void Dispose()
+        {
+            DisposeResources().GetAwaiter().GetResult();
+        }
+#endif
+        #endregion
     }
 }
