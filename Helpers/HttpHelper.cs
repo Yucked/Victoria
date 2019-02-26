@@ -42,13 +42,10 @@ namespace Victoria.Helpers
             return read;
         }
 
-        public HttpHelper WithCustomHeaders(params (string name, string value)[] headers)
+        public HttpHelper WithCustomHeader(string key, string value)
         {
             CheckClient();
-
-            foreach (var (name, value) in headers)
-                _client.DefaultRequestHeaders.Add(name, value);
-
+            _client.DefaultRequestHeaders.Add(key, value);
             return this;
         }
     }

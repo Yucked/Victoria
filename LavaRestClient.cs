@@ -50,7 +50,7 @@ namespace Victoria
         {
             var url = $"http://{_rest.Host}:{_rest.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}";
             var request = await HttpHelper.Instance
-                .WithCustomHeaders(("Authorization", _rest.Password))
+                .WithCustomHeader("Authorization", _rest.Password)
                 .GetStringAsync(url).ConfigureAwait(false);
             return JsonConvert.DeserializeObject<SearchResult>(request);
         }

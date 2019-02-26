@@ -1,7 +1,9 @@
 using Discord;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Victoria.Entities;
 using Victoria.Entities.Payloads;
 using Victoria.Entities.Responses;
 using Victoria.Helpers;
@@ -9,13 +11,15 @@ using Victoria.Queue;
 
 namespace Victoria
 {
-    public class LavaPlayer
+    /// <summary>
+    /// 
+    /// </summary>
+    public sealed class LavaPlayer
     {
         /// <summary>
         /// 
         /// </summary>
         public bool IsPaused => isPaused;
-        private bool isPaused;
 
         /// <summary>
         /// 
@@ -47,6 +51,7 @@ namespace Victoria
         /// </summary>
         public int CurrentVolume { get; private set; }
 
+        private bool isPaused;
         private readonly SocketHelper _socketHelper;
 
         internal LavaPlayer(IVoiceChannel voiceChannel, ITextChannel textChannel,
@@ -58,6 +63,12 @@ namespace Victoria
             Queue = new LavaQueue<IQueueObject>();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="track"></param>
+        /// <param name="noReplace"></param>
+        /// <returns></returns>
         public Task PlayAsync(LavaTrack track, bool noReplace = false)
         {
             IsPlaying = true;
@@ -66,6 +77,14 @@ namespace Victoria
             return _socketHelper.SendPayloadAsync(payload);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="track"></param>
+        /// <param name="startTime"></param>
+        /// <param name="stopTime"></param>
+        /// <param name="noReplace"></param>
+        /// <returns></returns>
         public Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan stopTime, bool noReplace = false)
         {
             if (startTime.TotalMilliseconds < 0 || stopTime.TotalMilliseconds < 0)
@@ -80,6 +99,10 @@ namespace Victoria
             return _socketHelper.SendPayloadAsync(payload);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public Task StopAsync()
         {
             if (!IsPlaying)
@@ -91,6 +114,10 @@ namespace Victoria
             return _socketHelper.SendPayloadAsync(payload);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public Task ResumeAsync()
         {
             Volatile.Write(ref isPaused, false);
@@ -98,6 +125,10 @@ namespace Victoria
             return _socketHelper.SendPayloadAsync(payload);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public Task PauseAsync()
         {
             Volatile.Write(ref isPaused, true);
@@ -109,19 +140,71 @@ namespace Victoria
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual async Task<LavaTrack> SkipAsync()
+        public async Task<LavaTrack> SkipAsync()
         {
             if (!Queue.TryDequeue(out var item))
                 throw new InvalidOperationException("");
 
             if (!(item is LavaTrack track))
-                throw new ArgumentException("");
+                throw new InvalidCastException();
 
             await StopAsync();
             await PlayAsync(track);
             return track;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public Task SeekAsync(TimeSpan position)
+        {
+            var payload = new SeekPayload(VoiceChannel.GuildId, position);
+            return _socketHelper.SendPayloadAsync(payload);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="volume"></param>
+        /// <returns></returns>
+        public Task SetVolumeAsync(int volume)
+        {
+            if (volume > 1000)
+                throw new ArgumentOutOfRangeException();
+
+            CurrentVolume = volume;
+            var payload = new VolumePayload(VoiceChannel.GuildId, volume);
+            return _socketHelper.SendPayloadAsync(payload);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="bands"></param>
+        /// <returns></returns>
+        public Task EqualizerAsync(List<EqualizerBand> bands)
+        {
+            var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
+            return _socketHelper.SendPayloadAsync(payload);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="bands"></param>
+        /// <returns></returns>
+        public Task EqualizerAsync(params EqualizerBand[] bands)
+        {
+            var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
+            return _socketHelper.SendPayloadAsync(payload);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
             Queue.Clear();

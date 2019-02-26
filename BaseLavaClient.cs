@@ -14,39 +14,45 @@ namespace Victoria
 {
     public abstract class BaseLavaClient
     {
-        #region EVENTS
         /// <summary>
-        /// Fires when stats are sent from Lavalink server.
+        /// 
         /// </summary>
-        public event Func<ServerStats, Task> StatsReceived;
+        public event Func<ServerStats, Task> OnServerStats;
 
         /// <summary>
-        /// Fires when a track has timed out.
+        /// 
         /// </summary>
-        public event Func<LavaPlayer, LavaTrack, long, Task> TrackStuck;
+        public event Func<LavaPlayer, LavaTrack, long, Task> OnTrackStuck;
 
         /// <summary>
-        /// Fires when a track throws an exception.
+        /// 
         /// </summary>
-        public event Func<LavaPlayer, LavaTrack, string, Task> TrackException;
+        public event Func<LavaPlayer, LavaTrack, string, Task> OnTrackException;
 
         /// <summary>
-        /// Fires when player update is sent from lavalink server.
+        /// 
         /// </summary>
-        public event Func<LavaPlayer, LavaTrack, TimeSpan, Task> PlayerUpdated;
+        public event Func<LavaPlayer, LavaTrack, TimeSpan, Task> OnPlayerUpdated;
 
         /// <summary>
-        /// Fires when any of the <see cref="TrackReason"/> 's are met.
+        /// 
         /// </summary>
-        public event Func<LavaPlayer, LavaTrack, TrackEndReason, Task> TrackFinished;
-        #endregion
+        public event Func<LavaPlayer, LavaTrack, TrackEndReason, Task> OnTrackFinished;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public ServerStats ServerStats { get; private set; }
 
-        private readonly BaseSocketClient _baseSocketClient;
-        protected readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
-        private readonly SocketHelper _socketHelper;
+        /// <summary>
+        /// 
+        /// </summary>
+        public StateType StateType { get; private set; }
+
         private SocketVoiceState cachedStated;
+        private readonly BaseSocketClient _baseSocketClient;
+        private readonly SocketHelper _socketHelper;
+        protected readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
 
         /// <summary>
         /// 
@@ -54,6 +60,7 @@ namespace Victoria
         /// <param name="baseSocketClient"></param>
         protected BaseLavaClient(BaseSocketClient baseSocketClient, Configuration configuration)
         {
+            _baseSocketClient = baseSocketClient;
             configuration.UserId = baseSocketClient.CurrentUser.Id;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
@@ -74,15 +81,28 @@ namespace Victoria
             if (_players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
 
+            await _socketHelper.ConnectAsync().ConfigureAwait(false);
             player = new LavaPlayer(voiceChannel, textChannel, _socketHelper);
+            _players.TryAdd(voiceChannel.GuildId, player);
 
             return player;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public async ValueTask DisposeAsync()
+        {
+            GC.SuppressFinalize(this);
+        }
+
+        #region PRIVATES
         private bool OnMessage(string message)
         {
+            Console.WriteLine(message);
             var json = JObject.Parse(message);
-            ulong guildId;
+            var guildId = (ulong)0;
 
             if (json.TryGetValue("guildId", out var guildToken))
                 guildId = ulong.Parse($"{guildToken}");
@@ -97,14 +117,17 @@ namespace Victoria
                 case "stats":
                     var stats = json.ToObject<ServerStats>();
                     ServerStats = stats;
-                    StatsReceived?.Invoke(stats);
+                    OnServerStats?.Invoke(stats);
                     break;
 
                 case "event":
                     var evt = json.GetValue("type").ToObject<EventType>();
+                    _players.TryGetValue(guildId, out var player);
+
                     switch (evt)
                     {
                         case EventType.TrackEnd:
+                            var endReason = json.GetValue("reason").ToObject<TrackEndReason>();
                             break;
 
                         case EventType.TrackException:
@@ -156,9 +179,6 @@ namespace Victoria
             return _socketHelper.SendPayloadAsync(update);
         }
 
-        public async ValueTask DisposeAsync()
-        {
-            GC.SuppressFinalize(this);
-        }
+        #endregion
     }
 }
