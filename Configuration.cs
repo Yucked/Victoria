@@ -26,12 +26,17 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
-        public ushort BufferSize { get; set; }
+        public ushort? BufferSize { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public LogSeverity LogSeverity { get; set; }
+        public bool? SelfDeaf { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public LogSeverity? LogSeverity { get; set; }
 
         /// <summary>
         /// 
@@ -58,8 +63,9 @@ namespace Victoria
             Host ??= "127.0.0.1";
             Port = Port is 0 ? 2333 : Port;
             Password ??= "youshallnotpass";
-            BufferSize = BufferSize == default ? (ushort)512 : BufferSize;
-            LogSeverity = LogSeverity is default(LogSeverity) ? LogSeverity.Info : LogSeverity;
+            SelfDeaf ??= true;
+            BufferSize ??= (ushort)512;
+            LogSeverity ??= Discord.LogSeverity.Info;
             ReconnectAttempts = ReconnectAttempts == default ? 10 : ReconnectAttempts;
             ReconnectInterval = ReconnectInterval == default ? TimeSpan.FromSeconds(10) : ReconnectInterval;
         }

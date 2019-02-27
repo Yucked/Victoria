@@ -6,6 +6,9 @@ using Victoria.Entities;
 
 namespace Victoria
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public sealed class LavaRestClient
     {
         private readonly (string Host, int Port, string Password) _rest;
@@ -13,12 +16,25 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="nodeSettings"></param>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <param name="password"></param>
         public LavaRestClient(string host = default, int? port = default, string password = default)
         {
             _rest.Host = host ?? "127.0.0.1";
             _rest.Port = port ?? 2333;
             _rest.Password = password ?? "youshallnotpass";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="configuration"></param>
+        public LavaRestClient(Configuration configuration)
+        {
+            _rest.Host = configuration.Host;
+            _rest.Port = configuration.Port;
+            _rest.Password = configuration.Password;
         }
 
         /// <summary>

@@ -26,7 +26,7 @@ namespace Victoria.Helpers
 
         public SocketHelper(Configuration configuration, ref Func<LogMessage, Task> log)
         {
-            _log = log;
+            log += _log;
             _config = configuration;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (_, __, ___, ____) => true;
@@ -43,6 +43,7 @@ namespace Victoria.Helpers
             var url = new Uri($"ws://{_config.Host}:{_config.Port}");
             try
             {
+                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Info, $"Connecting to {url}."));
                 await clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
             }
             catch
@@ -57,7 +58,7 @@ namespace Victoria.Helpers
                 return Task.CompletedTask;
 
             var serialize = JsonConvert.SerializeObject(payload);
-            //TODO: Log
+            _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Verbose, serialize));
             var seg = new ArraySegment<byte>(_encoding.GetBytes(serialize));
             return clientWebSocket.SendAsync(seg, WebSocketMessageType.Text, true, CancellationToken.None);
         }
@@ -71,6 +72,7 @@ namespace Victoria.Helpers
             }
             else
             {
+                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Info, "WebSocket connection established!"));
                 isUseable = true;
                 reconnectAttempts = 0;
                 await ReceiveAsync(cancellationTokenSource.Token).ConfigureAwait(false);
@@ -88,11 +90,6 @@ namespace Victoria.Helpers
                 // Ignore
             }
 
-            if (reconnectAttempts == _config.ReconnectAttempts)
-            {
-                return;
-            }
-
             if (reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
                 return;
 
@@ -101,6 +98,16 @@ namespace Victoria.Helpers
 
             reconnectAttempts++;
             interval += _config.ReconnectInterval;
+
+            if (reconnectAttempts == _config.ReconnectAttempts)
+            {
+                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Warning, $"Max number of reconnect attempts reached."));
+            }
+            else
+            {
+                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Warning, $"Attempt #{reconnectAttempts}. Next retry in {interval.Seconds} seconds."));
+            }
+
             await Task.Delay(interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
 

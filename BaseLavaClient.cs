@@ -14,6 +14,9 @@ namespace Victoria
 {
     public abstract class BaseLavaClient
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public event Func<LogMessage, Task> Log;
 
         /// <summary>
@@ -50,17 +53,21 @@ namespace Victoria
         private readonly BaseSocketClient _baseSocketClient;
         private readonly SocketHelper _socketHelper;
         private readonly LogSeverity _logSeverity;
-        protected readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
+        protected ConcurrentDictionary<ulong, LavaPlayer> _players;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="baseSocketClient"></param>
+        /// <param name="configuration"></param>
         protected BaseLavaClient(BaseSocketClient baseSocketClient, Configuration configuration)
         {
+            if (!(baseSocketClient is DiscordSocketClient) || !(baseSocketClient is DiscordShardedClient))
+                throw new ArgumentException();
+
             _baseSocketClient = baseSocketClient;
             configuration.UserId = baseSocketClient.CurrentUser.Id;
-            _logSeverity = configuration.LogSeverity;
+            _logSeverity = configuration.LogSeverity.Value;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
@@ -99,6 +106,12 @@ namespace Victoria
         /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
+            foreach (var player in _players.Values)
+            {
+                await player.DisposeAsync().ConfigureAwait(false);
+            }
+            _players.Clear();
+            _players = null;            
             GC.SuppressFinalize(this);
         }
 
@@ -162,7 +175,7 @@ namespace Victoria
             if (severity >= _logSeverity)
                 return;
 
-            Log?.Invoke(new LogMessage(severity, nameof(Victoria), message, exception));
+            Log?.Invoke(VictoriaExtensions.LogMessage(severity, message, exception));
         }
 
         private async Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState currentState)

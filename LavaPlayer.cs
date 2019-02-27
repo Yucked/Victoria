@@ -44,7 +44,7 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
-        public LavaQueue<IQueueObject> Queue { get; }
+        public LavaQueue<IQueueObject> Queue { get; private set; }
 
         /// <summary>
         /// 
@@ -120,6 +120,9 @@ namespace Victoria
         /// <returns></returns>
         public Task ResumeAsync()
         {
+            if (!IsPlaying)
+                throw new InvalidOperationException();
+
             Volatile.Write(ref isPaused, false);
             var payload = new PausePayload(VoiceChannel.GuildId, IsPaused);
             return _socketHelper.SendPayloadAsync(payload);
@@ -131,6 +134,9 @@ namespace Victoria
         /// <returns></returns>
         public Task PauseAsync()
         {
+            if (!IsPlaying)
+                throw new InvalidOperationException();
+
             Volatile.Write(ref isPaused, true);
             var payload = new PausePayload(VoiceChannel.GuildId, IsPaused);
             return _socketHelper.SendPayloadAsync(payload);
@@ -160,6 +166,9 @@ namespace Victoria
         /// <returns></returns>
         public Task SeekAsync(TimeSpan position)
         {
+            if (!IsPlaying)
+                throw new InvalidOperationException();
+
             var payload = new SeekPayload(VoiceChannel.GuildId, position);
             return _socketHelper.SendPayloadAsync(payload);
         }
@@ -171,6 +180,9 @@ namespace Victoria
         /// <returns></returns>
         public Task SetVolumeAsync(int volume)
         {
+            if (!IsPlaying)
+                throw new InvalidOperationException();
+
             if (volume > 1000)
                 throw new ArgumentOutOfRangeException();
 
@@ -186,6 +198,9 @@ namespace Victoria
         /// <returns></returns>
         public Task EqualizerAsync(List<EqualizerBand> bands)
         {
+            if (!IsPlaying)
+                throw new InvalidOperationException();
+
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             return _socketHelper.SendPayloadAsync(payload);
         }
@@ -197,6 +212,9 @@ namespace Victoria
         /// <returns></returns>
         public Task EqualizerAsync(params EqualizerBand[] bands)
         {
+            if (!IsPlaying)
+                throw new InvalidOperationException();
+
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             return _socketHelper.SendPayloadAsync(payload);
         }
@@ -207,7 +225,10 @@ namespace Victoria
         /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
+            IsPlaying = false;
             Queue.Clear();
+            Queue = null;
+            CurrentTrack = null;
             await VoiceChannel.DisconnectAsync().ConfigureAwait(false);
             GC.SuppressFinalize(this);
         }

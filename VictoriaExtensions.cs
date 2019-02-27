@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using Discord;
 using Newtonsoft.Json.Linq;
 using Victoria.Entities.Responses;
 using Victoria.Helpers;
@@ -49,6 +51,18 @@ namespace Victoria
         public static Task<string> FetchLyricsAsync(this LavaTrack track)
         {
             return LyricsHelper.SearchAsync(track.Author, track.Title);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="logSeverity"></param>
+        /// <param name="message"></param>
+        /// <param name="exception"></param>
+        /// <returns></returns>
+        internal static LogMessage LogMessage(LogSeverity logSeverity, string message = null, Exception exception = null)
+        {
+            return new LogMessage(logSeverity, nameof(Victoria), message, exception);
         }
     }
 }
