@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using Victoria.Entities.Payloads;
 using Newtonsoft.Json;
+using Discord;
 
 namespace Victoria.Helpers
 {
@@ -19,11 +20,14 @@ namespace Victoria.Helpers
         private readonly Encoding _encoding;
         private readonly Configuration _config;
         private CancellationTokenSource cancellationTokenSource;
+        private readonly Func<LogMessage, Task> _log;
 
         public event Func<string, bool> OnMessage;
 
-        public SocketHelper()
+        public SocketHelper(Configuration configuration, ref Func<LogMessage, Task> log)
         {
+            _log = log;
+            _config = configuration;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (_, __, ___, ____) => true;
         }
@@ -33,7 +37,6 @@ namespace Victoria.Helpers
             cancellationTokenSource = new CancellationTokenSource();
 
             clientWebSocket = new ClientWebSocket();
-
             clientWebSocket.Options.SetRequestHeader("User-Id", $"{_config.UserId}");
             clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_config.Shards}");
             clientWebSocket.Options.SetRequestHeader("Authorization", _config.Password);
@@ -86,7 +89,9 @@ namespace Victoria.Helpers
             }
 
             if (reconnectAttempts == _config.ReconnectAttempts)
+            {
                 return;
+            }
 
             if (reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
                 return;

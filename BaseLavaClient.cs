@@ -14,6 +14,8 @@ namespace Victoria
 {
     public abstract class BaseLavaClient
     {
+        public event Func<LogMessage, Task> Log;
+
         /// <summary>
         /// 
         /// </summary>
@@ -44,14 +46,10 @@ namespace Victoria
         /// </summary>
         public ServerStats ServerStats { get; private set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public StateType StateType { get; private set; }
-
         private SocketVoiceState cachedStated;
         private readonly BaseSocketClient _baseSocketClient;
         private readonly SocketHelper _socketHelper;
+        private readonly LogSeverity _logSeverity;
         protected readonly ConcurrentDictionary<ulong, LavaPlayer> _players;
 
         /// <summary>
@@ -62,12 +60,18 @@ namespace Victoria
         {
             _baseSocketClient = baseSocketClient;
             configuration.UserId = baseSocketClient.CurrentUser.Id;
+            _logSeverity = configuration.LogSeverity;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
 
-            _socketHelper = new SocketHelper();
+            _socketHelper = new SocketHelper(configuration, ref Log);
             _socketHelper.OnMessage += OnMessage;
+        }
+
+        public async Task StartAsync()
+        {
+            await _socketHelper.ConnectAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -81,8 +85,9 @@ namespace Victoria
             if (_players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
 
-            await _socketHelper.ConnectAsync().ConfigureAwait(false);
+
             player = new LavaPlayer(voiceChannel, textChannel, _socketHelper);
+            await voiceChannel.ConnectAsync(false, false, true).ConfigureAwait(false);
             _players.TryAdd(voiceChannel.GuildId, player);
 
             return player;
@@ -150,6 +155,14 @@ namespace Victoria
             }
 
             return true;
+        }
+
+        private void WriteLog(LogSeverity severity, string message, Exception exception = null)
+        {
+            if (severity >= _logSeverity)
+                return;
+
+            Log?.Invoke(new LogMessage(severity, nameof(Victoria), message, exception));
         }
 
         private async Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState currentState)
