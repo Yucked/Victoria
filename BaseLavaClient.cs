@@ -17,12 +17,21 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
-        public event Func<LogMessage, Task> Log;
+        public event Func<LogMessage, Task> Log
+        {
+            add { _log += value; }
+            remove { _log -= value; }
+        }
 
         /// <summary>
         /// 
         /// </summary>
         public event Func<ServerStats, Task> OnServerStats;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<int, string, bool, Task> OnSocketClosed;
 
         /// <summary>
         /// 
@@ -53,6 +62,7 @@ namespace Victoria
         private readonly BaseSocketClient _baseSocketClient;
         private readonly SocketHelper _socketHelper;
         private readonly LogSeverity _logSeverity;
+        protected Func<LogMessage, Task> _log;
         protected ConcurrentDictionary<ulong, LavaPlayer> _players;
 
         /// <summary>
@@ -72,7 +82,7 @@ namespace Victoria
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
 
-            _socketHelper = new SocketHelper(configuration, ref Log);
+            _socketHelper = new SocketHelper(configuration, ref _log);
             _socketHelper.OnMessage += OnMessage;
         }
 
@@ -111,16 +121,18 @@ namespace Victoria
                 await player.DisposeAsync().ConfigureAwait(false);
             }
             _players.Clear();
-            _players = null;            
+            _players = null;
             GC.SuppressFinalize(this);
         }
 
         #region PRIVATES
         private bool OnMessage(string message)
         {
-            Console.WriteLine(message);
+            WriteLog(LogSeverity.Verbose, message);
             var json = JObject.Parse(message);
+
             var guildId = (ulong)0;
+            var player = default(LavaPlayer);
 
             if (json.TryGetValue("guildId", out var guildToken))
                 guildId = ulong.Parse($"{guildToken}");
@@ -129,7 +141,18 @@ namespace Victoria
             switch (opCode)
             {
                 case "playerUpdate":
+                    var state = json.GetValue("state");
 
+                    if (!_players.TryGetValue(guildId, out player))
+                        break;
+
+                    var pos = json.GetValue("position").ToObject<long>();
+                    var time = json.GetValue("time").ToObject<long>();
+
+                    player.CurrentTrack.Position = TimeSpan.FromMilliseconds(pos);
+                    player.LastUpdate = new DateTimeOffset(time * TimeSpan.TicksPerMillisecond + 621_355_968_000_000_000, TimeSpan.Zero);
+
+                    _players.TryUpdate(guildId, player, player);
                     break;
 
                 case "stats":
@@ -140,30 +163,54 @@ namespace Victoria
 
                 case "event":
                     var evt = json.GetValue("type").ToObject<EventType>();
-                    _players.TryGetValue(guildId, out var player);
+                    _players.TryGetValue(guildId, out player);
+
+                    LavaTrack track = default;
+                    if (json.TryGetValue("track", out var hash))
+                    {
+                        track = TrackHelper.DecodeTrack($"{hash}");
+                    }
 
                     switch (evt)
                     {
                         case EventType.TrackEnd:
                             var endReason = json.GetValue("reason").ToObject<TrackEndReason>();
+                            if (endReason != TrackEndReason.Replaced)
+                                player.CurrentTrack = default;
+                            _players.TryUpdate(guildId, player, player);
+                            OnTrackFinished?.Invoke(player, track, endReason);
                             break;
 
                         case EventType.TrackException:
+                            var error = json.GetValue("error").ToObject<string>();
+                            player.CurrentTrack = track;
+                            _players.TryUpdate(guildId, player, player);
+                            OnTrackException?.Invoke(player, track, error);
                             break;
 
                         case EventType.TrackStuck:
+                            var timeout = json.GetValue("thresholdMs").ToObject<long>();
+                            player.CurrentTrack = track;
+                            _players.TryUpdate(guildId, player, player);
+                            OnTrackStuck?.Invoke(player, track, timeout);
                             break;
 
                         case EventType.WebSocketClosed:
+                            var reason = json.GetValue("reason").ToObject<string>();
+                            var code = json.GetValue("code").ToObject<int>();
+                            var byRemote = json.GetValue("byRemote").ToObject<bool>();
+                            OnSocketClosed?.Invoke(code, reason, byRemote);
                             break;
 
                         default:
+                            WriteLog(LogSeverity.Warning, $"Missing implementation of {evt} event.");
                             break;
                     }
 
                     break;
 
                 default:
+                    WriteLog(LogSeverity.Warning, $"Missing handling of {opCode} OP code.");
                     break;
             }
 
@@ -175,7 +222,7 @@ namespace Victoria
             if (severity >= _logSeverity)
                 return;
 
-            Log?.Invoke(VictoriaExtensions.LogMessage(severity, message, exception));
+            _log?.Invoke(VictoriaExtensions.LogMessage(severity, message, exception));
         }
 
         private async Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState currentState)

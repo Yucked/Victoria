@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 
 namespace Victoria
@@ -22,6 +23,9 @@ namespace Victoria
 
                 await player.DisposeAsync().ConfigureAwait(false);
             }
+
+            _players.Clear();
+            _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Error, "Shards disconnecting. Disposing all connected players.", exception));
         }
     }
 }

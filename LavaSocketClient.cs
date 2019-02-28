@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using System;
 using System.Threading.Tasks;
 
@@ -16,13 +17,15 @@ namespace Victoria
             socketClient.Disconnected += OnDisconnected;
         }
 
-        public async Task OnDisconnected(Exception exception)
+        private async Task OnDisconnected(Exception exception)
         {
             foreach (var player in _players.Values)
             {
                 await player.DisposeAsync().ConfigureAwait(false);
             }
             _players.Clear();
+
+            _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Error, "WebSocket disconnected! Disposing all connected players.", exception));
         }
     }
 }

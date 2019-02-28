@@ -29,7 +29,7 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
-        public LavaTrack CurrentTrack { get; private set; }
+        public LavaTrack CurrentTrack { get; internal set; }
 
         /// <summary>
         /// 
@@ -45,6 +45,11 @@ namespace Victoria
         /// 
         /// </summary>
         public LavaQueue<IQueueObject> Queue { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTimeOffset LastUpdate { get; internal set; }
 
         /// <summary>
         /// 

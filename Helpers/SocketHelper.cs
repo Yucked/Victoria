@@ -120,7 +120,7 @@ namespace Victoria.Helpers
                     byte[] bytes;
                     using (var stream = new MemoryStream())
                     {
-                        var buffer = new byte[_config.BufferSize];
+                        var buffer = new byte[_config.BufferSize.Value];
                         var segment = new ArraySegment<byte>(buffer);
                         while (clientWebSocket.State == WebSocketState.Open)
                         {
