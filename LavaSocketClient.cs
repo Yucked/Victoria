@@ -8,13 +8,24 @@ namespace Victoria
     /// <summary>
     /// 
     /// </summary>
-    public sealed class LavaSocketClient : BaseLavaClient
+    public sealed class LavaSocketClient : LavaBaseClient
     {
-        public LavaSocketClient(DiscordSocketClient socketClient, Configuration configuration = default)
-            : base(socketClient, configuration)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public Task StartAsync(DiscordSocketClient socketClient, Configuration configuration = default)
         {
-            configuration.Shards = 1;
+            configuration ??= new Configuration
+            {
+                UserId = socketClient.CurrentUser.Id,
+                Shards = 1
+            };
+
             socketClient.Disconnected += OnDisconnected;
+            return InitializeAsync(socketClient, configuration);
         }
 
         private async Task OnDisconnected(Exception exception)

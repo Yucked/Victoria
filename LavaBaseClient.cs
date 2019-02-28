@@ -12,15 +12,21 @@ using Victoria.Helpers;
 
 namespace Victoria
 {
-    public abstract class BaseLavaClient
+    public abstract class LavaBaseClient
     {
         /// <summary>
         /// 
         /// </summary>
         public event Func<LogMessage, Task> Log
         {
-            add { _log += value; }
-            remove { _log -= value; }
+            add
+            {
+                _log += value;
+            }
+            remove
+            {
+                _log -= value;
+            }
         }
 
         /// <summary>
@@ -58,37 +64,25 @@ namespace Victoria
         /// </summary>
         public ServerStats ServerStats { get; private set; }
 
+        private BaseSocketClient baseSocketClient;
+        private LogSeverity logSeverity;
+        private SocketHelper socketHelper;
         private SocketVoiceState cachedStated;
-        private readonly BaseSocketClient _baseSocketClient;
-        private readonly SocketHelper _socketHelper;
-        private readonly LogSeverity _logSeverity;
         protected Func<LogMessage, Task> _log;
         protected ConcurrentDictionary<ulong, LavaPlayer> _players;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="baseSocketClient"></param>
-        /// <param name="configuration"></param>
-        protected BaseLavaClient(BaseSocketClient baseSocketClient, Configuration configuration)
+        protected async Task InitializeAsync(BaseSocketClient baseSocketClient, Configuration configuration)
         {
-            if (!(baseSocketClient is DiscordSocketClient) || !(baseSocketClient is DiscordShardedClient))
-                throw new ArgumentException();
-
-            _baseSocketClient = baseSocketClient;
-            configuration.UserId = baseSocketClient.CurrentUser.Id;
-            _logSeverity = configuration.LogSeverity.Value;
+            this.baseSocketClient = baseSocketClient;
+            logSeverity = configuration.LogSeverity.Value;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
 
-            _socketHelper = new SocketHelper(configuration, ref _log);
-            _socketHelper.OnMessage += OnMessage;
-        }
+            socketHelper = new SocketHelper(configuration, _log);
+            socketHelper.OnMessage += OnMessage;
 
-        public async Task StartAsync()
-        {
-            await _socketHelper.ConnectAsync().ConfigureAwait(false);
+            await socketHelper.ConnectAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -103,7 +97,7 @@ namespace Victoria
                 return player;
 
 
-            player = new LavaPlayer(voiceChannel, textChannel, _socketHelper);
+            player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
             await voiceChannel.ConnectAsync(false, false, true).ConfigureAwait(false);
             _players.TryAdd(voiceChannel.GuildId, player);
 
@@ -122,6 +116,7 @@ namespace Victoria
             }
             _players.Clear();
             _players = null;
+            await socketHelper.DisposeAsync();
             GC.SuppressFinalize(this);
         }
 
@@ -146,13 +141,14 @@ namespace Victoria
                     if (!_players.TryGetValue(guildId, out player))
                         break;
 
-                    var pos = json.GetValue("position").ToObject<long>();
+                    var position = TimeSpan.FromMilliseconds(json.GetValue("position").ToObject<long>());
                     var time = json.GetValue("time").ToObject<long>();
 
-                    player.CurrentTrack.Position = TimeSpan.FromMilliseconds(pos);
+                    player.CurrentTrack.Position = position;
                     player.LastUpdate = new DateTimeOffset(time * TimeSpan.TicksPerMillisecond + 621_355_968_000_000_000, TimeSpan.Zero);
 
                     _players.TryUpdate(guildId, player, player);
+                    OnPlayerUpdated?.Invoke(player, player.CurrentTrack, position);
                     break;
 
                 case "stats":
@@ -219,7 +215,7 @@ namespace Victoria
 
         private void WriteLog(LogSeverity severity, string message, Exception exception = null)
         {
-            if (severity >= _logSeverity)
+            if (severity >= logSeverity)
                 return;
 
             _log?.Invoke(VictoriaExtensions.LogMessage(severity, message, exception));
@@ -227,7 +223,7 @@ namespace Victoria
 
         private async Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState currentState)
         {
-            if (user.Id != _baseSocketClient.CurrentUser.Id)
+            if (user.Id != baseSocketClient.CurrentUser.Id)
                 return;
 
             cachedStated = currentState;
@@ -239,7 +235,7 @@ namespace Victoria
 
                 await player.DisposeAsync().ConfigureAwait(false);
                 var destroy = new DestroyPayload(oldState.VoiceChannel.Guild.Id);
-                await _socketHelper.SendPayloadAsync(destroy).ConfigureAwait(false);
+                await socketHelper.SendPayloadAsync(destroy).ConfigureAwait(false);
             }
         }
 
@@ -249,7 +245,7 @@ namespace Victoria
                 return Task.CompletedTask;
 
             var update = new VoiceServerPayload(server, cachedStated.VoiceSessionId);
-            return _socketHelper.SendPayloadAsync(update);
+            return socketHelper.SendPayloadAsync(update);
         }
 
         #endregion

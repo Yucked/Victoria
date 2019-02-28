@@ -5,13 +5,27 @@ using Discord.WebSocket;
 
 namespace Victoria
 {
-    public sealed class LavaShardClient : BaseLavaClient
+    /// <summary>
+    /// 
+    /// </summary>
+    public sealed class LavaShardClient : LavaBaseClient
     {
-        public LavaShardClient(DiscordShardedClient shardedClient, Configuration configuration = default)
-            : base(shardedClient, configuration)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="shardedClient"></param>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public Task StartAsync(DiscordShardedClient shardedClient, Configuration configuration = default)
         {
-            configuration.Shards = shardedClient.Shards.Count;
+            configuration ??= new Configuration
+            {
+                UserId = shardedClient.CurrentUser.Id,
+                Shards = shardedClient.Shards.Count
+            };
+
             shardedClient.ShardDisconnected += OnShardDisconnected;
+            return InitializeAsync(shardedClient, configuration);
         }
 
         private async Task OnShardDisconnected(Exception exception, DiscordSocketClient socketClient)

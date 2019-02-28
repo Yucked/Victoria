@@ -3,6 +3,7 @@
   <PropertyGroup>
     <LangVersion>8.0</LangVersion>
     <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -13,6 +14,11 @@
     <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
     <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
     <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
+    <PackageReleaseNotes>
+      Lavalink file has been removed. Victoria now targets .NET Standard 2.0 and .NET Coreapp 3.0.
+      LavaNode has been replaced with specific LavaClient for DiscordSocketClient and DiscordShardedClient.
+      LavaClient no longer contain REST related methods. LavaRestClient exposes all REST related methods such SearchTracksAsync.
+    </PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -21,9 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net.WebSocket" Version="2.0.1" />
-    <PackageReference Condition="'$(TargetFramework)' == 'netstandard2.0'"
-                      Include="System.Threading.Tasks.Extensions"
-                      Version="4.6.0-preview.18571.3" />
+    <PackageReference Condition="'$(TargetFramework)' == 'netstandard2.0'" Include="System.Threading.Tasks.Extensions" Version="4.6.0-preview.18571.3" />
   </ItemGroup>
 
 </Project>

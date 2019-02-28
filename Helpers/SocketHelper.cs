@@ -24,9 +24,9 @@ namespace Victoria.Helpers
 
         public event Func<string, bool> OnMessage;
 
-        public SocketHelper(Configuration configuration, ref Func<LogMessage, Task> log)
+        public SocketHelper(Configuration configuration, Func<LogMessage, Task> log)
         {
-            log += _log;
+            _log = log;
             _config = configuration;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (_, __, ___, ____) => true;
@@ -63,12 +63,28 @@ namespace Victoria.Helpers
             return clientWebSocket.SendAsync(seg, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
+        public async ValueTask DisposeAsync()
+        {
+            isUseable = false;
+
+            await clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Closed called.",
+                CancellationToken.None).ConfigureAwait(false);
+            await clientWebSocket
+                .CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed called.", CancellationToken.None)
+                .ConfigureAwait(false);
+
+            try { cancellationTokenSource.Cancel(); }
+            catch { }
+
+            clientWebSocket.Dispose();
+        }
+
         private async Task VerifyConnectionAsync(Task task)
         {
             if (task.IsCanceled || task.IsFaulted || task.Exception != null)
             {
                 isUseable = false;
-                await Task.Delay(interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
+                await RetryConnectionAsync().ConfigureAwait(false);
             }
             else
             {
@@ -81,32 +97,23 @@ namespace Victoria.Helpers
 
         private async Task RetryConnectionAsync()
         {
-            try
-            {
-                cancellationTokenSource.Cancel();
-            }
-            catch
-            {
-                // Ignore
-            }
+            try { cancellationTokenSource.Cancel(); }
+            catch { }
+
 
             if (reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
                 return;
+
+            if (reconnectAttempts == _config.ReconnectAttempts)
+                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Warning, $"Max number of reconnect attempts reached."));
+
 
             if (isUseable)
                 return;
 
             reconnectAttempts++;
             interval += _config.ReconnectInterval;
-
-            if (reconnectAttempts == _config.ReconnectAttempts)
-            {
-                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Warning, $"Max number of reconnect attempts reached."));
-            }
-            else
-            {
-                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Warning, $"Attempt #{reconnectAttempts}. Next retry in {interval.Seconds} seconds."));
-            }
+            _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Warning, $"Attempt #{reconnectAttempts}. Next retry in {interval.TotalSeconds} seconds."));
 
             await Task.Delay(interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
