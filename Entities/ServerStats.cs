@@ -1,6 +1,5 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Victoria.Entities.Statistics;
 
 namespace Victoria.Entities
 {

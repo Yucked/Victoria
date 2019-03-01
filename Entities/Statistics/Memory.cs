@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Victoria.Entities.Statistics
+namespace Victoria.Entities
 {
     public sealed class Memory
     {

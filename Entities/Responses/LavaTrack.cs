@@ -2,7 +2,7 @@
 using System;
 using Victoria.Queue;
 
-namespace Victoria.Entities.Responses
+namespace Victoria.Entities
 {
     public sealed class LavaTrack : IQueueObject
     {
@@ -25,7 +25,7 @@ namespace Victoria.Entities.Responses
         public TimeSpan Position
         {
             get => new TimeSpan(TrackPosition);
-            internal set => Position = value;
+            internal set => TrackPosition = value.Ticks;
         }
 
         [JsonProperty("position")]

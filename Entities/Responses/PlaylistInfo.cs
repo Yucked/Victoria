@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Victoria.Entities.Responses
+namespace Victoria.Entities
 {
     public sealed class PlaylistInfo
     {

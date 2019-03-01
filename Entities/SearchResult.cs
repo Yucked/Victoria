@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using Victoria.Entities.Responses;
 
 namespace Victoria.Entities
 {
@@ -12,9 +11,9 @@ namespace Victoria.Entities
         public PlaylistInfo PlaylistInfo { get; private set; }
 
         [JsonProperty("loadType")]
-        public string LoadType { get; private set; }
+        public LoadType LoadType { get; private set; }
 
-        [JsonProperty("tracks")]
-        public HashSet<LavaTrack> Tracks { get; private set; }
+        [JsonIgnore]
+        public IEnumerable<LavaTrack> Tracks { get; internal set; }
     }
 }

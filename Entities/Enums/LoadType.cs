@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
 
-namespace Victoria.Entities.Enums
+namespace Victoria.Entities
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public enum LoadType

@@ -5,9 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Victoria.Entities;
-using Victoria.Entities.Enums;
 using Victoria.Entities.Payloads;
-using Victoria.Entities.Responses;
 using Victoria.Helpers;
 
 namespace Victoria
@@ -104,6 +102,11 @@ namespace Victoria
             return player;
         }
 
+        public LavaPlayer GetPlayer(ulong guildId)
+        {
+            return _players.TryGetValue(guildId, out var player)
+                ? player : default;
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -141,11 +144,13 @@ namespace Victoria
                     if (!_players.TryGetValue(guildId, out player))
                         break;
 
-                    var position = TimeSpan.FromMilliseconds(json.GetValue("position").ToObject<long>());
-                    var time = json.GetValue("time").ToObject<long>();
+                    var statePos = state["position"].ToObject<long>();
+                    var stateTime = state["time"].ToObject<long>();
+
+                    var position = TimeSpan.FromMilliseconds(statePos);
 
                     player.CurrentTrack.Position = position;
-                    player.LastUpdate = new DateTimeOffset(time * TimeSpan.TicksPerMillisecond + 621_355_968_000_000_000, TimeSpan.Zero);
+                    player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(stateTime);
 
                     _players.TryUpdate(guildId, player, player);
                     OnPlayerUpdated?.Invoke(player, player.CurrentTrack, position);

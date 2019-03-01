@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Discord;
 using Newtonsoft.Json.Linq;
-using Victoria.Entities.Responses;
+using Victoria.Entities;
 using Victoria.Helpers;
 
 namespace Victoria

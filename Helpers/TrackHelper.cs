@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Victoria.Entities.Responses;
+using Victoria.Entities;
 
 namespace Victoria.Helpers
 {

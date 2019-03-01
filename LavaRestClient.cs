@@ -1,8 +1,10 @@
 ﻿using System.Net;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Victoria.Helpers;
 using Victoria.Entities;
+using Newtonsoft.Json.Linq;
+using Victoria.Entities;
+using System.Collections.Generic;
 
 namespace Victoria
 {
@@ -19,19 +21,20 @@ namespace Victoria
         /// <param name="host"></param>
         /// <param name="port"></param>
         /// <param name="password"></param>
-        public LavaRestClient(string host = default, int? port = default, string password = default)
+        public LavaRestClient(string host, int port, string password)
         {
-            _rest.Host = host ?? "127.0.0.1";
-            _rest.Port = port ?? 2333;
-            _rest.Password = password ?? "youshallnotpass";
+            _rest.Host = host;
+            _rest.Port = port;
+            _rest.Password = password;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="configuration"></param>
-        public LavaRestClient(Configuration configuration)
+        public LavaRestClient(Configuration configuration = null)
         {
+            configuration ??= new Configuration();
             _rest.Host = configuration.Host;
             _rest.Port = configuration.Port;
             _rest.Password = configuration.Password;
@@ -68,7 +71,21 @@ namespace Victoria
             var request = await HttpHelper.Instance
                 .WithCustomHeader("Authorization", _rest.Password)
                 .GetStringAsync(url).ConfigureAwait(false);
-            return JsonConvert.DeserializeObject<SearchResult>(request);
+
+            var json = JObject.Parse(request);
+            var result = json.ToObject<SearchResult>();
+            var trackInfo = json.GetValue("tracks").ToObject<JArray>();
+            var hashset = new HashSet<LavaTrack>();
+
+            foreach (var info in trackInfo)
+            {
+                var track = info["info"].ToObject<LavaTrack>();
+                track.Hash = info["track"].ToObject<string>();
+                hashset.Add(track);
+            }
+
+            result.Tracks = hashset;
+            return result;
         }
     }
 }

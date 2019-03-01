@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Victoria.Entities;
 using Victoria.Entities.Payloads;
-using Victoria.Entities.Responses;
+using Victoria.Entities;
 using Victoria.Helpers;
 using Victoria.Queue;
 
