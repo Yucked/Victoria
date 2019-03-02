@@ -5,14 +5,14 @@
   <a href="https://ci.appveyor.com/project/Yucked/victoria"> <img src="https://img.shields.io/appveyor/ci/gruntjs/grunt.svg?label=Appveyor&logo=appveyor&style=for-the-badge&logoWidth=20"/> </a>
   <a href="https://www.nuget.org/packages/Victoria/)"> <img src="https://img.shields.io/nuget/dt/Victoria.svg?label=Downloads&logo=nuget&style=for-the-badge&logoWidth=20"/> </a>
 </p>
+
 🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.
 
 ---
 
 
 ## 🔧`What Is It?`
-Victoria is a Lavalink wrapper for Discord.NET library. It uses Emzi's code style while keeping it simple like sharplink.
-Even though Sharplink is great, there were constant internal exceptions and weird code style. Victoria aims to solve that and also provide full support of Lavalink.
+Victoria is a Lavalink wrapper for Discord.NET library. It is better than Sharplink and Lavalink.Net and provides more features than both of the combined. It also supports almost all of the Lavalink features and keeps up with Lavalink features and updates.
 
 ## 🤔 `How To Use It?`
 
