@@ -1,3 +1,5 @@
+[![Nuget](https://img.shields.io/nuget/dt/Victoria.svg?label=NuGet%20Downloads)](https://www.nuget.org/packages/Victoria/)
+
 <p align="center">
   <img src="https://i.imgur.com/jtF8JTn.png" widht="70%">
 </p>  
