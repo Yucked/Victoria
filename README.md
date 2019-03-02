@@ -1,9 +1,10 @@
-[![Nuget](https://img.shields.io/nuget/dt/Victoria.svg?label=NuGet%20Downloads)](https://www.nuget.org/packages/Victoria/)
-
 <p align="center">
-  <img src="https://i.imgur.com/jtF8JTn.png" widht="70%">
-</p>  
-
+  <img src="https://i.imgur.com/ycwIkcb.png" widht="70%">
+  </hr>
+  <a href="https://discord.gg/ZJaVXK8"> <img src="https://img.shields.io/badge/Discord-Support-%237289DA.svg?logo=discord&style=for-the-badge&logoWidth=20"/> </a>
+  <a href="https://ci.appveyor.com/project/Yucked/victoria"> <img src="https://img.shields.io/appveyor/ci/gruntjs/grunt.svg?label=Appveyor&logo=appveyor&style=for-the-badge&logoWidth=20"/> </a>
+  <a href="https://www.nuget.org/packages/Victoria/)"> <img src="https://img.shields.io/nuget/dt/Victoria.svg?label=Downloads&logo=nuget&style=for-the-badge&logoWidth=20"/> </a>
+</p>
 🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.
 
 ---
