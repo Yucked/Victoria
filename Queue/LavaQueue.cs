@@ -70,8 +70,13 @@ namespace Victoria.Queue
         /// <returns><see cref="bool" /> based on if dequeue-ing was successful.</returns>
         public bool TryDequeue(out T value)
         {
-            var result = _linked.First.Value;
+            if (_linked.Count < 1)
+            {
+                value = default;
+                return false;
+            }
 
+            var result = _linked.First.Value;
             if (result == null)
             {
                 value = default(T);

@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Victoria.Entities;
 using Victoria.Entities.Payloads;
-using Victoria.Entities;
 using Victoria.Helpers;
 using Victoria.Queue;
 
@@ -159,9 +158,9 @@ namespace Victoria
             if (!(item is LavaTrack track))
                 throw new InvalidCastException();
 
-            await StopAsync();
+            var previousTrack = CurrentTrack;
             await PlayAsync(track);
-            return track;
+            return previousTrack;
         }
 
         /// <summary>
@@ -234,6 +233,10 @@ namespace Victoria
             Queue.Clear();
             Queue = null;
             CurrentTrack = null;
+            var stopPayload = new StopPayload(VoiceChannel.GuildId);
+            var destroyPayload = new DestroyPayload(VoiceChannel.GuildId);
+            await _socketHelper.SendPayloadAsync(stopPayload);
+            await _socketHelper.SendPayloadAsync(destroyPayload);
             await VoiceChannel.DisconnectAsync().ConfigureAwait(false);
             GC.SuppressFinalize(this);
         }

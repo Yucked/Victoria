@@ -45,6 +45,10 @@ namespace Victoria.Helpers
         public HttpHelper WithCustomHeader(string key, string value)
         {
             CheckClient();
+
+            if (_client.DefaultRequestHeaders.Contains(key))
+                return this;
+
             _client.DefaultRequestHeaders.Add(key, value);
             return this;
         }

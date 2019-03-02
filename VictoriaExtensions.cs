@@ -56,6 +56,16 @@ namespace Victoria
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="reason"></param>
+        /// <returns></returns>
+        public static bool ShouldPlayNext(this TrackEndReason reason)
+        {
+            return reason == TrackEndReason.Finished || reason == TrackEndReason.LoadFailed;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="logSeverity"></param>
         /// <param name="message"></param>
         /// <param name="exception"></param>

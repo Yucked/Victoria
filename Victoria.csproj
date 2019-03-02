@@ -17,9 +17,15 @@
     <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
     <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     <PackageReleaseNotes>
-      Lavalink file has been removed. Victoria now targets .NET Standard 2.0 and .NET Coreapp 3.0.
-      LavaNode has been replaced with specific LavaClient for DiscordSocketClient and DiscordShardedClient.
-      LavaClient no longer contain REST related methods. LavaRestClient exposes all REST related methods such SearchTracksAsync.
+      - Fixed HTTPHelper WithCustomHeaders existing header exception
+
+      - Fixed skip method?
+
+      - LavaPlayer#Dispose properly disposes and destroys player
+
+      - LavaQueue#TryDequeue first checks if there are any elements
+
+      - VictoriaExtensions now contains a method for figuring out if next track should be played
     </PackageReleaseNotes>
   </PropertyGroup>
 
