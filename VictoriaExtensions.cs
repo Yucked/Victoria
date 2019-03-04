@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
+using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using Victoria.Entities;
 using Victoria.Helpers;
@@ -10,10 +11,9 @@ namespace Victoria
     public static class VictoriaExtensions
     {
         /// <summary>
-        /// 
+        /// Fetches thumbnail of the specified track.
         /// </summary>
-        /// <param name="track"></param>
-        /// <returns></returns>
+        /// <param name="track"><see cref="LavaTrack"/></param>
         public static async Task<string> FetchThumbnailAsync(this LavaTrack track)
         {
             var url = string.Empty;
@@ -44,32 +44,23 @@ namespace Victoria
         }
 
         /// <summary>
-        /// 
+        /// Searches lyrics for the specified track.
         /// </summary>
-        /// <param name="track"></param>
-        /// <returns></returns>
+        /// <param name="track"><see cref="LavaTrack"/></param>
         public static Task<string> FetchLyricsAsync(this LavaTrack track)
         {
             return LyricsHelper.SearchAsync(track.Author, track.Title);
         }
 
         /// <summary>
-        /// 
+        /// Checks if the <see cref="TrackEndReason"/> is Finished or LoadFailed.
         /// </summary>
-        /// <param name="reason"></param>
-        /// <returns></returns>
+        /// <param name="reason"><see cref="TrackEndReason"/></param>
         public static bool ShouldPlayNext(this TrackEndReason reason)
         {
             return reason == TrackEndReason.Finished || reason == TrackEndReason.LoadFailed;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="logSeverity"></param>
-        /// <param name="message"></param>
-        /// <param name="exception"></param>
-        /// <returns></returns>
         internal static LogMessage LogMessage(LogSeverity logSeverity, string message = null, Exception exception = null)
         {
             return new LogMessage(logSeverity, nameof(Victoria), message, exception);

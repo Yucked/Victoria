@@ -33,7 +33,7 @@ namespace Victoria.Entities
 
         [JsonIgnore]
         public TimeSpan Length
-            => new TimeSpan(TrackLength);
+            => TimeSpan.FromMilliseconds(TrackLength);
 
         [JsonProperty("length")]
         internal long TrackLength { get; set; }

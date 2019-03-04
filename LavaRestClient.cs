@@ -3,24 +3,23 @@ using System.Threading.Tasks;
 using Victoria.Helpers;
 using Victoria.Entities;
 using Newtonsoft.Json.Linq;
-using Victoria.Entities;
 using System.Collections.Generic;
 
 namespace Victoria
 {
     /// <summary>
-    /// 
+    /// Handles Lavalink's REST features.
     /// </summary>
     public sealed class LavaRestClient
     {
         private readonly (string Host, int Port, string Password) _rest;
 
         /// <summary>
-        /// 
+        /// Initializes <see cref="LavaRestClient"/>.
         /// </summary>
-        /// <param name="host"></param>
-        /// <param name="port"></param>
-        /// <param name="password"></param>
+        /// <param name="host">Lavalink host.</param>
+        /// <param name="port">Lavalink port.</param>
+        /// <param name="password">Lavalink server password.</param>
         public LavaRestClient(string host, int port, string password)
         {
             _rest.Host = host;
@@ -29,9 +28,9 @@ namespace Victoria
         }
 
         /// <summary>
-        /// 
+        /// Initializes <see cref="LavaRestClient"/>.
         /// </summary>
-        /// <param name="configuration"></param>
+        /// <param name="configuration"><see cref="Configuration"/></param>
         public LavaRestClient(Configuration configuration = null)
         {
             configuration ??= new Configuration();
@@ -41,30 +40,30 @@ namespace Victoria
         }
 
         /// <summary>
-        /// 
+        /// Searches Soundcloud for your query.
         /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
+        /// <param name="query">Search query.</param>
+        /// <returns><see cref="SearchResult"/></returns>
         public Task<SearchResult> SearchSoundcloudAsync(string query)
         {
             return TracksRequestAsync($"scsearch:{query}");
         }
 
         /// <summary>
-        /// 
+        /// Searches YouTube for your query.
         /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        public Task<SearchResult> SearchYoutubeAsync(string query)
+        /// <param name="query">Search query.</param>
+        /// <returns><see cref="SearchResult"/></returns>
+        public Task<SearchResult> SearchYouTubeAsync(string query)
         {
             return TracksRequestAsync($"ytsearch:{query}");
         }
 
         /// <summary>
-        /// 
+        /// Searches all sources specified in Lavalink's application.yml.
         /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
+        /// <param name="query">Search query.</param>
+        /// <returns><see cref="SearchResult"/></returns>
         public async Task<SearchResult> TracksRequestAsync(string query)
         {
             var url = $"http://{_rest.Host}:{_rest.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}";

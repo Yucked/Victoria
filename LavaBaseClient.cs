@@ -13,7 +13,7 @@ namespace Victoria
     public abstract class LavaBaseClient
     {
         /// <summary>
-        /// 
+        /// Spits out important information.
         /// </summary>
         public event Func<LogMessage, Task> Log
         {
@@ -28,37 +28,38 @@ namespace Victoria
         }
 
         /// <summary>
-        /// 
+        /// Fires when Lavalink server sends stats.
         /// </summary>
         public event Func<ServerStats, Task> OnServerStats;
 
         /// <summary>
-        /// 
+        /// Fires when Lavalink server closes connection. 
+        /// Params are: <see cref="int"/> ErrorCode, <see cref="string"/> Reason, <see cref="bool"/> ByRemote.
         /// </summary>
         public event Func<int, string, bool, Task> OnSocketClosed;
 
         /// <summary>
-        /// 
+        /// Fires when a <see cref="LavaTrack"/> is stuck. <see cref="long"/> specifies threshold.
         /// </summary>
         public event Func<LavaPlayer, LavaTrack, long, Task> OnTrackStuck;
 
         /// <summary>
-        /// 
+        /// Fires when <see cref="LavaTrack"/> throws an exception. <see cref="string"/> is the error reason.
         /// </summary>
         public event Func<LavaPlayer, LavaTrack, string, Task> OnTrackException;
 
         /// <summary>
-        /// 
+        /// Fires when <see cref="LavaTrack"/> receives an updated.
         /// </summary>
         public event Func<LavaPlayer, LavaTrack, TimeSpan, Task> OnPlayerUpdated;
 
         /// <summary>
-        /// 
+        /// Fires when a track has finished playing.
         /// </summary>
         public event Func<LavaPlayer, LavaTrack, TrackEndReason, Task> OnTrackFinished;
 
         /// <summary>
-        /// 
+        /// Keeps up to date with <see cref="OnServerStats"/>.
         /// </summary>
         public ServerStats ServerStats { get; private set; }
 
@@ -84,11 +85,10 @@ namespace Victoria
         }
 
         /// <summary>
-        /// 
+        /// Connects to <paramref name="voiceChannel"/> and returns a <see cref="LavaPlayer"/>.
         /// </summary>
-        /// <param name="voiceChannel"></param>
-        /// <param name="textChannel"></param>
-        /// <returns></returns>
+        /// <param name="voiceChannel">Voice channel to connect to.</param>
+        /// <param name="textChannel">Optional text channel that can send updates.</param>
         public async Task<LavaPlayer> ConnectAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = null)
         {
             if (_players.TryGetValue(voiceChannel.GuildId, out var player))
@@ -102,13 +102,19 @@ namespace Victoria
             return player;
         }
 
+        /// <summary>
+        /// Gets an existing <see cref="LavaPlayer"/> otherwise null.
+        /// </summary>
+        /// <param name="guildId">Id of the guild.</param>
+        /// <returns><see cref="LavaPlayer"/></returns>
         public LavaPlayer GetPlayer(ulong guildId)
         {
             return _players.TryGetValue(guildId, out var player)
                 ? player : default;
         }
+
         /// <summary>
-        /// 
+        /// Disposes all <see cref="LavaPlayer"/>s and closes websocket connection.
         /// </summary>
         /// <returns></returns>
         public async ValueTask DisposeAsync()

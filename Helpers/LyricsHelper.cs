@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 namespace Victoria.Helpers
 {
     /// <summary>
-    /// 
+    /// Contains method for searching lyrics.
     /// </summary>
     public sealed class LyricsHelper
     {
@@ -18,23 +18,12 @@ namespace Victoria.Helpers
             return new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(500));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="searchText"></param>
-        /// <returns></returns>
         public static async Task<string> SearchAsync(string searchText)
         {
             var (author, title) = await SuggestAsync(searchText).ConfigureAwait(false);
             return await SearchExactAsync(author, title).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="trackAuthor"></param>
-        /// <param name="trackTitle"></param>
-        /// <returns></returns>
         public static Task<string> SearchAsync(string trackAuthor, string trackTitle)
         {
             var (author, title) = GetSongInfo(trackAuthor, trackTitle);
@@ -77,7 +66,7 @@ namespace Victoria.Helpers
 
             var parse = JObject.Parse(request);
             if (!parse.TryGetValue("lyrics", out var result))
-                return $"{parse.GetValue("error")}";
+                return parse.GetValue("error").ToObject<string>();
 
             var clean = Compiled(@"[\r\n]{2,}").Replace($"{result}", "\n");
             return clean;
