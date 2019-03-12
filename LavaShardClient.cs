@@ -38,7 +38,7 @@ namespace Victoria
             }
 
             _players.Clear();
-            _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Error, "Shards disconnecting. Disposing all connected players.", exception));
+            _log?.WriteLog(LogSeverity.Error, "Shards disconnecting. Disposing all connected players.", exception);
         }
     }
 }

@@ -35,7 +35,7 @@ namespace Victoria
             }
             _players.Clear();
 
-            _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Error, "WebSocket disconnected! Disposing all connected players.", exception));
+            _log?.WriteLog(LogSeverity.Error, "WebSocket disconnected! Disposing all connected players.", exception);
         }
     }
 }

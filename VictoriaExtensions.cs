@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
-using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using Victoria.Entities;
 using Victoria.Helpers;
@@ -61,9 +60,13 @@ namespace Victoria
             return reason == TrackEndReason.Finished || reason == TrackEndReason.LoadFailed;
         }
 
-        internal static LogMessage LogMessage(LogSeverity logSeverity, string message = null, Exception exception = null)
+        internal static void WriteLog(this Func<LogMessage, Task> log, LogSeverity severity, string message, Exception exception = null)
         {
-            return new LogMessage(logSeverity, nameof(Victoria), message, exception);
+            if (severity > Configuration.InternalSeverity)
+                return;
+
+            var logMessage = new LogMessage(severity, nameof(Victoria), message, exception);
+            log?.Invoke(logMessage);
         }
     }
 }

@@ -13,19 +13,15 @@
     <Authors>Yucked</Authors>
     <Copyright>2018 - 2019 Yucked. All rights reserved.</Copyright>
     <PackageIconUrl>https://i.imgur.com/lA1HyyI.png</PackageIconUrl>
-    <PackageTags>Lavalink, Wrapper, Discord Music, Yucked</PackageTags>
+    <PackageTags>Lavalink, Wrapper, Discord, Discord.NET, Music, Yucked</PackageTags>
     <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
     <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     <PackageReleaseNotes>
-      - Fixed HTTPHelper WithCustomHeaders existing header exception
+      - Created an extensions method of Func (LogMessage, Task) and replaced all logging statements with the extension method.
 
-      - Fixed skip method?
+      - Added locks for LavaQueue methods.
 
-      - LavaPlayer#Dispose properly disposes and destroys player
-
-      - LavaQueue#TryDequeue first checks if there are any elements
-
-      - VictoriaExtensions now contains a method for figuring out if next track should be played
+      - Removed redundant cast for BufferSize.
     </PackageReleaseNotes>
   </PropertyGroup>
 

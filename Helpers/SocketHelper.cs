@@ -43,13 +43,10 @@ namespace Victoria.Helpers
             var url = new Uri($"ws://{_config.Host}:{_config.Port}");
             try
             {
-                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Info, $"Connecting to {url}."));
+                _log?.WriteLog(LogSeverity.Info, $"Connecting to {url}.");
                 await clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
             }
-            catch
-            {
-                // Ignore all websocket exceptions.
-            }
+            catch { }
         }
 
         public Task SendPayloadAsync(BasePayload payload)
@@ -58,7 +55,7 @@ namespace Victoria.Helpers
                 return Task.CompletedTask;
 
             var serialize = JsonConvert.SerializeObject(payload);
-            _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Verbose, serialize));
+            _log?.WriteLog(LogSeverity.Verbose, serialize);
             var seg = new ArraySegment<byte>(_encoding.GetBytes(serialize));
             return clientWebSocket.SendAsync(seg, WebSocketMessageType.Text, true, CancellationToken.None);
         }
@@ -67,8 +64,6 @@ namespace Victoria.Helpers
         {
             isUseable = false;
 
-            await clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Closed called.",
-                CancellationToken.None).ConfigureAwait(false);
             await clientWebSocket
                 .CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed called.", CancellationToken.None)
                 .ConfigureAwait(false);
@@ -88,7 +83,7 @@ namespace Victoria.Helpers
             }
             else
             {
-                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Info, "WebSocket connection established!"));
+                _log?.WriteLog(LogSeverity.Info, "WebSocket connection established!");
                 isUseable = true;
                 reconnectAttempts = 0;
                 await ReceiveAsync(cancellationTokenSource.Token).ConfigureAwait(false);
@@ -100,20 +95,21 @@ namespace Victoria.Helpers
             try { cancellationTokenSource.Cancel(); }
             catch { }
 
-
             if (reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
                 return;
 
             if (reconnectAttempts == _config.ReconnectAttempts)
-                _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Warning, $"Max number of reconnect attempts reached."));
-
+            {
+                _log?.WriteLog(LogSeverity.Warning, $"Max number of reconnect attempts reached.");
+                return;
+            }
 
             if (isUseable)
                 return;
 
             reconnectAttempts++;
             interval += _config.ReconnectInterval;
-            _log?.Invoke(VictoriaExtensions.LogMessage(LogSeverity.Warning, $"Attempt #{reconnectAttempts}. Next retry in {interval.TotalSeconds} seconds."));
+            _log?.WriteLog(LogSeverity.Warning, $"Attempt #{reconnectAttempts}. Next retry in {interval.TotalSeconds} seconds.");
 
             await Task.Delay(interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }

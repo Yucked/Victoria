@@ -58,16 +58,19 @@ namespace Victoria
         /// </summary>
         internal int Shards { get; set; }
 
+        internal static LogSeverity InternalSeverity;
+
         public Configuration()
         {
             Host ??= "127.0.0.1";
             Port = Port is 0 ? 2333 : Port;
             Password ??= "youshallnotpass";
             SelfDeaf ??= true;
-            BufferSize ??= (ushort)512;
+            BufferSize ??= 512;
             LogSeverity ??= Discord.LogSeverity.Info;
             ReconnectAttempts = ReconnectAttempts == default ? 10 : ReconnectAttempts;
             ReconnectInterval = ReconnectInterval == default ? TimeSpan.FromSeconds(10) : ReconnectInterval;
+            InternalSeverity = LogSeverity.Value;
         }
     }
 }

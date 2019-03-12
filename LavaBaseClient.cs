@@ -64,7 +64,6 @@ namespace Victoria
         public ServerStats ServerStats { get; private set; }
 
         private BaseSocketClient baseSocketClient;
-        private LogSeverity logSeverity;
         private SocketHelper socketHelper;
         private SocketVoiceState cachedStated;
         protected Func<LogMessage, Task> _log;
@@ -73,7 +72,6 @@ namespace Victoria
         protected async Task InitializeAsync(BaseSocketClient baseSocketClient, Configuration configuration)
         {
             this.baseSocketClient = baseSocketClient;
-            logSeverity = configuration.LogSeverity.Value;
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
@@ -129,10 +127,9 @@ namespace Victoria
             GC.SuppressFinalize(this);
         }
 
-        #region PRIVATES
         private bool OnMessage(string message)
         {
-            WriteLog(LogSeverity.Verbose, message);
+            _log?.WriteLog(LogSeverity.Verbose, message);
             var json = JObject.Parse(message);
 
             var guildId = (ulong)0;
@@ -210,26 +207,18 @@ namespace Victoria
                             break;
 
                         default:
-                            WriteLog(LogSeverity.Warning, $"Missing implementation of {evt} event.");
+                            _log?.WriteLog(LogSeverity.Warning, $"Missing implementation of {evt} event.");
                             break;
                     }
 
                     break;
 
                 default:
-                    WriteLog(LogSeverity.Warning, $"Missing handling of {opCode} OP code.");
+                    _log?.WriteLog(LogSeverity.Warning, $"Missing handling of {opCode} OP code.");
                     break;
             }
 
             return true;
-        }
-
-        private void WriteLog(LogSeverity severity, string message, Exception exception = null)
-        {
-            if (severity >= logSeverity)
-                return;
-
-            _log?.Invoke(VictoriaExtensions.LogMessage(severity, message, exception));
         }
 
         private async Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState currentState)
@@ -258,7 +247,5 @@ namespace Victoria
             var update = new VoiceServerPayload(server, cachedStated.VoiceSessionId);
             return socketHelper.SendPayloadAsync(update);
         }
-
-        #endregion
     }
 }
