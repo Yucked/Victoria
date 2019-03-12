@@ -59,7 +59,7 @@ namespace Victoria
         private readonly SocketHelper _socketHelper;
 
         private const string InvalidOp
-            = "This operation is invalid since player isn't anything playing anything.";
+            = "This operation is invalid since player isn't actually playing anything.";
 
         internal LavaPlayer(IVoiceChannel voiceChannel, ITextChannel textChannel,
             SocketHelper socketHelper)
