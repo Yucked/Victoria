@@ -17,11 +17,9 @@
     <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
     <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     <PackageReleaseNotes>
-      - Created an extensions method of Func (LogMessage, Task) and replaced all logging statements with the extension method.
+      - Proper way of getting shards
 
-      - Added locks for LavaQueue methods.
-
-      - Removed redundant cast for BufferSize.
+      - Removed bloat from StartAsync
     </PackageReleaseNotes>
   </PropertyGroup>
 

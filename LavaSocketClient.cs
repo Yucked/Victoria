@@ -17,12 +17,6 @@ namespace Victoria
         /// <param name="configuration"><see cref="Configuration"/></param>
         public Task StartAsync(DiscordSocketClient socketClient, Configuration configuration = default)
         {
-            configuration ??= new Configuration
-            {
-                UserId = socketClient.CurrentUser.Id,
-                Shards = 1
-            };
-
             socketClient.Disconnected += OnDisconnected;
             return InitializeAsync(socketClient, configuration);
         }

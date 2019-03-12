@@ -66,12 +66,27 @@ namespace Victoria
         private BaseSocketClient baseSocketClient;
         private SocketHelper socketHelper;
         private SocketVoiceState cachedStated;
+        private Configuration configuration;
         protected Func<LogMessage, Task> _log;
         protected ConcurrentDictionary<ulong, LavaPlayer> _players;
 
         protected async Task InitializeAsync(BaseSocketClient baseSocketClient, Configuration configuration)
         {
             this.baseSocketClient = baseSocketClient;
+            this.configuration = configuration;
+
+            configuration.UserId = baseSocketClient.CurrentUser.Id;
+            configuration.Shards = baseSocketClient switch
+            {
+                DiscordSocketClient socketClient
+                    => await socketClient.GetRecommendedShardCountAsync(),
+
+                DiscordShardedClient shardedClient
+                    => shardedClient.Shards.Count,
+
+                _ => 1
+            };
+
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
@@ -94,7 +109,7 @@ namespace Victoria
 
 
             player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
-            await voiceChannel.ConnectAsync(false, false, true).ConfigureAwait(false);
+            await voiceChannel.ConnectAsync(configuration.SelfDeaf.Value, false, true).ConfigureAwait(false);
             _players.TryAdd(voiceChannel.GuildId, player);
 
             return player;
