@@ -73,10 +73,10 @@ namespace Victoria
         protected async Task InitializeAsync(BaseSocketClient baseSocketClient, Configuration configuration)
         {
             this.baseSocketClient = baseSocketClient;
-            this.configuration = configuration;
+            this.configuration = configuration ?? new Configuration();
 
-            configuration.UserId = baseSocketClient.CurrentUser.Id;
-            configuration.Shards = baseSocketClient switch
+            this.configuration.UserId = baseSocketClient.CurrentUser.Id;
+            this.configuration.Shards = baseSocketClient switch
             {
                 DiscordSocketClient socketClient
                     => await socketClient.GetRecommendedShardCountAsync(),
@@ -91,7 +91,7 @@ namespace Victoria
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
 
-            socketHelper = new SocketHelper(configuration, _log);
+            socketHelper = new SocketHelper(this.configuration, _log);
             socketHelper.OnMessage += OnMessage;
 
             await socketHelper.ConnectAsync().ConfigureAwait(false);
@@ -107,12 +107,26 @@ namespace Victoria
             if (_players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
 
-
             player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
             await voiceChannel.ConnectAsync(configuration.SelfDeaf.Value, false, true).ConfigureAwait(false);
             _players.TryAdd(voiceChannel.GuildId, player);
 
             return player;
+        }
+
+        /// <summary>
+        /// Disconnects from the <paramref name="voiceChannel"/>.
+        /// </summary>
+        /// <param name="voiceChannel">Connected voice channel.</param>
+        /// <returns></returns>
+        public async Task DisconnectAsync(IVoiceChannel voiceChannel)
+        {
+            if (!_players.TryRemove(voiceChannel.GuildId, out _))
+                return;
+
+            await voiceChannel.DisconnectAsync().ConfigureAwait(false);
+            var destroyPayload = new DestroyPayload(voiceChannel.GuildId);
+            await socketHelper.SendPayloadAsync(destroyPayload);
         }
 
         /// <summary>

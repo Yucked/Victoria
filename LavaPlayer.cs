@@ -220,20 +220,12 @@ namespace Victoria
             return _socketHelper.SendPayloadAsync(payload);
         }
 
-        /// <summary>
-        /// Disposes <see cref="LavaPlayer"/>, sends a stop and destroy request to Lavalink server and disconnects from <see cref="VoiceChannel"/>.
-        /// </summary>
-        public async ValueTask DisposeAsync()
+        internal async ValueTask DisposeAsync()
         {
             IsPlaying = false;
             Queue.Clear();
             Queue = null;
             CurrentTrack = null;
-            var stopPayload = new StopPayload(VoiceChannel.GuildId);
-            var destroyPayload = new DestroyPayload(VoiceChannel.GuildId);
-            await _socketHelper.SendPayloadAsync(stopPayload);
-            await _socketHelper.SendPayloadAsync(destroyPayload);
-            await VoiceChannel.DisconnectAsync().ConfigureAwait(false);
             GC.SuppressFinalize(this);
         }
     }
