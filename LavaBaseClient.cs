@@ -65,7 +65,6 @@ namespace Victoria
 
         private BaseSocketClient baseSocketClient;
         private SocketHelper socketHelper;
-        private SocketVoiceState cachedStated;
         private Configuration configuration;
         protected Func<LogMessage, Task> _log;
         protected ConcurrentDictionary<ulong, LavaPlayer> _players;
@@ -73,10 +72,7 @@ namespace Victoria
         protected async Task InitializeAsync(BaseSocketClient baseSocketClient, Configuration configuration)
         {
             this.baseSocketClient = baseSocketClient;
-            this.configuration = configuration ?? new Configuration();
-
-            this.configuration.UserId = baseSocketClient.CurrentUser.Id;
-            this.configuration.Shards = baseSocketClient switch
+            var shards = baseSocketClient switch
             {
                 DiscordSocketClient socketClient
                     => await socketClient.GetRecommendedShardCountAsync(),
@@ -87,14 +83,21 @@ namespace Victoria
                 _ => 1
             };
 
+            this.configuration = configuration.SetInternals(baseSocketClient.CurrentUser.Id, shards);
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
 
+            await InitializeWebSocketAsync().ConfigureAwait(false);
+        }
+
+        private Task InitializeWebSocketAsync()
+        {
             socketHelper = new SocketHelper(this.configuration, _log);
             socketHelper.OnMessage += OnMessage;
+            socketHelper.OnClosed += OnClosedAsync;
 
-            await socketHelper.ConnectAsync().ConfigureAwait(false);
+            return socketHelper.ConnectAsync();
         }
 
         /// <summary>
@@ -102,14 +105,25 @@ namespace Victoria
         /// </summary>
         /// <param name="voiceChannel">Voice channel to connect to.</param>
         /// <param name="textChannel">Optional text channel that can send updates.</param>
-        public async Task<LavaPlayer> ConnectAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = null)
+        /// <param name="existing">If player already exists in cache. Works with <see cref="Configuration.ShouldPreservePlayers"/>.</param>
+        public async Task<LavaPlayer> ConnectAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = null, bool existing = false)
         {
-            if (_players.TryGetValue(voiceChannel.GuildId, out var player))
+            if (_players.TryGetValue(voiceChannel.GuildId, out var player) && !existing)
                 return player;
 
-            player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
-            await voiceChannel.ConnectAsync(configuration.SelfDeaf.Value, false, true).ConfigureAwait(false);
-            _players.TryAdd(voiceChannel.GuildId, player);
+            await voiceChannel.ConnectAsync(configuration.SelfDeaf, false, true).ConfigureAwait(false);
+
+            if (existing)
+            {
+                await InitializeWebSocketAsync().ConfigureAwait(false);
+                player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
+                _players.TryUpdate(voiceChannel.GuildId, player, default);
+            }
+            else
+            {
+                player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
+                _players.TryAdd(voiceChannel.GuildId, player);
+            }
 
             return player;
         }
@@ -118,7 +132,6 @@ namespace Victoria
         /// Disconnects from the <paramref name="voiceChannel"/>.
         /// </summary>
         /// <param name="voiceChannel">Connected voice channel.</param>
-        /// <returns></returns>
         public async Task DisconnectAsync(IVoiceChannel voiceChannel)
         {
             if (!_players.TryRemove(voiceChannel.GuildId, out _))
@@ -143,7 +156,6 @@ namespace Victoria
         /// <summary>
         /// Disposes all <see cref="LavaPlayer"/>s and closes websocket connection.
         /// </summary>
-        /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
             foreach (var player in _players.Values)
@@ -156,9 +168,24 @@ namespace Victoria
             GC.SuppressFinalize(this);
         }
 
+        private async Task OnClosedAsync()
+        {
+            if (configuration.ShouldPreservePlayers)
+                return;
+
+            foreach (var player in _players.Values)
+            {
+                await DisconnectAsync(player.VoiceChannel).
+                    ContinueWith(_ => player.DisposeAsync());
+            }
+
+            _players.Clear();
+            _log?.WriteLog(LogSeverity.Warning, "Lavalink died. Disposed all players.");
+        }
+
         private bool OnMessage(string message)
         {
-            _log?.WriteLog(LogSeverity.Verbose, message);
+            _log?.WriteLog(LogSeverity.Debug, message);
             var json = JObject.Parse(message);
 
             var guildId = (ulong)0;
@@ -171,60 +198,49 @@ namespace Victoria
             switch (opCode)
             {
                 case "playerUpdate":
-                    var state = json.GetValue("state");
-
                     if (!_players.TryGetValue(guildId, out player))
-                        break;
+                        return false;
 
-                    var statePos = state["position"].ToObject<long>();
-                    var stateTime = state["time"].ToObject<long>();
+                    var state = json.GetValue("state").ToObject<PlayerState>();
+                    player.CurrentTrack.Position = state.Position;
+                    player.LastUpdate = state.Time;
 
-                    var position = TimeSpan.FromMilliseconds(statePos);
-
-                    player.CurrentTrack.Position = position;
-                    player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(stateTime);
-
-                    _players.TryUpdate(guildId, player, player);
-                    OnPlayerUpdated?.Invoke(player, player.CurrentTrack, position);
+                    OnPlayerUpdated?.Invoke(player, player.CurrentTrack, state.Position);
                     break;
 
                 case "stats":
-                    var stats = json.ToObject<ServerStats>();
-                    ServerStats = stats;
-                    OnServerStats?.Invoke(stats);
+                    ServerStats = json.ToObject<ServerStats>();
+                    OnServerStats?.Invoke(ServerStats);
                     break;
 
                 case "event":
                     var evt = json.GetValue("type").ToObject<EventType>();
-                    _players.TryGetValue(guildId, out player);
+                    if (!_players.TryGetValue(guildId, out player))
+                        return false;
 
-                    LavaTrack track = default;
+                    var track = default(LavaTrack);
                     if (json.TryGetValue("track", out var hash))
-                    {
                         track = TrackHelper.DecodeTrack($"{hash}");
-                    }
 
                     switch (evt)
                     {
                         case EventType.TrackEnd:
                             var endReason = json.GetValue("reason").ToObject<TrackEndReason>();
+                            player.IsPlaying = false;
                             if (endReason != TrackEndReason.Replaced)
                                 player.CurrentTrack = default;
-                            _players.TryUpdate(guildId, player, player);
                             OnTrackFinished?.Invoke(player, track, endReason);
                             break;
 
                         case EventType.TrackException:
                             var error = json.GetValue("error").ToObject<string>();
                             player.CurrentTrack = track;
-                            _players.TryUpdate(guildId, player, player);
                             OnTrackException?.Invoke(player, track, error);
                             break;
 
                         case EventType.TrackStuck:
                             var timeout = json.GetValue("thresholdMs").ToObject<long>();
                             player.CurrentTrack = track;
-                            _players.TryUpdate(guildId, player, player);
                             OnTrackStuck?.Invoke(player, track, timeout);
                             break;
 
@@ -239,7 +255,6 @@ namespace Victoria
                             _log?.WriteLog(LogSeverity.Warning, $"Missing implementation of {evt} event.");
                             break;
                     }
-
                     break;
 
                 default:
@@ -250,22 +265,19 @@ namespace Victoria
             return true;
         }
 
-        private async Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState currentState)
+        private Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
         {
             if (user.Id != baseSocketClient.CurrentUser.Id)
-                return;
+                return Task.CompletedTask;
 
-            cachedStated = currentState;
+            var guildId = (oldState.VoiceChannel ?? newState.VoiceChannel).Guild.Id;
 
-            if (oldState.VoiceChannel != null && currentState.VoiceChannel is null)
-            {
-                if (!_players.TryGetValue(oldState.VoiceChannel.Id, out var player))
-                    return;
+            if (!_players.TryGetValue(guildId, out var player))
+                return Task.CompletedTask;
 
-                await player.DisposeAsync().ConfigureAwait(false);
-                var destroy = new DestroyPayload(oldState.VoiceChannel.Guild.Id);
-                await socketHelper.SendPayloadAsync(destroy).ConfigureAwait(false);
-            }
+            player.cachedState = newState;
+
+            return Task.CompletedTask;
         }
 
         private Task OnVoiceServerUpdated(SocketVoiceServer server)
@@ -273,7 +285,7 @@ namespace Victoria
             if (!server.Guild.HasValue || !_players.TryGetValue(server.Guild.Id, out var player))
                 return Task.CompletedTask;
 
-            var update = new VoiceServerPayload(server, cachedStated.VoiceSessionId);
+            var update = new VoiceServerPayload(server, player.cachedState.VoiceSessionId);
             return socketHelper.SendPayloadAsync(update);
         }
     }

@@ -17,9 +17,25 @@
     <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
     <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     <PackageReleaseNotes>
-      - Proper way of getting shards
+      - Added documentation for Configuration properties.
 
-      - Removed bloat from StartAsync
+      - Specified default values for Configuration properties.
+
+      - Added ShouldPreservePlayers incase Lavalink dies.
+
+      - Added PlayerState struct to make JSON deserialization faster.
+
+      - Moved classes to Responses folder.
+
+      - Fixed reconnect attempts bug in SocketHelper.
+
+      - Added existing argument for ConnectAsync which tries to restart websocket connection if closed and updates player.
+
+      - FinishedEvent now sets IsPlaying to false.
+
+      - Moved SocketVoiceState from LavaBaseClient to LavaPlayer.
+
+      - Set CurrentVolume to 100 in LavaPlayer CTOR.
     </PackageReleaseNotes>
   </PropertyGroup>
 

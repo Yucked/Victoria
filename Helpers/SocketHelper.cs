@@ -22,6 +22,7 @@ namespace Victoria.Helpers
         private CancellationTokenSource cancellationTokenSource;
         private readonly Func<LogMessage, Task> _log;
 
+        public event Func<Task> OnClosed;
         public event Func<string, bool> OnMessage;
 
         public SocketHelper(Configuration configuration, Func<LogMessage, Task> log)
@@ -41,6 +42,10 @@ namespace Victoria.Helpers
             clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_config.Shards}");
             clientWebSocket.Options.SetRequestHeader("Authorization", _config.Password);
             var url = new Uri($"ws://{_config.Host}:{_config.Port}");
+
+            if (reconnectAttempts == _config.ReconnectAttempts)
+                return;
+
             try
             {
                 _log?.WriteLog(LogSeverity.Info, $"Connecting to {url}.");
@@ -55,7 +60,7 @@ namespace Victoria.Helpers
                 return Task.CompletedTask;
 
             var serialize = JsonConvert.SerializeObject(payload);
-            _log?.WriteLog(LogSeverity.Verbose, serialize);
+            _log?.WriteLog(LogSeverity.Debug, serialize);
             var seg = new ArraySegment<byte>(_encoding.GetBytes(serialize));
             return clientWebSocket.SendAsync(seg, WebSocketMessageType.Text, true, CancellationToken.None);
         }
@@ -98,18 +103,15 @@ namespace Victoria.Helpers
             if (reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
                 return;
 
-            if (reconnectAttempts == _config.ReconnectAttempts)
-            {
-                _log?.WriteLog(LogSeverity.Warning, $"Max number of reconnect attempts reached.");
-                return;
-            }
-
             if (isUseable)
                 return;
 
             reconnectAttempts++;
             interval += _config.ReconnectInterval;
-            _log?.WriteLog(LogSeverity.Warning, $"Attempt #{reconnectAttempts}. Next retry in {interval.TotalSeconds} seconds.");
+            _log?.WriteLog(LogSeverity.Warning,
+                reconnectAttempts == _config.ReconnectAttempts ?
+                $"This was the last attempt at re-establishing websocket connection." :
+                $"Attempt #{reconnectAttempts}. Next retry in {interval.TotalSeconds} seconds.");
 
             await Task.Delay(interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
@@ -155,6 +157,7 @@ namespace Victoria.Helpers
             catch (Exception ex) when (ex.HResult == -2147467259)
             {
                 isUseable = false;
+                OnClosed?.Invoke();
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
         }

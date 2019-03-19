@@ -1,4 +1,5 @@
 using Discord;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -23,7 +24,7 @@ namespace Victoria
         /// <summary>
         /// Checks whether the <see cref="LavaPlayer"/> is playing or not.
         /// </summary>
-        public bool IsPlaying { get; private set; }
+        public bool IsPlaying { get; internal set; }
 
         /// <summary>
         /// Current track that is playing.
@@ -57,6 +58,7 @@ namespace Victoria
 
         private bool isPaused;
         private readonly SocketHelper _socketHelper;
+        internal SocketVoiceState cachedState;
 
         private const string InvalidOp
             = "This operation is invalid since player isn't actually playing anything.";
@@ -67,6 +69,7 @@ namespace Victoria
             VoiceChannel = voiceChannel;
             TextChannel = textChannel;
             _socketHelper = socketHelper;
+            CurrentVolume = 100;
             Queue = new LavaQueue<IQueueObject>();
         }
 
@@ -220,13 +223,15 @@ namespace Victoria
             return _socketHelper.SendPayloadAsync(payload);
         }
 
-        internal async ValueTask DisposeAsync()
+        internal ValueTask DisposeAsync()
         {
             IsPlaying = false;
             Queue.Clear();
             Queue = null;
             CurrentTrack = null;
             GC.SuppressFinalize(this);
+
+            return default;
         }
     }
 }
