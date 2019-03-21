@@ -88,16 +88,11 @@ namespace Victoria
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
 
-            await InitializeWebSocketAsync().ConfigureAwait(false);
-        }
-
-        private Task InitializeWebSocketAsync()
-        {
-            socketHelper = new SocketHelper(this.configuration, _log);
+            socketHelper = new SocketHelper(configuration, _log);
             socketHelper.OnMessage += OnMessage;
             socketHelper.OnClosed += OnClosedAsync;
 
-            return socketHelper.ConnectAsync();
+            await socketHelper.ConnectAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -105,25 +100,14 @@ namespace Victoria
         /// </summary>
         /// <param name="voiceChannel">Voice channel to connect to.</param>
         /// <param name="textChannel">Optional text channel that can send updates.</param>
-        /// <param name="existing">If player already exists in cache. Works with <see cref="Configuration.ShouldPreservePlayers"/>.</param>
-        public async Task<LavaPlayer> ConnectAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = null, bool existing = false)
+        public async Task<LavaPlayer> ConnectAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = null)
         {
-            if (_players.TryGetValue(voiceChannel.GuildId, out var player) && !existing)
+            if (_players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
 
             await voiceChannel.ConnectAsync(configuration.SelfDeaf, false, true).ConfigureAwait(false);
-
-            if (existing)
-            {
-                await InitializeWebSocketAsync().ConfigureAwait(false);
-                player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
-                _players.TryUpdate(voiceChannel.GuildId, player, default);
-            }
-            else
-            {
-                player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
-                _players.TryAdd(voiceChannel.GuildId, player);
-            }
+            player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
+            _players.TryAdd(voiceChannel.GuildId, player);
 
             return player;
         }
@@ -140,6 +124,38 @@ namespace Victoria
             await voiceChannel.DisconnectAsync().ConfigureAwait(false);
             var destroyPayload = new DestroyPayload(voiceChannel.GuildId);
             await socketHelper.SendPayloadAsync(destroyPayload);
+        }
+
+        /// <summary>
+        /// Moves voice channels and updates <see cref="LavaPlayer.VoiceChannel"/>.
+        /// </summary>
+        /// <param name="voiceChannel"><see cref="IVoiceChannel"/></param>
+        public async Task MoveChannelsAsync(IVoiceChannel voiceChannel)
+        {
+            if (!_players.TryGetValue(voiceChannel.GuildId, out var player))
+                return;
+
+            if (player.VoiceChannel.Id == voiceChannel.Id)
+                return;
+
+            await player.PauseAsync();
+            await player.VoiceChannel.DisconnectAsync().ConfigureAwait(false);
+            await voiceChannel.ConnectAsync(configuration.SelfDeaf, false, true).ConfigureAwait(false);
+            await player.ResumeAsync();
+
+            player.VoiceChannel = voiceChannel;
+        }
+
+        /// <summary>
+        /// Update the <see cref="LavaPlayer.TextChannel"/>.
+        /// </summary>
+        /// <param name="channel"><see cref="ITextChannel"/></param>
+        public void UpdateTextChannel(ulong guildId, ITextChannel textChannel)
+        {
+            if (!_players.TryGetValue(guildId, out var player))
+                return;
+
+            player.TextChannel = textChannel;
         }
 
         /// <summary>
@@ -170,9 +186,6 @@ namespace Victoria
 
         private async Task OnClosedAsync()
         {
-            if (configuration.ShouldPreservePlayers)
-                return;
-
             foreach (var player in _players.Values)
             {
                 await DisconnectAsync(player.VoiceChannel).

@@ -48,11 +48,6 @@ namespace Victoria
         /// </summary>
         public TimeSpan ReconnectInterval { get; set; } = TimeSpan.FromSeconds(10);
 
-        /// <summary>
-        /// Whether players should be preserved if Lavalink is closed.
-        /// </summary>
-        public bool ShouldPreservePlayers { get; set; } = false;
-
         internal int Shards { get; set; }
         internal ulong UserId { get; set; }
         internal static LogSeverity InternalSeverity { get; set; }

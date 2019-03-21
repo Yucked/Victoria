@@ -46,7 +46,7 @@ namespace Victoria
         /// <returns><see cref="SearchResult"/></returns>
         public Task<SearchResult> SearchSoundcloudAsync(string query)
         {
-            return TracksRequestAsync($"scsearch:{query}");
+            return SearchTracksAsync($"scsearch:{query}");
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Victoria
         /// <returns><see cref="SearchResult"/></returns>
         public Task<SearchResult> SearchYouTubeAsync(string query)
         {
-            return TracksRequestAsync($"ytsearch:{query}");
+            return SearchTracksAsync($"ytsearch:{query}");
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Victoria
         /// </summary>
         /// <param name="query">Search query.</param>
         /// <returns><see cref="SearchResult"/></returns>
-        public async Task<SearchResult> TracksRequestAsync(string query)
+        public async Task<SearchResult> SearchTracksAsync(string query)
         {
             var url = $"http://{_rest.Host}:{_rest.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}";
             var request = await HttpHelper.Instance

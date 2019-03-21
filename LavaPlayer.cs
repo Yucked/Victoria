@@ -34,12 +34,12 @@ namespace Victoria
         /// <summary>
         /// Optional text channel.
         /// </summary>
-        public ITextChannel TextChannel { get; }
+        public ITextChannel TextChannel { get; internal set; }
 
         /// <summary>
         /// Connected voice channel.
         /// </summary>
-        public IVoiceChannel VoiceChannel { get; }
+        public IVoiceChannel VoiceChannel { get; internal set; }
 
         /// <summary>
         /// Default queue, takes an object that implements <see cref="IQueueObject"/>.
