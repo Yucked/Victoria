@@ -17,25 +17,17 @@
     <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
     <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     <PackageReleaseNotes>
-      - Added documentation for Configuration properties.
+      - Changed LavaRestClient#TracksRequestAsync to LavaRestClient#SearchTracksAsync
 
-      - Specified default values for Configuration properties.
+      - Changed setter modifier of VoiceChannel and TextChannel to internal.
 
-      - Added ShouldPreservePlayers incase Lavalink dies.
+      - Removed ShouldPreservePlayers property from Configuration.
 
-      - Added PlayerState struct to make JSON deserialization faster.
+      - Added LavaBaseClient#MoveChannelsAsync(IVoiceChannel) to move voice channels.
 
-      - Moved classes to Responses folder.
+      - Added UpdateTextChannel(ulong, ITextChannel) that changes player's text channel.
 
-      - Fixed reconnect attempts bug in SocketHelper.
-
-      - Added existing argument for ConnectAsync which tries to restart websocket connection if closed and updates player.
-
-      - FinishedEvent now sets IsPlaying to false.
-
-      - Moved SocketVoiceState from LavaBaseClient to LavaPlayer.
-
-      - Set CurrentVolume to 100 in LavaPlayer CTOR.
+      - Removed resudue of ShouldPresevePlayers and all logic related to it.
     </PackageReleaseNotes>
   </PropertyGroup>
 
