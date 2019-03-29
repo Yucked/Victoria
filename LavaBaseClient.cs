@@ -3,6 +3,8 @@ using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Victoria.Entities;
 using Victoria.Entities.Payloads;
@@ -65,7 +67,9 @@ namespace Victoria
 
         private BaseSocketClient baseSocketClient;
         private SocketHelper socketHelper;
-        private Configuration configuration;
+        private Task disconnectTask;
+        private CancellationTokenSource cancellationTokenSource;
+        protected Configuration configuration;
         protected Func<LogMessage, Task> _log;
         protected ConcurrentDictionary<ulong, LavaPlayer> _players;
 
@@ -85,6 +89,7 @@ namespace Victoria
 
             this.configuration = configuration.SetInternals(baseSocketClient.CurrentUser.Id, shards);
             _players = new ConcurrentDictionary<ulong, LavaPlayer>();
+            cancellationTokenSource = new CancellationTokenSource();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
 
@@ -169,6 +174,11 @@ namespace Victoria
                 ? player : default;
         }
 
+        public void ToggleAutoDisconnect()
+        {
+            configuration.AutoDisconnect = !configuration.AutoDisconnect;
+        }
+
         /// <summary>
         /// Disposes all <see cref="LavaPlayer"/>s and closes websocket connection.
         /// </summary>
@@ -186,6 +196,9 @@ namespace Victoria
 
         private async Task OnClosedAsync()
         {
+            if (configuration.PreservePlayers)
+                return;
+
             foreach (var player in _players.Values)
             {
                 await DisconnectAsync(player.VoiceChannel).
@@ -280,15 +293,38 @@ namespace Victoria
 
         private Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
         {
-            if (user.Id != baseSocketClient.CurrentUser.Id)
-                return Task.CompletedTask;
+            var channel = (oldState.VoiceChannel ?? newState.VoiceChannel);
+            var guildId = channel.Guild.Id;
 
-            var guildId = (oldState.VoiceChannel ?? newState.VoiceChannel).Guild.Id;
 
-            if (!_players.TryGetValue(guildId, out var player))
-                return Task.CompletedTask;
+            if (_players.TryGetValue(guildId, out var player)
+                && user.Id == baseSocketClient.CurrentUser.Id)
+            {
+                player.cachedState = newState;
+            }
 
-            player.cachedState = newState;
+            if (configuration.AutoDisconnect)
+            {
+                var users = channel.Users.Count(x => !x.IsBot);
+
+                if (users > 0)
+                {
+                    cancellationTokenSource.Cancel(false);
+                    cancellationTokenSource = new CancellationTokenSource();
+                    return Task.CompletedTask;
+                }
+
+                if (player is null)
+                    return Task.CompletedTask;
+
+                disconnectTask = Task.Run(async () =>
+                {
+                    _log?.WriteLog(LogSeverity.Warning, $"Started disconnect task. Disconnecting in {configuration.InactivityTimeout.TotalSeconds} seconds.");
+                    await Task.Delay(configuration.InactivityTimeout).ConfigureAwait(false);
+                    await player.StopAsync().ConfigureAwait(false);
+                    await DisconnectAsync(player.VoiceChannel).ConfigureAwait(false);
+                }, cancellationTokenSource.Token);
+            }
 
             return Task.CompletedTask;
         }

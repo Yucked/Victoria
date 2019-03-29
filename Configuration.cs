@@ -48,6 +48,21 @@ namespace Victoria
         /// </summary>
         public TimeSpan ReconnectInterval { get; set; } = TimeSpan.FromSeconds(10);
 
+        /// <summary>
+        /// Whether to automatically disconnect after everyone leaves.
+        /// </summary>
+        public bool AutoDisconnect { get; set; } = true;
+
+        /// <summary>
+        /// Should players be preserved if Victoria loses connection?
+        /// </summary>
+        public bool PreservePlayers { get; set; } = false;
+
+        /// <summary>
+        /// Timeout before <see cref="AutoDisconnect"/>.
+        /// </summary>
+        public TimeSpan InactivityTimeout { get; set; } = TimeSpan.FromMinutes(3);
+
         internal int Shards { get; set; }
         internal ulong UserId { get; set; }
         internal static LogSeverity InternalSeverity { get; set; }

@@ -23,6 +23,9 @@ namespace Victoria
 
         private async Task OnShardDisconnected(Exception exception, DiscordSocketClient socketClient)
         {
+            if (configuration.PreservePlayers)
+                return;
+
             foreach (var guild in socketClient.Guilds)
             {
                 if (!_players.TryRemove(guild.Id, out var player))

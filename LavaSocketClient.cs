@@ -23,6 +23,9 @@ namespace Victoria
 
         private async Task OnDisconnected(Exception exception)
         {
+            if (configuration.PreservePlayers)
+                return;
+
             foreach (var player in _players.Values)
             {
                 await player.DisposeAsync().ConfigureAwait(false);
