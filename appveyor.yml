@@ -8,8 +8,8 @@ pull_requests:
 shallow_clone: true
 clone_folder: C:\Projects\Victoria
 
-skip_commits:
-  message: /Update/
+only_commits:
+  message: /Build/
 
 dotnet_csproj:
   patch: true
