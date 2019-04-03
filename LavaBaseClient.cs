@@ -252,9 +252,11 @@ namespace Victoria
                     {
                         case EventType.TrackEnd:
                             var endReason = json.GetValue("reason").ToObject<TrackEndReason>();
-                            player.IsPlaying = false;
                             if (endReason != TrackEndReason.Replaced)
+                            {
+                                player.IsPlaying = false;
                                 player.CurrentTrack = default;
+                            }
                             OnTrackFinished?.Invoke(player, track, endReason);
                             break;
 
