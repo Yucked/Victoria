@@ -309,21 +309,25 @@ namespace Victoria
 
                 if (users > 0)
                 {
+                    if (disconnectTask is null)
+                        return Task.CompletedTask;
+
                     cancellationTokenSource.Cancel(false);
                     cancellationTokenSource = new CancellationTokenSource();
                     return Task.CompletedTask;
                 }
 
-                if (player is null)
-                    return Task.CompletedTask;
-
-                disconnectTask = Task.Run(async () =>
+                if (!(player is null))
                 {
-                    _log?.WriteLog(LogSeverity.Warning, $"Started disconnect task. Disconnecting in {configuration.InactivityTimeout.TotalSeconds} seconds.");
-                    await Task.Delay(configuration.InactivityTimeout).ConfigureAwait(false);
-                    await player.StopAsync().ConfigureAwait(false);
-                    await DisconnectAsync(player.VoiceChannel).ConfigureAwait(false);
-                }, cancellationTokenSource.Token);
+                    _log?.WriteLog(LogSeverity.Warning, $"Automatically disconnecting in {configuration.InactivityTimeout.TotalSeconds} seconds.");
+                    disconnectTask = Task.Run(async () =>
+                    {
+                        await Task.Delay(configuration.InactivityTimeout).ConfigureAwait(false);
+                        if (player.IsPlaying)
+                            await player.StopAsync().ConfigureAwait(false);
+                        await DisconnectAsync(player.VoiceChannel).ConfigureAwait(false);
+                    }, cancellationTokenSource.Token);
+                }
             }
 
             return Task.CompletedTask;
