@@ -186,9 +186,6 @@ namespace Victoria
         /// <param name="volume">Volume may range from 0 to 1000. 100 is default.</param>
         public Task SetVolumeAsync(int volume)
         {
-            if (!IsPlaying)
-                throw new InvalidOperationException(InvalidOp);
-
             if (volume > 1000)
                 throw new ArgumentOutOfRangeException($"{nameof(volume)} was greater than max limit which is 1000.");
 
