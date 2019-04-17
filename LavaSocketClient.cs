@@ -17,7 +17,6 @@ namespace Victoria
         /// <param name="configuration"><see cref="Configuration"/></param>
         public Task StartAsync(DiscordSocketClient socketClient, Configuration configuration = null)
         {
-            if (configuration == null) configuration = new Configuration();
             socketClient.Disconnected += OnDisconnected;
             return InitializeAsync(socketClient, configuration);
         }
