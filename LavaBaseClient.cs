@@ -75,6 +75,8 @@ namespace Victoria
 
         protected async Task InitializeAsync(BaseSocketClient baseSocketClient, Configuration configuration)
         {
+            configuration ??= new Configuration();
+            
             this.baseSocketClient = baseSocketClient;
             var shards = baseSocketClient switch
             {

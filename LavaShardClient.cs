@@ -15,7 +15,7 @@ namespace Victoria
         /// </summary>
         /// <param name="socketClient"><see cref="DiscordSocketClient"/></param>
         /// <param name="configuration"><see cref="Configuration"/></param>
-        public Task StartAsync(DiscordShardedClient shardedClient, Configuration configuration = default)
+        public Task StartAsync(DiscordShardedClient shardedClient, Configuration configuration = null)
         {
             shardedClient.ShardDisconnected += OnShardDisconnected;
             return InitializeAsync(shardedClient, configuration);
