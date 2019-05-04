@@ -17,7 +17,7 @@
     <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
     <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
     <PackageReleaseNotes>
-      - Changed LavaRestClient#TracksRequestAsync to LavaRestClient#SearchTracksAsync
+      - Changed LavaRestClient#TracksRequestAsync to LavaRestClient#SearchTracksAsync and added a loadFullPlaylist parameter to allow loading a full playlist
 
       - Changed setter modifier of VoiceChannel and TextChannel to internal.
 
@@ -28,6 +28,8 @@
       - Added UpdateTextChannel(ulong, ITextChannel) that changes player's text channel.
 
       - Removed resudue of ShouldPresevePlayers and all logic related to it.
+      
+      - Added String#SanitizeYoutubeUrl(String) that allows getting a proper youtube video url out of a youtube playlist url
     </PackageReleaseNotes>
   </PropertyGroup>
 
