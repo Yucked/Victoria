@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Newtonsoft.Json.Linq;
@@ -9,6 +10,11 @@ namespace Victoria
 {
     public static class VictoriaExtensions
     {
+        internal static Regex Compiled(string pattern)
+        {
+            return new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        }
+
         /// <summary>
         /// Fetches thumbnail of the specified track.
         /// </summary>
@@ -49,6 +55,25 @@ namespace Victoria
         public static Task<string> FetchLyricsAsync(this LavaTrack track)
         {
             return LyricsHelper.SearchAsync(track.Author, track.Title);
+        }
+
+        /// <summary>
+        /// Transforms a single youtube video playlist url to proper youtube url
+        /// </summary>
+        /// <param name="url">The youtube url to sanitize</param>
+        /// <returns>The sanitized youtube url</returns>
+        public static string SanitizeYoutubeUrl(this string url)
+        {
+            Regex regex = Compiled(@"(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})\W");
+            if (regex.IsMatch(url))
+            {
+                string identifier = regex.Match(url).Groups[1].Value;
+                return $"https://www.youtube.com/watch?v={identifier}";
+            }
+            else
+            {
+                return url;
+            }
         }
 
         /// <summary>

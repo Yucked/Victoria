@@ -13,11 +13,6 @@ namespace Victoria.Helpers
     {
         internal LyricsHelper() { }
 
-        private static Regex Compiled(string pattern)
-        {
-            return new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(500));
-        }
-
         public static async Task<string> SearchAsync(string searchText)
         {
             var (author, title) = await SuggestAsync(searchText).ConfigureAwait(false);
@@ -68,7 +63,7 @@ namespace Victoria.Helpers
             if (!parse.TryGetValue("lyrics", out var result))
                 return parse.GetValue("error").ToObject<string>();
 
-            var clean = Compiled(@"[\r\n]{2,}").Replace($"{result}", "\n");
+            var clean = VictoriaExtensions.Compiled(@"[\r\n]{2,}").Replace($"{result}", "\n");
             return clean;
         }
 
@@ -81,7 +76,7 @@ namespace Victoria.Helpers
 
             var author = split[0];
             var title = split[1];
-            var regex = Compiled(@"(ft).\s+\w+|\(.*?\)|(lyrics)");
+            var regex = VictoriaExtensions.Compiled(@"(ft).\s+\w+|\(.*?\)|(lyrics)");
 
             while (regex.IsMatch(title))
                 title = regex.Replace(title, string.Empty);

@@ -64,8 +64,11 @@ namespace Victoria
         /// </summary>
         /// <param name="query">Search query.</param>
         /// <returns><see cref="SearchResult"/></returns>
-        public async Task<SearchResult> SearchTracksAsync(string query)
+        public async Task<SearchResult> SearchTracksAsync(string query, bool loadFullPlaylist = false)
         {
+            if (!loadFullPlaylist)
+                query = query.SanitizeYoutubeUrl();
+
             var url = $"http://{_rest.Host}:{_rest.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}";
             var request = await HttpHelper.Instance
                 .WithCustomHeader("Authorization", _rest.Password)
