@@ -297,7 +297,8 @@ namespace Victoria
 
         private SocketVoiceChannel GetVoiceChannel(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
         {
-            var botUser = (oldState.VoiceChannel ?? newState.VoiceChannel).Guild.CurrentUser;
+            var channel = (oldState.VoiceChannel ?? newState.VoiceChannel);
+            var botUser = channel.Guild.CurrentUser;
             if (oldState.VoiceChannel != botUser.VoiceChannel
                 && newState.VoiceChannel != botUser.VoiceChannel) // unrelated channel activities
             {
@@ -318,7 +319,7 @@ namespace Victoria
                     return oldState.VoiceChannel;
             }
 
-            return null;
+            return channel; // user moved out of our channel
         }
 
         private Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
