@@ -23,19 +23,19 @@ namespace Victoria
 
         private async Task OnShardDisconnected(Exception exception, DiscordSocketClient socketClient)
         {
-            if (configuration.PreservePlayers)
+            if (Configuration.PreservePlayers)
                 return;
 
             foreach (var guild in socketClient.Guilds)
             {
-                if (!_players.TryRemove(guild.Id, out var player))
+                if (!Players.TryRemove(guild.Id, out var player))
                     continue;
 
                 await player.DisposeAsync().ConfigureAwait(false);
             }
 
-            _players.Clear();
-            _log?.WriteLog(LogSeverity.Error, "Shards disconnecting. Disposing all connected players.", exception);
+            Players.Clear();
+            ShadowLog?.WriteLog(LogSeverity.Error, "Shards disconnecting. Disposing all connected players.", exception);
         }
     }
 }

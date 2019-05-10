@@ -23,16 +23,16 @@ namespace Victoria
 
         private async Task OnDisconnected(Exception exception)
         {
-            if (configuration.PreservePlayers)
+            if (Configuration.PreservePlayers)
                 return;
 
-            foreach (var player in _players.Values)
+            foreach (var player in Players.Values)
             {
                 await player.DisposeAsync().ConfigureAwait(false);
             }
-            _players.Clear();
+            Players.Clear();
 
-            _log?.WriteLog(LogSeverity.Error, "WebSocket disconnected! Disposing all connected players.", exception);
+            ShadowLog?.WriteLog(LogSeverity.Error, "WebSocket disconnected! Disposing all connected players.", exception);
         }
     }
 }

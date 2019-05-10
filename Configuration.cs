@@ -51,7 +51,7 @@ namespace Victoria
         /// <summary>
         /// Whether to automatically disconnect after everyone leaves.
         /// </summary>
-        public bool AutoDisconnect { get; set; } = true;
+        public bool AutoDisconnect { get; set; }
 
         /// <summary>
         /// Should players be preserved if Victoria loses connection?

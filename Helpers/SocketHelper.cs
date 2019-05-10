@@ -13,21 +13,21 @@ namespace Victoria.Helpers
 {
     internal sealed class SocketHelper
     {
-        private bool isUseable;
-        private TimeSpan interval;
-        private int reconnectAttempts;
-        private ClientWebSocket clientWebSocket;
+        private bool _isUseable;
+        private TimeSpan _interval;
+        private int _reconnectAttempts;
+        private ClientWebSocket _clientWebSocket;
         private readonly Encoding _encoding;
         private readonly Configuration _config;
-        private CancellationTokenSource cancellationTokenSource;
-        private readonly Func<LogMessage, Task> _log;
+        private CancellationTokenSource _cancellationTokenSource;
+        private readonly Func<LogMessage, Task> ShadowLog;
 
         public event Func<Task> OnClosed;
         public event Func<string, bool> OnMessage;
 
         public SocketHelper(Configuration configuration, Func<LogMessage, Task> log)
         {
-            _log = log;
+            ShadowLog = log;
             _config = configuration;
             _encoding = new UTF8Encoding(false);
             ServicePointManager.ServerCertificateValidationCallback += (_, __, ___, ____) => true;
@@ -35,85 +35,85 @@ namespace Victoria.Helpers
 
         public async Task ConnectAsync()
         {
-            cancellationTokenSource = new CancellationTokenSource();
+            _cancellationTokenSource = new CancellationTokenSource();
 
-            clientWebSocket = new ClientWebSocket();
-            clientWebSocket.Options.SetRequestHeader("User-Id", $"{_config.UserId}");
-            clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_config.Shards}");
-            clientWebSocket.Options.SetRequestHeader("Authorization", _config.Password);
+            _clientWebSocket = new ClientWebSocket();
+            _clientWebSocket.Options.SetRequestHeader("User-Id", $"{_config.UserId}");
+            _clientWebSocket.Options.SetRequestHeader("Num-Shards", $"{_config.Shards}");
+            _clientWebSocket.Options.SetRequestHeader("Authorization", _config.Password);
             var url = new Uri($"ws://{_config.Host}:{_config.Port}");
 
-            if (reconnectAttempts == _config.ReconnectAttempts)
+            if (_reconnectAttempts == _config.ReconnectAttempts)
                 return;
 
             try
             {
-                _log?.WriteLog(LogSeverity.Info, $"Connecting to {url}.");
-                await clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
+                ShadowLog?.WriteLog(LogSeverity.Info, $"Connecting to {url}.");
+                await _clientWebSocket.ConnectAsync(url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
             }
             catch { }
         }
 
         public Task SendPayloadAsync(BasePayload payload)
         {
-            if (!isUseable)
+            if (!_isUseable)
                 return Task.CompletedTask;
 
             var serialize = JsonConvert.SerializeObject(payload);
-            _log?.WriteLog(LogSeverity.Debug, serialize);
+            ShadowLog?.WriteLog(LogSeverity.Debug, serialize);
             var seg = new ArraySegment<byte>(_encoding.GetBytes(serialize));
-            return clientWebSocket.SendAsync(seg, WebSocketMessageType.Text, true, CancellationToken.None);
+            return _clientWebSocket.SendAsync(seg, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
         public async ValueTask DisposeAsync()
         {
-            isUseable = false;
+            _isUseable = false;
 
-            await clientWebSocket
+            await _clientWebSocket
                 .CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed called.", CancellationToken.None)
                 .ConfigureAwait(false);
 
-            try { cancellationTokenSource.Cancel(); }
+            try { _cancellationTokenSource.Cancel(); }
             catch { }
 
-            clientWebSocket.Dispose();
+            _clientWebSocket.Dispose();
         }
 
         private async Task VerifyConnectionAsync(Task task)
         {
             if (task.IsCanceled || task.IsFaulted || task.Exception != null)
             {
-                isUseable = false;
+                _isUseable = false;
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
             else
             {
-                _log?.WriteLog(LogSeverity.Info, "WebSocket connection established!");
-                isUseable = true;
-                reconnectAttempts = 0;
-                await ReceiveAsync(cancellationTokenSource.Token).ConfigureAwait(false);
+                ShadowLog?.WriteLog(LogSeverity.Info, "WebSocket connection established!");
+                _isUseable = true;
+                _reconnectAttempts = 0;
+                await ReceiveAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
             }
         }
 
         private async Task RetryConnectionAsync()
         {
-            try { cancellationTokenSource.Cancel(); }
+            try { _cancellationTokenSource.Cancel(); }
             catch { }
 
-            if (reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
+            if (_reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
                 return;
 
-            if (isUseable)
+            if (_isUseable)
                 return;
 
-            reconnectAttempts++;
-            interval += _config.ReconnectInterval;
-            _log?.WriteLog(LogSeverity.Warning,
-                reconnectAttempts == _config.ReconnectAttempts ?
+            _reconnectAttempts++;
+            _interval += _config.ReconnectInterval;
+            ShadowLog?.WriteLog(LogSeverity.Warning,
+                _reconnectAttempts == _config.ReconnectAttempts ?
                 $"This was the last attempt at re-establishing websocket connection." :
-                $"Attempt #{reconnectAttempts}. Next retry in {interval.TotalSeconds} seconds.");
+                $"Attempt #{_reconnectAttempts}. Next retry in {_interval.TotalSeconds} seconds.");
 
-            await Task.Delay(interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
+            await Task.Delay(_interval).ContinueWith(_ => ConnectAsync()).ConfigureAwait(false);
         }
 
         private async Task ReceiveAsync(CancellationToken cancellationToken)
@@ -127,14 +127,14 @@ namespace Victoria.Helpers
                     {
                         var buffer = new byte[_config.BufferSize.Value];
                         var segment = new ArraySegment<byte>(buffer);
-                        while (clientWebSocket.State == WebSocketState.Open)
+                        while (_clientWebSocket.State == WebSocketState.Open)
                         {
-                            var result = await clientWebSocket.ReceiveAsync(segment, cancellationToken)
+                            var result = await _clientWebSocket.ReceiveAsync(segment, cancellationToken)
                                 .ConfigureAwait(false);
                             if (result.MessageType == WebSocketMessageType.Close)
                                 if (result.CloseStatus == WebSocketCloseStatus.EndpointUnavailable)
                                 {
-                                    isUseable = false;
+                                    _isUseable = false;
                                     await RetryConnectionAsync().ConfigureAwait(false);
                                     break;
                                 }
@@ -156,7 +156,7 @@ namespace Victoria.Helpers
             }
             catch (Exception ex) when (ex.HResult == -2147467259)
             {
-                isUseable = false;
+                _isUseable = false;
                 OnClosed?.Invoke();
                 await RetryConnectionAsync().ConfigureAwait(false);
             }

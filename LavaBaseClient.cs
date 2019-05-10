@@ -19,14 +19,8 @@ namespace Victoria
         /// </summary>
         public event Func<LogMessage, Task> Log
         {
-            add
-            {
-                _log += value;
-            }
-            remove
-            {
-                _log -= value;
-            }
+            add { ShadowLog += value; }
+            remove { ShadowLog -= value; }
         }
 
         /// <summary>
@@ -65,41 +59,36 @@ namespace Victoria
         /// </summary>
         public ServerStats ServerStats { get; private set; }
 
-        private BaseSocketClient baseSocketClient;
-        private SocketHelper socketHelper;
-        private Task disconnectTask;
-        private CancellationTokenSource cancellationTokenSource;
-        protected Configuration configuration;
-        protected Func<LogMessage, Task> _log;
-        protected ConcurrentDictionary<ulong, LavaPlayer> _players;
+        private BaseSocketClient _baseSocketClient;
+        private SocketHelper _socketHelper;
+        private Task _disconnectTask;
+        private CancellationTokenSource _cancellationTokenSource;
+        protected Configuration Configuration;
+        protected Func<LogMessage, Task> ShadowLog;
+        protected ConcurrentDictionary<ulong, LavaPlayer> Players;
 
         protected async Task InitializeAsync(BaseSocketClient baseSocketClient, Configuration configuration)
         {
             configuration ??= new Configuration();
-            
-            this.baseSocketClient = baseSocketClient;
-            var shards = baseSocketClient switch
-            {
-                DiscordSocketClient socketClient
-                    => await socketClient.GetRecommendedShardCountAsync(),
 
-                DiscordShardedClient shardedClient
-                    => shardedClient.Shards.Count,
-
-                _ => 1
+            _baseSocketClient = baseSocketClient;
+            var shards = baseSocketClient switch 
+            { 
+                DiscordSocketClient socketClient => await socketClient.GetRecommendedShardCountAsync(), 
+                DiscordShardedClient shardedClient => shardedClient.Shards.Count, _ => 1 
             };
 
-            this.configuration = configuration.SetInternals(baseSocketClient.CurrentUser.Id, shards);
-            _players = new ConcurrentDictionary<ulong, LavaPlayer>();
-            cancellationTokenSource = new CancellationTokenSource();
+            Configuration = configuration.SetInternals(baseSocketClient.CurrentUser.Id, shards);
+            Players = new ConcurrentDictionary<ulong, LavaPlayer>();
+            _cancellationTokenSource = new CancellationTokenSource();
             baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdated;
             baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdated;
 
-            socketHelper = new SocketHelper(configuration, _log);
-            socketHelper.OnMessage += OnMessage;
-            socketHelper.OnClosed += OnClosedAsync;
+            _socketHelper = new SocketHelper(configuration, ShadowLog);
+            _socketHelper.OnMessage += OnMessage;
+            _socketHelper.OnClosed += OnClosedAsync;
 
-            await socketHelper.ConnectAsync().ConfigureAwait(false);
+            await _socketHelper.ConnectAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -109,12 +98,12 @@ namespace Victoria
         /// <param name="textChannel">Optional text channel that can send updates.</param>
         public async Task<LavaPlayer> ConnectAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = null)
         {
-            if (_players.TryGetValue(voiceChannel.GuildId, out var player))
+            if (Players.TryGetValue(voiceChannel.GuildId, out var player))
                 return player;
 
-            await voiceChannel.ConnectAsync(configuration.SelfDeaf, false, true).ConfigureAwait(false);
-            player = new LavaPlayer(voiceChannel, textChannel, socketHelper);
-            _players.TryAdd(voiceChannel.GuildId, player);
+            await voiceChannel.ConnectAsync(Configuration.SelfDeaf, false, true).ConfigureAwait(false);
+            player = new LavaPlayer(voiceChannel, textChannel, _socketHelper);
+            Players.TryAdd(voiceChannel.GuildId, player);
 
             return player;
         }
@@ -125,12 +114,12 @@ namespace Victoria
         /// <param name="voiceChannel">Connected voice channel.</param>
         public async Task DisconnectAsync(IVoiceChannel voiceChannel)
         {
-            if (!_players.TryRemove(voiceChannel.GuildId, out _))
+            if (!Players.TryRemove(voiceChannel.GuildId, out _))
                 return;
 
             await voiceChannel.DisconnectAsync().ConfigureAwait(false);
             var destroyPayload = new DestroyPayload(voiceChannel.GuildId);
-            await socketHelper.SendPayloadAsync(destroyPayload);
+            await _socketHelper.SendPayloadAsync(destroyPayload);
         }
 
         /// <summary>
@@ -139,7 +128,7 @@ namespace Victoria
         /// <param name="voiceChannel"><see cref="IVoiceChannel"/></param>
         public async Task MoveChannelsAsync(IVoiceChannel voiceChannel)
         {
-            if (!_players.TryGetValue(voiceChannel.GuildId, out var player))
+            if (!Players.TryGetValue(voiceChannel.GuildId, out var player))
                 return;
 
             if (player.VoiceChannel.Id == voiceChannel.Id)
@@ -147,7 +136,7 @@ namespace Victoria
 
             await player.PauseAsync();
             await player.VoiceChannel.DisconnectAsync().ConfigureAwait(false);
-            await voiceChannel.ConnectAsync(configuration.SelfDeaf, false, true).ConfigureAwait(false);
+            await voiceChannel.ConnectAsync(Configuration.SelfDeaf, false, true).ConfigureAwait(false);
             await player.ResumeAsync();
 
             player.VoiceChannel = voiceChannel;
@@ -156,10 +145,11 @@ namespace Victoria
         /// <summary>
         /// Update the <see cref="LavaPlayer.TextChannel"/>.
         /// </summary>
-        /// <param name="channel"><see cref="ITextChannel"/></param>
+        /// <param name="guildId">Guild Id</param>
+        /// <param name="textChannel"><see cref="ITextChannel"/></param>
         public void UpdateTextChannel(ulong guildId, ITextChannel textChannel)
         {
-            if (!_players.TryGetValue(guildId, out var player))
+            if (!Players.TryGetValue(guildId, out var player))
                 return;
 
             player.TextChannel = textChannel;
@@ -172,13 +162,12 @@ namespace Victoria
         /// <returns><see cref="LavaPlayer"/></returns>
         public LavaPlayer GetPlayer(ulong guildId)
         {
-            return _players.TryGetValue(guildId, out var player)
-                ? player : default;
+            return Players.TryGetValue(guildId, out var player) ? player : default;
         }
 
         public void ToggleAutoDisconnect()
         {
-            configuration.AutoDisconnect = !configuration.AutoDisconnect;
+            Configuration.AutoDisconnect = !Configuration.AutoDisconnect;
         }
 
         /// <summary>
@@ -186,38 +175,38 @@ namespace Victoria
         /// </summary>
         public async ValueTask DisposeAsync()
         {
-            foreach (var player in _players.Values)
+            foreach (var player in Players.Values)
             {
                 await player.DisposeAsync().ConfigureAwait(false);
             }
-            _players.Clear();
-            _players = null;
-            await socketHelper.DisposeAsync();
+
+            Players.Clear();
+            Players = null;
+            await _socketHelper.DisposeAsync();
             GC.SuppressFinalize(this);
         }
 
         private async Task OnClosedAsync()
         {
-            if (configuration.PreservePlayers)
+            if (Configuration.PreservePlayers)
                 return;
 
-            foreach (var player in _players.Values)
+            foreach (var player in Players.Values)
             {
-                await DisconnectAsync(player.VoiceChannel).
-                    ContinueWith(_ => player.DisposeAsync());
+                await DisconnectAsync(player.VoiceChannel).ContinueWith(_ => player.DisposeAsync());
             }
 
-            _players.Clear();
-            _log?.WriteLog(LogSeverity.Warning, "Lavalink died. Disposed all players.");
+            Players.Clear();
+            ShadowLog?.WriteLog(LogSeverity.Warning, "Lavalink died. Disposed all players.");
         }
 
         private bool OnMessage(string message)
         {
-            _log?.WriteLog(LogSeverity.Debug, message);
+            ShadowLog?.WriteLog(LogSeverity.Debug, message);
             var json = JObject.Parse(message);
 
-            var guildId = (ulong)0;
-            var player = default(LavaPlayer);
+            var guildId = (ulong) 0;
+            LavaPlayer player;
 
             if (json.TryGetValue("guildId", out var guildToken))
                 guildId = ulong.Parse($"{guildToken}");
@@ -226,7 +215,7 @@ namespace Victoria
             switch (opCode)
             {
                 case "playerUpdate":
-                    if (!_players.TryGetValue(guildId, out player))
+                    if (!Players.TryGetValue(guildId, out player))
                         return false;
 
                     var state = json.GetValue("state").ToObject<PlayerState>();
@@ -243,7 +232,7 @@ namespace Victoria
 
                 case "event":
                     var evt = json.GetValue("type").ToObject<EventType>();
-                    if (!_players.TryGetValue(guildId, out player))
+                    if (!Players.TryGetValue(guildId, out player))
                         return false;
 
                     var track = default(LavaTrack);
@@ -259,6 +248,7 @@ namespace Victoria
                                 player.IsPlaying = false;
                                 player.CurrentTrack = default;
                             }
+
                             OnTrackFinished?.Invoke(player, track, endReason);
                             break;
 
@@ -282,13 +272,14 @@ namespace Victoria
                             break;
 
                         default:
-                            _log?.WriteLog(LogSeverity.Warning, $"Missing implementation of {evt} event.");
+                            ShadowLog?.WriteLog(LogSeverity.Warning, $"Missing implementation of {evt} event.");
                             break;
                     }
+
                     break;
 
                 default:
-                    _log?.WriteLog(LogSeverity.Warning, $"Missing handling of {opCode} OP code.");
+                    ShadowLog?.WriteLog(LogSeverity.Warning, $"Missing handling of {opCode} OP code.");
                     break;
             }
 
@@ -297,80 +288,88 @@ namespace Victoria
 
         private SocketVoiceChannel GetVoiceChannel(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
         {
-            var channel = (oldState.VoiceChannel ?? newState.VoiceChannel);
+            var channel = oldState.VoiceChannel ?? newState.VoiceChannel;
             var botUser = channel.Guild.CurrentUser;
-            if (oldState.VoiceChannel != botUser.VoiceChannel
-                && newState.VoiceChannel != botUser.VoiceChannel) // unrelated channel activities
-            {
+
+            if (oldState.VoiceChannel != botUser.VoiceChannel && newState.VoiceChannel != botUser.VoiceChannel)
                 return null;
-            }
 
-            if (newState.VoiceChannel != null)
+            switch (newState.VoiceChannel)
             {
-                if (user.Id == baseSocketClient.CurrentUser.Id) // we moved of channel
-                    return newState.VoiceChannel;
+                case null:
+                    if (oldState.VoiceChannel != null && user.Id != _baseSocketClient.CurrentUser.Id)
+                        return oldState.VoiceChannel;
+                    break;
 
-                if (botUser.VoiceChannel == newState.VoiceChannel) // a user joined our channel
-                    return newState.VoiceChannel;
-            }
-            else
-            {
-                if (oldState.VoiceChannel != null && user.Id != baseSocketClient.CurrentUser.Id) // user disconnected
-                    return oldState.VoiceChannel;
+                default:
+                    if (user.Id == _baseSocketClient.CurrentUser.Id)
+                        return newState.VoiceChannel;
+
+                    if (botUser.VoiceChannel == newState.VoiceChannel)
+                        return newState.VoiceChannel;
+                    break;
             }
 
-            return channel; // user moved out of our channel
+            return channel;
         }
 
         private Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
         {
             var channel = GetVoiceChannel(user, oldState, newState);
-            if (channel == null) return Task.CompletedTask;
-
-            var guildId = channel.Guild.Id;
-            if (_players.TryGetValue(guildId, out var player)
-                && user.Id == baseSocketClient.CurrentUser.Id)
-            {
-                player.cachedState = newState;
-            }
-
-            if (configuration.AutoDisconnect)
-            {
-                var users = channel.Users.Count(x => !x.IsBot);
-
-                if (users > 0)
-                {
-                    if (disconnectTask is null)
-                        return Task.CompletedTask;
-
-                    cancellationTokenSource.Cancel(false);
-                    cancellationTokenSource = new CancellationTokenSource();
-                    return Task.CompletedTask;
-                }
-
-                if (!(player is null))
-                {
-                    _log?.WriteLog(LogSeverity.Warning, $"Automatically disconnecting in {configuration.InactivityTimeout.TotalSeconds} seconds.");
-                    disconnectTask = Task.Run(async () =>
-                    {
-                        await Task.Delay(configuration.InactivityTimeout).ConfigureAwait(false);
-                        if (player.IsPlaying)
-                            await player.StopAsync().ConfigureAwait(false);
-                        await DisconnectAsync(player.VoiceChannel).ConfigureAwait(false);
-                    }, cancellationTokenSource.Token);
-                }
-            }
-
-            return Task.CompletedTask;
-        }
-
-        private Task OnVoiceServerUpdated(SocketVoiceServer server)
-        {
-            if (!server.Guild.HasValue || !_players.TryGetValue(server.Guild.Id, out var player))
+            if (channel == null)
                 return Task.CompletedTask;
 
-            var update = new VoiceServerPayload(server, player.cachedState.VoiceSessionId);
-            return socketHelper.SendPayloadAsync(update);
+            var guildId = channel.Guild.Id;
+            if (Players.TryGetValue(guildId, out var player) && user.Id == _baseSocketClient.CurrentUser.Id)
+            {
+                player.CachedState = newState;
+            }
+
+            if (!Configuration.AutoDisconnect)
+                return Task.CompletedTask;
+            
+            var users = channel.Users.Count(x => !x.IsBot);
+
+            if (users > 0)
+            {
+                if (_disconnectTask is null)
+                    return Task.CompletedTask;
+
+                _cancellationTokenSource.Cancel(false);
+                _cancellationTokenSource = new CancellationTokenSource();
+                return Task.CompletedTask;
+            }
+
+            if (player is null)
+                return Task.CompletedTask;
+
+            ShadowLog?.WriteLog(LogSeverity.Warning,
+                                $"Automatically disconnecting in {Configuration.InactivityTimeout.TotalSeconds} seconds.");
+            
+            _disconnectTask = DisconnectTaskAsync(player, _cancellationTokenSource.Token);
+            return Task.CompletedTask;
+        }
+        
+        private async Task DisconnectTaskAsync(LavaPlayer player, CancellationToken token)
+        {
+            await Task.Delay(Configuration.InactivityTimeout, token).ConfigureAwait(false);
+            
+            if (token.IsCancellationRequested)
+                return;
+            
+            if (player.IsPlaying)
+                await player.StopAsync().ConfigureAwait(false);
+            
+            await DisconnectAsync(player.VoiceChannel).ConfigureAwait(false);
+        }
+        
+        private Task OnVoiceServerUpdated(SocketVoiceServer server)
+        {
+            if (!server.Guild.HasValue || !Players.TryGetValue(server.Guild.Id, out var player))
+                return Task.CompletedTask;
+
+            var update = new VoiceServerPayload(server, player.CachedState.VoiceSessionId);
+            return _socketHelper.SendPayloadAsync(update);
         }
     }
 }
