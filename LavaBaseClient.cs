@@ -295,12 +295,39 @@ namespace Victoria
             return true;
         }
 
-        private Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
+        private SocketVoiceChannel GetVoiceChannel(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
         {
             var channel = (oldState.VoiceChannel ?? newState.VoiceChannel);
+            var botUser = channel.Guild.CurrentUser;
+            if (oldState.VoiceChannel != botUser.VoiceChannel
+                && newState.VoiceChannel != botUser.VoiceChannel) // unrelated channel activities
+            {
+                return null;
+            }
+
+            if (newState.VoiceChannel != null)
+            {
+                if (user.Id == baseSocketClient.CurrentUser.Id) // we moved of channel
+                    return newState.VoiceChannel;
+
+                if (botUser.VoiceChannel == newState.VoiceChannel) // a user joined our channel
+                    return newState.VoiceChannel;
+            }
+            else
+            {
+                if (oldState.VoiceChannel != null && user.Id != baseSocketClient.CurrentUser.Id) // user disconnected
+                    return oldState.VoiceChannel;
+            }
+
+            return channel; // user moved out of our channel
+        }
+
+        private Task OnUserVoiceStateUpdated(SocketUser user, SocketVoiceState oldState, SocketVoiceState newState)
+        {
+            var channel = GetVoiceChannel(user, oldState, newState);
+            if (channel == null) return Task.CompletedTask;
+
             var guildId = channel.Guild.Id;
-
-
             if (_players.TryGetValue(guildId, out var player)
                 && user.Id == baseSocketClient.CurrentUser.Id)
             {
