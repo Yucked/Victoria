@@ -44,6 +44,12 @@ namespace Victoria.Entities
         [JsonProperty("uri")]
         public Uri Uri { get; internal set; }
 
+        [JsonIgnore]
+        public string Provider
+        {
+            get => this.Uri.ToString().GetUrlProvider();
+        }
+
         /// <summary>
         /// 
         /// </summary>
