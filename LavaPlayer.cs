@@ -19,7 +19,7 @@ namespace Victoria
         /// <summary>
         /// Keeps track of <see cref="PauseAsync"/> & <see cref="ResumeAsync"/>.
         /// </summary>
-        public bool IsPaused => isPaused;
+        public bool IsPaused => _isPaused;
 
         /// <summary>
         /// Checks whether the <see cref="LavaPlayer"/> is playing or not.
@@ -56,11 +56,11 @@ namespace Victoria
         /// </summary>
         public int CurrentVolume { get; private set; }
 
-        private bool isPaused;
+        private bool _isPaused;
         private readonly SocketHelper _socketHelper;
-        internal SocketVoiceState cachedState;
+        internal SocketVoiceState CachedState;
 
-        private const string InvalidOp
+        private const string INVALID_OP
             = "This operation is invalid since player isn't actually playing anything.";
 
         internal LavaPlayer(IVoiceChannel voiceChannel, ITextChannel textChannel,
@@ -113,7 +113,7 @@ namespace Victoria
         public Task StopAsync()
         {
             if (!IsPlaying)
-                throw new InvalidOperationException(InvalidOp);
+                throw new InvalidOperationException(INVALID_OP);
 
             IsPlaying = false;
             CurrentTrack = null;
@@ -127,9 +127,9 @@ namespace Victoria
         public Task ResumeAsync()
         {
             if (!IsPlaying)
-                throw new InvalidOperationException(InvalidOp);
+                throw new InvalidOperationException(INVALID_OP);
 
-            Volatile.Write(ref isPaused, false);
+            Volatile.Write(ref _isPaused, false);
             var payload = new PausePayload(VoiceChannel.GuildId, IsPaused);
             return _socketHelper.SendPayloadAsync(payload);
         }
@@ -140,9 +140,9 @@ namespace Victoria
         public Task PauseAsync()
         {
             if (!IsPlaying)
-                throw new InvalidOperationException(InvalidOp);
+                throw new InvalidOperationException(INVALID_OP);
 
-            Volatile.Write(ref isPaused, true);
+            Volatile.Write(ref _isPaused, true);
             var payload = new PausePayload(VoiceChannel.GuildId, IsPaused);
             return _socketHelper.SendPayloadAsync(payload);
         }
@@ -171,7 +171,7 @@ namespace Victoria
         public Task SeekAsync(TimeSpan position)
         {
             if (!IsPlaying)
-                throw new InvalidOperationException(InvalidOp);
+                throw new InvalidOperationException(INVALID_OP);
 
             if (position > CurrentTrack.Length)
                 throw new ArgumentOutOfRangeException($"{nameof(position)} is greater than current track's length.");
@@ -187,7 +187,7 @@ namespace Victoria
         public Task SetVolumeAsync(int volume)
         {
             if (!IsPlaying)
-                throw new InvalidOperationException(InvalidOp);
+                throw new InvalidOperationException(INVALID_OP);
 
             if (volume > 1000)
                 throw new ArgumentOutOfRangeException($"{nameof(volume)} was greater than max limit which is 1000.");
@@ -204,7 +204,7 @@ namespace Victoria
         public Task EqualizerAsync(List<EqualizerBand> bands)
         {
             if (!IsPlaying)
-                throw new InvalidOperationException(InvalidOp);
+                throw new InvalidOperationException(INVALID_OP);
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             return _socketHelper.SendPayloadAsync(payload);
@@ -217,7 +217,7 @@ namespace Victoria
         public Task EqualizerAsync(params EqualizerBand[] bands)
         {
             if (!IsPlaying)
-                throw new InvalidOperationException(InvalidOp);
+                throw new InvalidOperationException(INVALID_OP);
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             return _socketHelper.SendPayloadAsync(payload);
