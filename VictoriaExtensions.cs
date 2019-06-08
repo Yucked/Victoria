@@ -77,6 +77,22 @@ namespace Victoria
         }
 
         /// <summary>
+        /// Gets the provider name for an url (example: google.com -> google)
+        /// </summary>
+        /// <param name="url">The url to get the provider from</param>
+        /// <returns>The provider name</returns>
+        public static string GetUrlProvider(this string url)
+        {
+            Regex regex = Compiled(@"https?:\/\/([^\/\s]+)\.");
+            Match match = regex.Match(url);
+            if (match == null)
+                return "N/A";
+
+            string[] domainParts = match.Groups[2].Value.Split('.');
+            return domainParts[domainParts.Length - 1];
+        }
+
+        /// <summary>
         /// Checks if the <see cref="TrackEndReason"/> is Finished or LoadFailed.
         /// </summary>
         /// <param name="reason"><see cref="TrackEndReason"/></param>
