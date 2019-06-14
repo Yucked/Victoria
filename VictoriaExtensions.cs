@@ -64,10 +64,13 @@ namespace Victoria
         /// <returns>The sanitized youtube url</returns>
         public static string SanitizeYoutubeUrl(this string url)
         {
-            Regex regex = Compiled(@"(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})\W");
-            if (regex.IsMatch(url))
+            if (!url.Contains("youtu")) return url;
+
+            Regex regex = Compiled(@"(?!videoseries)[a-zA-Z0-9_-]{11,42}");
+            Match match = regex.Match(url);
+            if (match.Success)
             {
-                string identifier = regex.Match(url).Groups[1].Value;
+                string identifier = match.Value;
                 return $"https://www.youtube.com/watch?v={identifier}";
             }
             else
@@ -81,15 +84,13 @@ namespace Victoria
         /// </summary>
         /// <param name="url">The url to get the provider from</param>
         /// <returns>The provider name</returns>
-        public static string GetUrlProvider(this string url)
+        public static string GetProvider(this Uri uri)
         {
-            Regex regex = Compiled(@"https?:\/\/([^\/\s]+)\.");
-            Match match = regex.Match(url);
-            if (match == null)
+            string[] domainParts = uri.Host.Split('.');
+            if (domainParts.Length < 2)
                 return "N/A";
 
-            string[] domainParts = match.Groups[2].Value.Split('.');
-            return domainParts[domainParts.Length - 1];
+            return domainParts[domainParts.Length - 2];
         }
 
         /// <summary>

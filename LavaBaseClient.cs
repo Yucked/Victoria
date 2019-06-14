@@ -104,6 +104,8 @@ namespace Victoria
             await voiceChannel.ConnectAsync(Configuration.SelfDeaf, false, true).ConfigureAwait(false);
             player = new LavaPlayer(voiceChannel, textChannel, _socketHelper);
             Players.TryAdd(voiceChannel.GuildId, player);
+            if (Configuration.DefaultVolume != 100)
+                await player.SetVolumeAsync(Configuration.DefaultVolume);
 
             return player;
         }
@@ -165,6 +167,9 @@ namespace Victoria
             return Players.TryGetValue(guildId, out var player) ? player : default;
         }
 
+        /// <summary>
+        /// Enables or disables AutoDisconnect <see cref="Configuration.AutoDisconnect"/>
+        /// </summary>
         public void ToggleAutoDisconnect()
         {
             Configuration.AutoDisconnect = !Configuration.AutoDisconnect;

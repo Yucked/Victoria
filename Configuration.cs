@@ -63,6 +63,11 @@ namespace Victoria
         /// </summary>
         public TimeSpan InactivityTimeout { get; set; } = TimeSpan.FromMinutes(3);
 
+        /// <summary>
+        /// The default volume players should have when joining a voice chat
+        /// </summary>
+        public int DefaultVolume { get; set; } = 100;
+
         internal int Shards { get; set; }
         internal ulong UserId { get; set; }
         internal static LogSeverity InternalSeverity { get; set; }

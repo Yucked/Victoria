@@ -82,6 +82,8 @@ namespace Victoria
         {
             IsPlaying = true;
             CurrentTrack = track;
+            if (!noReplace)
+                Volatile.Write(ref _isPaused, false);
             var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, noReplace);
             return _socketHelper.SendPayloadAsync(payload);
         }
@@ -103,6 +105,8 @@ namespace Victoria
 
             IsPlaying = true;
             CurrentTrack = track;
+            if (!noReplace)
+                Volatile.Write(ref _isPaused, false);
             var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, stopTime, noReplace);
             return _socketHelper.SendPayloadAsync(payload);
         }
@@ -117,6 +121,7 @@ namespace Victoria
 
             IsPlaying = false;
             CurrentTrack = null;
+            Volatile.Write(ref _isPaused, false);
             var payload = new StopPayload(VoiceChannel.GuildId);
             return _socketHelper.SendPayloadAsync(payload);
         }
@@ -186,9 +191,6 @@ namespace Victoria
         /// <param name="volume">Volume may range from 0 to 1000. 100 is default.</param>
         public Task SetVolumeAsync(int volume)
         {
-            if (!IsPlaying)
-                throw new InvalidOperationException(INVALID_OP);
-
             if (volume > 1000)
                 throw new ArgumentOutOfRangeException($"{nameof(volume)} was greater than max limit which is 1000.");
 

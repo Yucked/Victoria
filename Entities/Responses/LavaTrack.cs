@@ -47,7 +47,7 @@ namespace Victoria.Entities
         [JsonIgnore]
         public string Provider
         {
-            get => this.Uri.ToString().GetUrlProvider();
+            get => this.Uri.GetProvider();
         }
 
         /// <summary>
