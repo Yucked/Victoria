@@ -64,11 +64,13 @@ namespace Victoria
         /// <returns>The sanitized youtube url</returns>
         public static string SanitizeYoutubeUrl(this string url)
         {
-            Regex regex = Compiled(@"(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})");
+            if (!url.Contains("youtu")) return url;
+
+            Regex regex = Compiled(@"(?!videoseries)[a-zA-Z0-9_-]{11,42}");
             Match match = regex.Match(url);
             if (match.Success)
             {
-                string identifier = match.Groups[1].Value;
+                string identifier = match.Value;
                 return $"https://www.youtube.com/watch?v={identifier}";
             }
             else
