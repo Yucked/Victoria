@@ -73,9 +73,7 @@ namespace Victoria.Helpers
                 .CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed called.", CancellationToken.None)
                 .ConfigureAwait(false);
 
-            try { _cancellationTokenSource.Cancel(); }
-            catch { }
-
+            _cancellationTokenSource.Cancel(false);
             _clientWebSocket.Dispose();
         }
 
@@ -97,8 +95,7 @@ namespace Victoria.Helpers
 
         private async Task RetryConnectionAsync()
         {
-            try { _cancellationTokenSource.Cancel(); }
-            catch { }
+            _cancellationTokenSource.Cancel(false);
 
             if (_reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
                 return;
