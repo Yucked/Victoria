@@ -23,6 +23,7 @@ namespace Victoria.Helpers
         private readonly Func<LogMessage, Task> ShadowLog;
 
         public event Func<Task> OnClosed;
+        public event Func<Task> OnConnected;
         public event Func<string, bool> OnMessage;
 
         public SocketHelper(Configuration configuration, Func<LogMessage, Task> log)
@@ -73,9 +74,7 @@ namespace Victoria.Helpers
                 .CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed called.", CancellationToken.None)
                 .ConfigureAwait(false);
 
-            try { _cancellationTokenSource.Cancel(); }
-            catch { }
-
+            _cancellationTokenSource.Cancel(false); 
             _clientWebSocket.Dispose();
         }
 
@@ -91,14 +90,15 @@ namespace Victoria.Helpers
                 ShadowLog?.WriteLog(LogSeverity.Info, "WebSocket connection established!");
                 _isUseable = true;
                 _reconnectAttempts = 0;
+                if (OnConnected != null)
+                    await OnConnected();
                 await ReceiveAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
             }
         }
 
         private async Task RetryConnectionAsync()
         {
-            try { _cancellationTokenSource.Cancel(); }
-            catch { }
+            _cancellationTokenSource.Cancel(false);
 
             if (_reconnectAttempts > _config.ReconnectAttempts && _config.ReconnectAttempts != -1)
                 return;
@@ -157,7 +157,8 @@ namespace Victoria.Helpers
             catch (Exception ex) when (ex.HResult == -2147467259)
             {
                 _isUseable = false;
-                OnClosed?.Invoke();
+                if (OnClosed != null)
+                    await OnClosed();
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
         }

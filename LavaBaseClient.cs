@@ -75,7 +75,8 @@ namespace Victoria
             var shards = baseSocketClient switch 
             { 
                 DiscordSocketClient socketClient => await socketClient.GetRecommendedShardCountAsync(), 
-                DiscordShardedClient shardedClient => shardedClient.Shards.Count, _ => 1 
+                DiscordShardedClient shardedClient => shardedClient.Shards.Count,
+                _ => 1 
             };
 
             Configuration = configuration.SetInternals(baseSocketClient.CurrentUser.Id, shards);
@@ -87,6 +88,7 @@ namespace Victoria
             _socketHelper = new SocketHelper(configuration, ShadowLog);
             _socketHelper.OnMessage += OnMessage;
             _socketHelper.OnClosed += OnClosedAsync;
+            _socketHelper.OnConnected += OnConnectedAsync;
 
             await _socketHelper.ConnectAsync().ConfigureAwait(false);
         }
@@ -103,7 +105,8 @@ namespace Victoria
 
             await voiceChannel.ConnectAsync(Configuration.SelfDeaf, false, true).ConfigureAwait(false);
             player = new LavaPlayer(voiceChannel, textChannel, _socketHelper);
-            Players.TryAdd(voiceChannel.GuildId, player);
+            Players.AddOrUpdate(voiceChannel.GuildId, player, (id, oldPly) => player);
+
             if (Configuration.DefaultVolume != 100)
                 await player.SetVolumeAsync(Configuration.DefaultVolume);
 
@@ -189,6 +192,11 @@ namespace Victoria
             Players = null;
             await _socketHelper.DisposeAsync();
             GC.SuppressFinalize(this);
+        }
+
+        private async Task OnConnectedAsync()
+        {
+            await _socketHelper.SendPayloadAsync(new ConfigureResumingPayload(null, 0));
         }
 
         private async Task OnClosedAsync()
