@@ -154,7 +154,7 @@ namespace Victoria.Helpers
             catch (Exception ex) when (ex.HResult == -2147467259)
             {
                 _isUseable = false;
-                OnClosed?.Invoke();
+                await OnClosed.Invoke();
                 await RetryConnectionAsync().ConfigureAwait(false);
             }
         }
