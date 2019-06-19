@@ -68,7 +68,7 @@ namespace Victoria
 
             Regex regex = Compiled(@"(?!videoseries)[a-zA-Z0-9_-]{11,42}");
             Match match = regex.Match(url);
-            if (match.Success)
+            if (match.Success && match.Value.Length == 11)
             {
                 string identifier = match.Value;
                 return $"https://www.youtube.com/watch?v={identifier}";
