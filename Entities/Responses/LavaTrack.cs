@@ -4,7 +4,7 @@ using Victoria.Queue;
 
 namespace Victoria.Entities
 {
-    public sealed class LavaTrack : IQueueObject
+    public class LavaTrack : IQueueObject
     {
         [JsonIgnore]
         internal string Hash { get; set; }
