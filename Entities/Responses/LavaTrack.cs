@@ -10,19 +10,19 @@ namespace Victoria.Entities
         internal string Hash { get; set; }
 
         [JsonProperty("identifier")]
-        public string Id { get; internal set; }
+        public virtual string Id { get; internal set; }
 
         [JsonProperty("isSeekable")]
-        public bool IsSeekable { get; internal set; }
+        public virtual bool IsSeekable { get; internal set; }
 
         [JsonProperty("author")]
-        public string Author { get; internal set; }
+        public virtual string Author { get; internal set; }
 
         [JsonProperty("isStream")]
-        public bool IsStream { get; internal set; }
+        public virtual bool IsStream { get; internal set; }
 
         [JsonIgnore]
-        public TimeSpan Position
+        public virtual TimeSpan Position
         {
             get => new TimeSpan(TrackPosition);
             internal set => TrackPosition = value.Ticks;
@@ -32,20 +32,20 @@ namespace Victoria.Entities
         internal long TrackPosition { get; set; }
 
         [JsonIgnore]
-        public TimeSpan Length
+        public virtual TimeSpan Length
             => TimeSpan.FromMilliseconds(TrackLength);
 
         [JsonProperty("length")]
         internal long TrackLength { get; set; }
 
         [JsonProperty("title")]
-        public string Title { get; internal set; }
+        public virtual string Title { get; internal set; }
 
         [JsonProperty("uri")]
-        public Uri Uri { get; internal set; }
+        public virtual Uri Uri { get; internal set; }
 
         [JsonIgnore]
-        public string Provider
+        public virtual string Provider
         {
             get => this.Uri.GetProvider();
         }
@@ -53,7 +53,7 @@ namespace Victoria.Entities
         /// <summary>
         /// 
         /// </summary>
-        public void ResetPosition()
+        public virtual void ResetPosition()
         {
             Position = TimeSpan.Zero;
         }
