@@ -7,7 +7,7 @@ namespace Victoria.Entities
     public class LavaTrack : IQueueObject
     {
         [JsonIgnore]
-        internal string Hash { get; set; }
+        public virtual string Hash { get; internal set; }
 
         [JsonProperty("identifier")]
         public virtual string Id { get; internal set; }
