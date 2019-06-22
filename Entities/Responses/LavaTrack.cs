@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using Victoria.Queue;
 
@@ -7,7 +7,7 @@ namespace Victoria.Entities
     public class LavaTrack : IQueueObject
     {
         [JsonIgnore]
-        public virtual string Hash { get; internal set; }
+        internal string Hash { get; set; }
 
         [JsonProperty("identifier")]
         public virtual string Id { get; internal set; }
