@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <Version></Version>
-        <PackageVersion></PackageVersion>
+        <PackageVersion>4.0.17</PackageVersion>
         <LangVersion>8.0</LangVersion>
         <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -10,19 +10,16 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Title>Victoria</Title>
-        <Authors>Yucked</Authors>
+        <PackageId>TheMulti0.Victoria</PackageId>
+        <Title>TheMulti0.Victoria</Title>
+        <Authors>Yucked, TheMulti0</Authors>
         <Copyright>2018 - 2019 Yucked. All rights reserved.</Copyright>
         <PackageIconUrl>https://i.imgur.com/lA1HyyI.png</PackageIconUrl>
         <PackageTags>Lavalink, Wrapper, Discord, Discord.NET, Music, Yucked</PackageTags>
-        <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/TheMulti0/Victoria</PackageProjectUrl>
         <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than Lavalink.NET and Sharplink combined.</Description>
         <PackageReleaseNotes>
-            - Thanks to Earu for PR #36 and #37.
-
-            - Renaming of couple private fields.
-
-            - Included XML documentation.
+            - Made LavaTracks' properties virtual
         </PackageReleaseNotes>
     </PropertyGroup>
 
