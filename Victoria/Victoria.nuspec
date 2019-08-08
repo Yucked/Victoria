@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package >
+    <metadata>
+        <id>Victoria</id>
+        <version>5.0</version>
+        <authors>Yucked</authors>
+        <owners>Yucked</owners>
+        <projectUrl>https://github.com/Yucked/Victoria</projectUrl>
+        <iconUrl>https://i.imgur.com/T6lVjn7.png</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>Contains packages for Lavalink and Frostbyte along with the base library and addons.</description>
+        <releaseNotes>First Release</releaseNotes>
+        <copyright>2018 - 2019 Yucked. All rights reserved.</copyright>
+        <tags>Lavalink Frostbyte Sharplink Lavalink.NET Wrapper Discord Discord.NET Music Yucked</tags>
+        <dependencies>
+            <dependency id="Victoria.Addon" version="1.0" />
+            <dependency id="Victoria.Common" version="1.0" />
+            <dependency id="Victoria.Frostbyte" version="1.0" />
+            <dependency id="Victoria.Lavalink" version="1.0" />
+        </dependencies>
+    </metadata>
+</package>

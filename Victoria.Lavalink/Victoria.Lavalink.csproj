@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\build.targets"/>
+
+    <PropertyGroup>
+        <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
+        <PackageReleaseNotes>First release.</PackageReleaseNotes>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Victoria.Common\Victoria.Common.csproj"/>
+    </ItemGroup>
+
+</Project>

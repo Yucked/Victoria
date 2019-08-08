@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\build.targets"/>
+
+    <PropertyGroup>
+        <Description>⚜ - Provides extensions and helper classes for Lavalink/Frostbyte.</Description>
+        <PackageReleaseNotes>First release.</PackageReleaseNotes>
+    </PropertyGroup>
+
+</Project>

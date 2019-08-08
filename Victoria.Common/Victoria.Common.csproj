@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\build.targets"/>
+
+    <PropertyGroup>
+        <Description>🧠 - Provides all the necessary classes and entities to write your own .NET Lavalink/Frostbyte library.</Description>
+        <PackageReleaseNotes>First release.</PackageReleaseNotes>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Discord.Net.WebSocket" Version="2.1.1"/>
+        <PackageReference Include="Socks" Version="1.2.0"/>
+    </ItemGroup>
+
+</Project>

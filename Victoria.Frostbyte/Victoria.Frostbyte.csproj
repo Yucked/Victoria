@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\build.targets"/>
+
+    <PropertyGroup>
+        <Description>❄ - An example .NET wrapper for Frostbyte. Implements all Frostbyte features.</Description>
+        <PackageReleaseNotes>First release.</PackageReleaseNotes>
+    </PropertyGroup>
+
+</Project>
