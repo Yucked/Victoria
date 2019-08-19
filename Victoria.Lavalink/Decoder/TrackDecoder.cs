@@ -22,11 +22,11 @@ namespace Victoria.Lavalink.Decoder
             using var javaReader = new JavaBinaryReader(memStream);
 
             // Reading header
-            var header = javaReader.ReadInt32();
+            var header = javaReader.Read<int>();
             var flags = (int) ((header & 0xC0000000L) >> 30);
             var hasVersion = (flags & 1) != 0;
             var version = hasVersion
-                ? javaReader.ReadSByte()
+                ? javaReader.Read<sbyte>()
                 : 1;
 
             // Get track information
@@ -34,10 +34,10 @@ namespace Victoria.Lavalink.Decoder
                 .WithHash(hash)
                 .WithTitle(javaReader.ReadString())
                 .WithAuthor(javaReader.ReadString())
-                .WithDuration(javaReader.ReadInt64())
+                .WithDuration(javaReader.Read<long>())
                 .WithId(javaReader.ReadString())
-                .WithStream(javaReader.ReadBoolean())
-                .WithUrl(javaReader.ReadBoolean()
+                .WithStream(javaReader.Read<bool>())
+                .WithUrl(javaReader.Read<bool>()
                     ? javaReader.ReadString()
                     : string.Empty);
 

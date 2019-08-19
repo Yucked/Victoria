@@ -1,75 +1,60 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using Victoria.Common;
 
 namespace Victoria.Lavalink.Decoder
 {
-    internal sealed class JavaBinaryReader : BinaryReader
+    internal sealed class JavaBinaryReader : IDisposable
     {
-        public JavaBinaryReader(Stream input) : base(input, Encoding.UTF8)
+        private Stream stream;
+
+        public JavaBinaryReader(Stream input)
         {
+            stream = input;
         }
 
-        public override float ReadSingle()
-            => Read(4, BitConverter.ToSingle);
-
-        public override double ReadDouble()
-            => Read(8, BitConverter.ToDouble);
-
-        public override short ReadInt16()
-            => Read(2, BitConverter.ToInt16);
-
-        public override int ReadInt32()
-            => Read(4, BitConverter.ToInt32);
-
-        public override long ReadInt64()
-            => Read(8, BitConverter.ToInt64);
-
-        public override ushort ReadUInt16()
-            => Read(2, BitConverter.ToUInt16);
-
-        public override uint ReadUInt32()
-            => Read(4, BitConverter.ToUInt32);
-
-        public override ulong ReadUInt64()
-            => Read(8, BitConverter.ToUInt64);
-
-        public override string ReadString()
+        public string ReadString()
         {
-            var length = ReadUInt16();
-            var bytes = new byte[length];
-            var read = Read(bytes, 0, length);
+            var length = Read<short>();
+            Span<byte> bytes = stackalloc byte[length];
+            var read = stream.Read(bytes);
 
             if (read < length)
-                Throw.Exception("Bytes read were less then length.");
+                Throw.Exception("Bytes read were less than length.");
 
             return Encoding.UTF8.GetString(bytes);
         }
 
-        private T Read<T>(int size, Func<byte[], int, T> converter) where T : struct
+        public T Read<T>() where T : struct
         {
-            var bytes = GetNextBytesNativeEndian(size);
-            return converter(bytes, 0);
+            T result = default;
+            GetNextBytesNativeEndian(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref result, 1)));
+            return result;
         }
 
-        private byte[] GetNextBytesNativeEndian(int count)
+        private void GetNextBytesNativeEndian(Span<byte> destination)
         {
-            var bytes = GetNextBytes(count);
+            GetNextBytes(destination);
             if (BitConverter.IsLittleEndian)
-                Array.Reverse(bytes);
-            return bytes;
+                destination.Reverse();
         }
 
-        private byte[] GetNextBytes(int count)
+        private void GetNextBytes(Span<byte> destination)
         {
-            var buffer = new byte[count];
-            var bytesRead = BaseStream.Read(buffer, 0, count);
-
-            if (bytesRead < count)
+            var bytesRead = stream.Read(destination);
+            if (bytesRead < destination.Length)
                 Throw.Exception("Unable to read stream.");
+        }
 
-            return buffer;
+        public void Dispose()
+        {
+            if(stream != null)
+            {
+                stream.Dispose();
+                stream = null;
+            }
         }
     }
 }
