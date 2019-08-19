@@ -1,13 +1,13 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Lavalink.Payloads
 {
     internal sealed class ServerUpdatePayload : BaseLavaPayload
     {
-        [JsonPropertyName("sessionId")]
+        [JsonProperty("sessionId")]
         public string SessionId { get; set; }
 
-        [JsonPropertyName("event")]
+        [JsonProperty("event")]
         public VoiceServerPayload VoiceServerPayload { get; set; }
 
         public ServerUpdatePayload() : base("voiceUpdate")
@@ -17,13 +17,13 @@ namespace Victoria.Lavalink.Payloads
 
     internal struct VoiceServerPayload
     {
-        [JsonPropertyName("token")]
+        [JsonProperty("token")]
         public string Token { get; set; }
 
-        [JsonPropertyName("guildId")]
+        [JsonProperty("guildId")]
         public string GuildId { get; set; }
 
-        [JsonPropertyName("endpoint")]
+        [JsonProperty("endpoint")]
         public string Endpoint { get; set; }
     }
 }

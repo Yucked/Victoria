@@ -1,10 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace Victoria.Lavalink.Payloads
 {
     internal abstract class BaseLavaPayload
     {
-        [JsonPropertyName("op")]
+        [JsonProperty("op")]
         public string Op { get; }
 
         protected BaseLavaPayload(string op)

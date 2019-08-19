@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
@@ -173,11 +172,7 @@ namespace Victoria.Lavalink
             var request = await RestClient.RequestAsync(
                     $"http://{_config.Hostname}:{_config.Port}/loadtracks?identifier={WebUtility.UrlEncode(query)}")
                 .ConfigureAwait(false);
-
-            using var parse = JsonDocument.Parse(request);
-            var root = parse.RootElement;
-
-            var response = new SearchResponse(root);
+            var response = Json.Deserialize<SearchResponse>(request);
             return response;
         }
 
@@ -227,12 +222,12 @@ namespace Victoria.Lavalink
             }
 
             Log(LogSeverity.Debug, nameof(Lavalink), eventArgs.Raw);
-            var baseWsResponse = JsonSerializer.Deserialize<BaseWsResponse>(eventArgs.Data.Span);
 
-            switch (baseWsResponse.Op)
+            var baseWsResponse = Json.Deserialize<BaseWsResponse>(eventArgs.Data);
+
+            switch (baseWsResponse)
             {
-                case "playerUpdate":
-                    var playerUpdate = JsonSerializer.Deserialize<PlayerUpdateResponse>(eventArgs.Data.Span);
+                case PlayerUpdateResponse playerUpdate:
                     if (!PlayerCache.TryGetValue(playerUpdate.GuildId, out var player))
                         return;
 
@@ -240,39 +235,33 @@ namespace Victoria.Lavalink
                         .ConfigureAwait(false);
                     break;
 
-                case "stats":
-                    var statsResponse = JsonSerializer.Deserialize<StatsResponse>(eventArgs.Data.Span);
+                case StatsResponse statsResponse:
                     OnStatsReceived?.Invoke(new StatsEventArgs(statsResponse))
                         .ConfigureAwait(false);
                     break;
 
-                case "event":
-                    var baseEventResponse = JsonSerializer.Deserialize<BaseEventResponse>(eventArgs.Data.Span);
+                case BaseEventResponse baseEventResponse:
                     if (!PlayerCache.TryGetValue(baseEventResponse.GuildId, out player))
                         return;
 
-                    switch (baseEventResponse.EventType)
+                    switch (baseEventResponse)
                     {
-                        case "TrackEndEvent":
-                            var endEvent = JsonSerializer.Deserialize<TrackEndEvent>(eventArgs.Data.Span);
+                        case TrackEndEvent endEvent:
                             OnTrackEnded?.Invoke(new TrackEndedEventArgs(player, endEvent))
                                 .ConfigureAwait(false);
                             break;
 
-                        case "TrackExceptionEvent":
-                            var exceptionEvent = JsonSerializer.Deserialize<TrackExceptionEvent>(eventArgs.Data.Span);
+                        case TrackExceptionEvent exceptionEvent:
                             OnTrackException?.Invoke(new TrackExceptionEventArgs(player, exceptionEvent))
                                 .ConfigureAwait(false);
                             break;
 
-                        case "TrackStuckEvent":
-                            var stuckEvent = JsonSerializer.Deserialize<TrackStuckEvent>(eventArgs.Data.Span);
+                        case TrackStuckEvent stuckEvent:
                             OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, stuckEvent))
                                 .ConfigureAwait(false);
                             break;
 
-                        case "WebSocketClosedEvent":
-                            var closedEvent = JsonSerializer.Deserialize<WebSocketClosedEvent>(eventArgs.Data.Span);
+                        case WebSocketClosedEvent closedEvent:
                             OnWebSocketClosed?.Invoke(new WebSocketClosedEventArgs(closedEvent))
                                 .ConfigureAwait(false);
                             break;

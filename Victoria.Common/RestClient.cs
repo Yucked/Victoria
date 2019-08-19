@@ -10,19 +10,11 @@ namespace Victoria.Common
     /// </summary>
     public readonly struct RestClient
     {
-        private static readonly HttpClient Client;
-
-        static RestClient()
+        private static readonly HttpClient Client = new HttpClient(new SocketsHttpHandler
         {
-            Client = new HttpClient(new SocketsHttpHandler
-            {
-                UseCookies = false,
-                AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
-            });
-
-            Client.DefaultRequestHeaders.Clear();
-            Client.DefaultRequestHeaders.Add("User-Agent", "Victoria");
-        }
+            UseCookies = false,
+            AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+        });
 
         /// <summary>
         /// 

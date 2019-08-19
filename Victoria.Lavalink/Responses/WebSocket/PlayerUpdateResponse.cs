@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Lavalink.Responses.WebSocket
 {
     internal sealed class PlayerUpdateResponse : BaseWsResponse
     {
-        [JsonPropertyName("guildId")]
+        [JsonProperty("guildId")]
         private string RawGuildId { get; set; }
 
         [JsonIgnore]
@@ -14,7 +14,7 @@ namespace Victoria.Lavalink.Responses.WebSocket
                 ? id
                 : 0;
 
-        [JsonPropertyName("state")]
+        [JsonProperty("state")]
         public PlayerState State { get; set; }
     }
 
@@ -24,14 +24,14 @@ namespace Victoria.Lavalink.Responses.WebSocket
         public DateTimeOffset Time
             => DateTimeOffset.FromUnixTimeMilliseconds(LongTime);
 
-        [JsonPropertyName("time")]
+        [JsonProperty("time")]
         private long LongTime { get; set; }
 
         [JsonIgnore]
         public TimeSpan Position
             => TimeSpan.FromMilliseconds(LongPosition);
 
-        [JsonPropertyName("position")]
+        [JsonProperty("position")]
         private long LongPosition { get; set; }
     }
 }

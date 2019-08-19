@@ -1,14 +1,14 @@
 using System;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Lavalink.Payloads
 {
     internal sealed class ResumePayload : BaseLavaPayload
     {
-        [JsonPropertyName("key")]
+        [JsonProperty("key")]
         private string Key { get; }
 
-        [JsonPropertyName("timeout")]
+        [JsonProperty("timeout")]
         private long Timeout { get; }
 
         public ResumePayload(string key, TimeSpan timeout) : base("configureResuming")

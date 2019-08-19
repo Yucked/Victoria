@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Lavalink.Responses.Rest
 {
@@ -10,13 +10,13 @@ namespace Victoria.Lavalink.Responses.Rest
         /// <summary>
         ///     Playlist name.
         /// </summary>
-        [JsonPropertyName("name")]
+        [JsonProperty("name")]
         public string Name { get; }
 
         /// <summary>
         ///     Which track was selected in playlist.
         /// </summary>
-        [JsonPropertyName("selectedTrack")]
+        [JsonProperty("selectedTrack")]
         public int SelectedTrack { get; }
 
         internal PlaylistInfo(string name, int selectedTrack)

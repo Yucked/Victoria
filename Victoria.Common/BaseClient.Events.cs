@@ -1,7 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Discord;
-using Discord.WebSocket;
 using Socks.EventArgs;
 using Victoria.Common.Interfaces;
 

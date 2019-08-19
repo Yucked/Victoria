@@ -1,20 +1,20 @@
 using System;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Lavalink.Payloads
 {
     internal sealed class PlayPayload : PlayerPayload
     {
-        [JsonPropertyName("track")]
+        [JsonProperty("track")]
         private string Hash { get; }
 
-        [JsonPropertyName("startTime")]
+        [JsonProperty("startTime")]
         private int StartTime { get; }
 
-        [JsonPropertyName("endTime")]
+        [JsonProperty("endTime")]
         private int EndTime { get; }
 
-        [JsonPropertyName("noReplace")]
+        [JsonProperty("noReplace")]
         private bool NoReplace { get; }
 
         public PlayPayload(ulong guildId, LavaTrack track, bool noReplace) : base(guildId, "play")

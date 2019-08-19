@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 using Victoria.Lavalink.Decoder;
 using Victoria.Lavalink.Enums;
 
@@ -6,7 +6,7 @@ namespace Victoria.Lavalink.Responses.WebSocket
 {
     internal class BaseEventResponse : BaseWsResponse
     {
-        [JsonPropertyName("guildId")]
+        [JsonProperty("guildId")]
         private string RawGuildId { get; set; }
 
         [JsonIgnore]
@@ -15,13 +15,13 @@ namespace Victoria.Lavalink.Responses.WebSocket
                 ? id
                 : 0;
 
-        [JsonPropertyName("type")]
+        [JsonProperty("type")]
         public string EventType { get; set; }
     }
 
     internal class TrackEventResponse : BaseEventResponse
     {
-        [JsonPropertyName("track")]
+        [JsonProperty("track")]
         private string Hash { get; set; }
 
         [JsonIgnore]
@@ -31,31 +31,31 @@ namespace Victoria.Lavalink.Responses.WebSocket
 
     internal sealed class TrackEndEvent : TrackEventResponse
     {
-        [JsonPropertyName("reason")]
+        [JsonProperty("reason")]
         public TrackEndReason Reason { get; set; }
     }
 
     internal sealed class TrackExceptionEvent : TrackEventResponse
     {
-        [JsonPropertyName("error")]
+        [JsonProperty("error")]
         public string Error { get; set; }
     }
 
     internal sealed class TrackStuckEvent : TrackEventResponse
     {
-        [JsonPropertyName("thresholdMs")]
+        [JsonProperty("thresholdMs")]
         public long ThresholdMs { get; set; }
     }
 
     internal sealed class WebSocketClosedEvent : BaseEventResponse
     {
-        [JsonPropertyName("code")]
+        [JsonProperty("code")]
         public int Code { get; set; }
 
-        [JsonPropertyName("reason")]
+        [JsonProperty("reason")]
         public string Reason { get; set; }
 
-        [JsonPropertyName("byRemote")]
+        [JsonProperty("byRemote")]
         public bool ByRemote { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using Newtonsoft.Json;
 
 namespace Victoria.Lavalink
@@ -11,7 +11,7 @@ namespace Victoria.Lavalink
         /// <summary>
         ///     15 bands (0-14) that can be changed.
         /// </summary>
-        [JsonPropertyName("band")]
+        [JsonProperty("band")]
         public ushort Number { get; set; }
 
         /// <summary>

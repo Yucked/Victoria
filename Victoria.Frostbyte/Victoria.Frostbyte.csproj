@@ -1,10 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\build.targets"/>
+    <Import Project="..\build.targets" />
 
     <PropertyGroup>
         <Description>❄ - An example .NET wrapper for Frostbyte. Implements all Frostbyte features.</Description>
         <PackageReleaseNotes>First release.</PackageReleaseNotes>
     </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Victoria.Common\Victoria.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Infos" />
+    </ItemGroup>
 
 </Project>

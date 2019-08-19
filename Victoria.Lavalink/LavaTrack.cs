@@ -1,5 +1,5 @@
 using System;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using Victoria.Common.Interfaces;
 
 namespace Victoria.Lavalink
@@ -22,19 +22,19 @@ namespace Victoria.Lavalink
         /// <summary>
         ///     Whether the track is a stream.
         /// </summary>
-        [JsonPropertyName("isStream")]
+        [JsonProperty("isStream")]
         public bool IsStream { get; private set; }
 
         /// <summary>
         ///     Whether the track is seekable.
         /// </summary>
-        [JsonPropertyName("isSeekable")]
+        [JsonProperty("isSeekable")]
         public bool CanSeek { get; private set; }
 
-        [JsonPropertyName("length")]
+        [JsonProperty("length")]
         private long TrackDuration { get; set; }
 
-        [JsonPropertyName("position")]
+        [JsonProperty("position")]
         internal long TrackPosition { get; set; }
 
         /// <inheritdoc />

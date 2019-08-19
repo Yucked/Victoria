@@ -1,10 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace Victoria.Lavalink.Responses.WebSocket
 {
     internal class BaseWsResponse
     {
-        [JsonPropertyName("op")]
+        [JsonProperty("op")]
         public string Op { get; set; }
     }
 }

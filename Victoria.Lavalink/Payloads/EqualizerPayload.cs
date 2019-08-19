@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Victoria.Lavalink.Payloads
 {
     internal sealed class EqualizerPayload : PlayerPayload
     {
-        [JsonPropertyName("bands")]
+        [JsonProperty("bands")]
         private IEnumerable<Band> Bands { get; }
 
         public EqualizerPayload(ulong guildId, params Band[] bands) : base(guildId, "equalizer")
