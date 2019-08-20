@@ -20,7 +20,7 @@ namespace Victoria.Lavalink.Decoder
             Span<byte> hashBuffer = stackalloc byte[hash.Length];
             Encoding.ASCII.GetBytes(hash, hashBuffer);
             Base64.DecodeFromUtf8InPlace(hashBuffer, out int bytesWritten);
-            var javaReader = new JavaBinaryReader(hashBuffer.Slice(bytesWritten));
+            var javaReader = new JavaBinaryReader(hashBuffer.Slice(0, bytesWritten));
 
             // Reading header
             var header = javaReader.Read<int>();
