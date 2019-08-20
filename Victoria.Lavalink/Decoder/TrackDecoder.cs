@@ -1,5 +1,6 @@
 ﻿using System;
-using System.IO;
+using System.Text;
+using System.Buffers.Text;
 
 namespace Victoria.Lavalink.Decoder
 {
@@ -16,10 +17,10 @@ namespace Victoria.Lavalink.Decoder
         /// </returns>
         public static LavaTrack Decode(string hash)
         {
-            var bytes = Convert.FromBase64String(hash);
-
-            using var memStream = new MemoryStream(bytes);
-            using var javaReader = new JavaBinaryReader(memStream);
+            Span<byte> hashBuffer = stackalloc byte[hash.Length];
+            Encoding.ASCII.GetBytes(hash, hashBuffer);
+            Base64.DecodeFromUtf8InPlace(hashBuffer, out int bytesWritten);
+            var javaReader = new JavaBinaryReader(hashBuffer.Slice(bytesWritten));
 
             // Reading header
             var header = javaReader.Read<int>();

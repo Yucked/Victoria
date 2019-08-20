@@ -1,60 +1,54 @@
 ﻿using System;
-using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
+using System.Runtime.InteropServices;
 using Victoria.Common;
 
 namespace Victoria.Lavalink.Decoder
 {
-    internal sealed class JavaBinaryReader : IDisposable
+    internal ref struct JavaBinaryReader
     {
-        private Stream stream;
+        private readonly Span<byte> bytes;
+        private int position;
 
-        public JavaBinaryReader(Stream input)
+        public JavaBinaryReader(Span<byte> bytes)
         {
-            stream = input;
+            this.bytes = bytes;
+            position = 0;
         }
 
         public string ReadString()
         {
             var length = Read<short>();
-            Span<byte> bytes = stackalloc byte[length];
-            var read = stream.Read(bytes);
+            int newPosition = position + length;
 
-            if (read < length)
-                Throw.Exception("Bytes read were less than length.");
+            if (newPosition > bytes.Length)
+                Throw.Exception("String length exceeds buffer length.");
 
-            return Encoding.UTF8.GetString(bytes);
+            string result = Encoding.UTF8.GetString(bytes.Slice(position, length));
+            position = newPosition;
+
+            return result;
         }
 
         public T Read<T>() where T : struct
         {
             T result = default;
-            GetNextBytesNativeEndian(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref result, 1)));
+            var bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref result, 1));
+            Read(bytes);
+            if (BitConverter.IsLittleEndian)
+                bytes.Reverse();
+
             return result;
         }
 
-        private void GetNextBytesNativeEndian(Span<byte> destination)
+        private void Read(Span<byte> destination)
         {
-            GetNextBytes(destination);
-            if (BitConverter.IsLittleEndian)
-                destination.Reverse();
-        }
+            int newPosition = position + destination.Length;
+            if (newPosition > bytes.Length)
+                Throw.Exception("Destination buffer is too large.");
 
-        private void GetNextBytes(Span<byte> destination)
-        {
-            var bytesRead = stream.Read(destination);
-            if (bytesRead < destination.Length)
-                Throw.Exception("Unable to read stream.");
-        }
-
-        public void Dispose()
-        {
-            if(stream != null)
-            {
-                stream.Dispose();
-                stream = null;
-            }
+            bytes.Slice(position, destination.Length).CopyTo(destination);
+            position = newPosition;
         }
     }
 }
