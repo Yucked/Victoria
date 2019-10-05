@@ -1,4 +1,5 @@
-﻿using Victoria.Enums;
+﻿using Victoria.Decoder;
+using Victoria.Enums;
 using Victoria.Responses.WebSocket;
 using PlayerState = Victoria.Enums.PlayerState;
 
@@ -27,7 +28,7 @@ namespace Victoria.EventArgs
         internal TrackEndedEventArgs(LavaPlayer player, TrackEndEvent endEvent)
         {
             Player = player;
-            Track = endEvent.Track;
+            Track = TrackDecoder.Decode(endEvent.Hash);
             Reason = endEvent.Reason;
 
             if (endEvent.Reason == TrackEndReason.Replaced)

@@ -24,7 +24,7 @@ namespace Victoria.Responses.Rest
 
         /// <inheritdoc />
         public override string ToString()
-            => $"Severity: {Severity ?? "NULL"}\n" +
-               $"Message: {Message ?? "NULL"}";
+            => $"Severity:{Extensions.GetWhitespace(Severity, 10)}{Severity}\n" +
+               $"Message:{Extensions.GetWhitespace(Message, 10)}{Message}\n";
     }
 }

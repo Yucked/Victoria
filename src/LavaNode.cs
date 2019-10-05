@@ -20,9 +20,7 @@ namespace Victoria
 {
     /// <summary>
     /// </summary>
-    public class LavaNode<TPlayer, TTrack> : IAsyncDisposable
-        where TTrack : LavaTrack
-        where TPlayer : LavaPlayer, new()
+    public class LavaNode : IAsyncDisposable
 
     {
         /// <summary>
@@ -67,9 +65,9 @@ namespace Victoria
             => Volatile.Read(ref _refConnected);
 
         /// <summary>
-        ///     Collection of <typeparamref name="TPlayer" />.
+        ///     Collection of <see cref="LavaPlayer" />.
         /// </summary>
-        public IEnumerable<TPlayer> Players
+        public IEnumerable<LavaPlayer> Players
             => _playerCache.Values;
 
         private bool _refConnected;
@@ -78,7 +76,7 @@ namespace Victoria
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly BaseSocketClient _socketClient;
         private readonly ClientSock _sock;
-        private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
+        private readonly ConcurrentDictionary<ulong, LavaPlayer> _playerCache;
         private readonly HttpClient _httpClient;
 
         /// <inheritdoc />
@@ -111,7 +109,7 @@ namespace Victoria
             _jsonOptions.Converters.Add(new SearchResponseConverter());
             _jsonOptions.Converters.Add(new WebsocketResponseConverter());
 
-            _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
+            _playerCache = new ConcurrentDictionary<ulong, LavaPlayer>();
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri($"http://{config.Hostname}:{config.Port}")
@@ -147,6 +145,9 @@ namespace Victoria
 
             if (_config.EnableResume)
                 _sock.AddHeader("Resume-Key", _config.ResumeKey);
+
+            await _sock.ConnectAsync()
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -169,14 +170,14 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Joins the specified voice channel and returns the connected <typeparamref name="TPlayer" />.
+        ///     Joins the specified voice channel and returns the connected <see cref="LavaPlayer" />.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <param name="textChannel">An instance of <see cref="ITextChannel" />.</param>
         /// <returns>
-        ///     <typeparamref name="TPlayer" />
+        ///     <see cref="LavaPlayer"/>
         /// </returns>
-        public async Task<TPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default)
+        public async Task<LavaPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default)
         {
             if (voiceChannel == null)
                 throw new ArgumentNullException(nameof(voiceChannel));
@@ -187,7 +188,7 @@ namespace Victoria
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _sock, voiceChannel, textChannel);
+            player = new LavaPlayer(_sock, voiceChannel, textChannel);
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -225,7 +226,7 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Leaves the specified channel only if <typeparamref name="TPlayer" /> is connected to it.
+        ///     Leaves the specified channel only if <see cref="LavaPlayer" /> is connected to it.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
@@ -237,17 +238,20 @@ namespace Victoria
             if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player))
                 return;
 
-            await voiceChannel.DisconnectAsync()
+            await player.StopAsync()
                 .ConfigureAwait(false);
 
             await player.DisposeAsync()
+                .ConfigureAwait(false);
+
+            await voiceChannel.DisconnectAsync()
                 .ConfigureAwait(false);
 
             _playerCache.TryRemove(voiceChannel.GuildId, out _);
         }
 
         /// <summary>
-        ///     Checks if <typeparamref name="TPlayer" /> exists for specified guild.
+        ///     Checks if <see cref="LavaPlayer" /> exists for specified guild.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
         /// <returns>
@@ -260,11 +264,11 @@ namespace Victoria
         ///     Returns either an existing or null player.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
-        /// <param name="player">An instance of <typeparamref name="TPlayer" /></param>
+        /// <param name="player">An instance of <see cref="LavaPlayer" /></param>
         /// <returns>
         ///     <see cref="bool" />
         /// </returns>
-        public bool TryGetPlayer(IGuild guild, out TPlayer player)
+        public bool TryGetPlayer(IGuild guild, out LavaPlayer player)
             => _playerCache.TryGetValue(guild.Id, out player);
 
         /// <inheritdoc />
@@ -388,6 +392,45 @@ namespace Victoria
             Log(LogSeverity.Debug, eventArgs.Raw);
 
             var baseWsResponse = JsonSerializer.Deserialize<BaseWsResponse>(eventArgs.Data.Span, _jsonOptions);
+
+            switch (baseWsResponse)
+            {
+                case PlayerUpdateResponse playerUpdateResponse:
+                    if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player))
+                        return;
+
+                    OnPlayerUpdated?.Invoke(new PlayerUpdateEventArgs(player, playerUpdateResponse));
+                    break;
+
+                case StatsResponse statsResponse:
+                    OnStatsReceived?.Invoke(new StatsEventArgs(statsResponse));
+                    break;
+
+                case TrackEndEvent trackEndEvent:
+                    if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out player))
+                        return;
+
+                    OnTrackEnded?.Invoke(new TrackEndedEventArgs(player, trackEndEvent));
+                    break;
+
+                case TrackStuckEvent trackStuckEvent:
+                    if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out player))
+                        return;
+
+                    OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
+                    break;
+
+                case TrackExceptionEvent trackExceptionEvent:
+                    if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out player))
+                        return;
+
+                    OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
+                    break;
+
+                case WebSocketClosedEvent socketClosedEvent:
+                    OnWebSocketClosed?.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
+                    break;
+            }
 
             await Task.Delay(0)
                 .ConfigureAwait(false);

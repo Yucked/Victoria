@@ -26,11 +26,8 @@ namespace Victoria.Decoder
             var header = javaReader.Read<int>();
             var flags = (int) ((header & 0xC0000000L) >> 30);
             var hasVersion = (flags & 1) != 0;
-            var version = hasVersion
-                ? javaReader.Read<sbyte>()
-                : 1;
+            var version = hasVersion ? javaReader.Read<sbyte>() : 1;
 
-            // Get track information
             var track = new LavaTrack()
                 .WithHash(hash)
                 .WithTitle(javaReader.ReadString())
