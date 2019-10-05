@@ -23,7 +23,7 @@ namespace Victoria.Responses.Rest
 
         /// <inheritdoc />
         public override string ToString()
-            => $"Name: {Name ?? "NULL"}\n" +
-               $"Selected Track: {SelectedTrack}";
+            => $"Name:{Extensions.GetWhitespace(Name, 15)}{Name}\n" +
+               $"Selected Track:{Extensions.GetWhitespace(SelectedTrack, 10)}{SelectedTrack}";
     }
 }
