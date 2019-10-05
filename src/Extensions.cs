@@ -11,5 +11,8 @@ namespace Victoria
         public static bool Match(this ReadOnlySpan<char> str, ReadOnlySpan<byte> bytes)
             => ToBytes(str)
                 .SequenceEqual(bytes);
+
+        public static string GetWhitespace(object obj, int maxSpace)
+            => new string(' ', maxSpace - nameof(obj).Length);
     }
 }

@@ -28,6 +28,6 @@ namespace Victoria.Enums
         /// <summary>
         ///     Something went wrong when trying to play the track.
         /// </summary>
-        Erroed
+        Errored
     }
 }

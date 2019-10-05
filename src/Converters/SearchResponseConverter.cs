@@ -68,7 +68,7 @@ namespace Victoria.Converters
                     playlist.WithTrack(reader.GetInt32());
             }
 
-            response.PlaylistInfo = playlist;
+            response.Playlist = playlist;
         }
 
         private void BuildRestException(ref SearchResponse response, ref Utf8JsonReader reader)
@@ -129,41 +129,20 @@ namespace Victoria.Converters
                         if (reader.TokenType != JsonTokenType.PropertyName)
                             continue;
 
-                        if (reader.ValueTextEquals("identifier"))
-                        {
-                            reader.Read();
+                        if (reader.ValueTextEquals("identifier") && reader.Read())
                             track.WithId(reader.GetString());
-                        }
-                        else if (reader.ValueTextEquals("isSeekable"))
-                        {
-                            reader.Read();
+                        else if (reader.ValueTextEquals("isSeekable") && reader.Read())
                             track.WithSeek(reader.GetBoolean());
-                        }
-                        else if (reader.ValueTextEquals("author"))
-                        {
-                            reader.Read();
+                        else if (reader.ValueTextEquals("author") && reader.Read())
                             track.WithAuthor(reader.GetString());
-                        }
-                        else if (reader.ValueTextEquals("length"))
-                        {
-                            reader.Read();
+                        else if (reader.ValueTextEquals("length") && reader.Read())
                             track.WithDuration(reader.GetInt64());
-                        }
-                        else if (reader.ValueTextEquals("isStream"))
-                        {
-                            reader.Read();
+                        else if (reader.ValueTextEquals("isStream") && reader.Read())
                             track.WithStream(reader.GetBoolean());
-                        }
-                        else if (reader.ValueTextEquals("title"))
-                        {
-                            reader.Read();
+                        else if (reader.ValueTextEquals("title") && reader.Read())
                             track.WithTitle(reader.GetString());
-                        }
-                        else if (reader.ValueTextEquals("uri"))
-                        {
-                            reader.Read();
+                        else if (reader.ValueTextEquals("uri") && reader.Read())
                             track.WithUrl(reader.GetString());
-                        }
                     }
                 }
 
@@ -175,7 +154,6 @@ namespace Victoria.Converters
 
         /// <inheritdoc />
         public override void Write(Utf8JsonWriter writer, SearchResponse value, JsonSerializerOptions options)
-        {
-        }
+            => throw new NotImplementedException("This method can't be used for writing.'");
     }
 }
