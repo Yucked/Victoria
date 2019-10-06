@@ -328,21 +328,19 @@ namespace Victoria
             return searchResponse;
         }
 
-        private async Task OnUserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldState,
+        private Task OnUserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldState,
             SocketVoiceState newState)
         {
             if (user.Id != _socketClient.CurrentUser.Id)
-                return;
+                return Task.CompletedTask;
 
             var guildId = newState.VoiceChannel?.Guild.Id;
 
             if (!_playerCache.TryGetValue(guildId.GetValueOrDefault(), out var player))
-                return;
+                return Task.CompletedTask;
 
             player.VoiceState = newState;
-
-            await Task.Delay(0)
-                .ConfigureAwait(false);
+            return Task.CompletedTask;
         }
 
         private async Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer)
@@ -364,29 +362,26 @@ namespace Victoria
                 .ConfigureAwait(false);
         }
 
-        private async Task OnConnectedAsync()
+        private Task OnConnectedAsync()
         {
             Volatile.Write(ref _refConnected, true);
             Log(LogSeverity.Info, "Websocket connection established.");
-
-            await Task.Delay(0)
-                .ConfigureAwait(false);
+            return Task.CompletedTask;
         }
 
-        private async Task OnDisconnectedAsync(DisconnectEventArgs eventArgs)
+        private Task OnDisconnectedAsync(DisconnectEventArgs eventArgs)
         {
             Volatile.Write(ref _refConnected, false);
             Log(LogSeverity.Info, eventArgs.Message ?? eventArgs.Exception.Message);
-            await Task.Delay(0)
-                .ConfigureAwait(false);
+            return Task.CompletedTask;
         }
 
-        private async Task OnReceiveAsync(ReceivedEventArgs eventArgs)
+        private Task OnReceiveAsync(ReceivedEventArgs eventArgs)
         {
             if (eventArgs.DataSize == 0)
             {
                 Log(LogSeverity.Warning, "Received empty payload from Lavalink.");
-                return;
+                return Task.CompletedTask;
             }
 
             Log(LogSeverity.Debug, eventArgs.Raw);
@@ -397,7 +392,7 @@ namespace Victoria
             {
                 case PlayerUpdateResponse playerUpdateResponse:
                     if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player))
-                        return;
+                        return Task.CompletedTask;
 
                     OnPlayerUpdated?.Invoke(new PlayerUpdateEventArgs(player, playerUpdateResponse));
                     break;
@@ -408,21 +403,21 @@ namespace Victoria
 
                 case TrackEndEvent trackEndEvent:
                     if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out player))
-                        return;
+                        return Task.CompletedTask;
 
                     OnTrackEnded?.Invoke(new TrackEndedEventArgs(player, trackEndEvent));
                     break;
 
                 case TrackStuckEvent trackStuckEvent:
                     if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out player))
-                        return;
+                        return Task.CompletedTask;
 
                     OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
                     break;
 
                 case TrackExceptionEvent trackExceptionEvent:
                     if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out player))
-                        return;
+                        return Task.CompletedTask;
 
                     OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
                     break;
@@ -432,8 +427,7 @@ namespace Victoria
                     break;
             }
 
-            await Task.Delay(0)
-                .ConfigureAwait(false);
+            return Task.CompletedTask;
         }
 
         private void Log(LogSeverity severity, string message, Exception exception = null)
