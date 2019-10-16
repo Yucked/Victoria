@@ -99,17 +99,5 @@ namespace Victoria
 
         internal void WithSeek(bool isSeekable)
             => CanSeek = isSeekable;
-
-        /// <inheritdoc />
-        public override string ToString()
-            => $"Hash:{Extensions.GetWhitespace(Hash, 10)}{Hash.Substring(0, 15)}...\n" +
-               $"Id:{Extensions.GetWhitespace(Id, 10)}{Id}\n" +
-               $"Title:{Extensions.GetWhitespace(Title, 10)}{Title}\n" +
-               $"Author:{Extensions.GetWhitespace(Author, 10)}{Author}\n" +
-               $"Is Stream:{Extensions.GetWhitespace(IsStream, 10)}{IsStream}\n" +
-               $"Can Seek:{Extensions.GetWhitespace(CanSeek, 10)}{CanSeek}\n" +
-               $"Duration:{Extensions.GetWhitespace(Duration, 10)}{Duration}\n" +
-               $"Position:{Extensions.GetWhitespace(Position, 10)}{Position}\n" +
-               $"Url:{Extensions.GetWhitespace(Hash, 10)}{Url}";
     }
 }

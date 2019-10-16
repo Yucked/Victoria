@@ -20,10 +20,5 @@ namespace Victoria.Responses.Rest
 
         internal void WithTrack(int track)
             => SelectedTrack = track;
-
-        /// <inheritdoc />
-        public override string ToString()
-            => $"Name:{Extensions.GetWhitespace(Name, 15)}{Name}\n" +
-               $"Selected Track:{Extensions.GetWhitespace(SelectedTrack, 10)}{SelectedTrack}";
     }
 }

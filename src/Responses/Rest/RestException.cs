@@ -21,10 +21,5 @@ namespace Victoria.Responses.Rest
 
         internal void WithSeverity(string severity)
             => Severity = severity;
-
-        /// <inheritdoc />
-        public override string ToString()
-            => $"Severity:{Extensions.GetWhitespace(Severity, 10)}{Severity}\n" +
-               $"Message:{Extensions.GetWhitespace(Message, 10)}{Message}\n";
     }
 }

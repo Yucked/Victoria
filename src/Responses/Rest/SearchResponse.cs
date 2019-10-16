@@ -27,12 +27,5 @@ namespace Victoria.Responses.Rest
         ///     If LoadType was LoadFailed then Exception is returned.
         /// </summary>
         public RestException Exception { get; internal set; }
-
-        /// <inheritdoc />
-        public override string ToString()
-            => $"Load Type:{Extensions.GetWhitespace(LoadType, 12)}{LoadType}\n" +
-               $"Playlist ->\n{Playlist}\n" +
-               $"Tracks:{Extensions.GetWhitespace(Tracks, 12)}{Tracks.Count}\n" +
-               $"Exception ->\n{Exception}";
     }
 }
