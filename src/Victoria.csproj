@@ -20,7 +20,7 @@
 
     <ItemGroup>
         <PackageReference Include="Discord.Net.WebSocket" Version="2.1.1" />
-        <PackageReference Include="Socks" Version="1.4.0" />
+        <PackageReference Include="Socks" Version="1.4.1" />
     </ItemGroup>
 
     <ItemGroup>

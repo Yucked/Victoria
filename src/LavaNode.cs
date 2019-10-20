@@ -100,7 +100,18 @@ namespace Victoria
             socketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
 
 
-            _sock = new ClientSock(new Endpoint(config.Hostname, config.Port, false), config.BufferSize);
+            _sock = new ClientSock(new SockConfig
+            {
+                Endpoint = new Endpoint(config.Hostname, config.Port, false),
+                BufferSize = config.BufferSize,
+                ReconnectSettings = new ReconnectSettings
+                {
+                    Interval = config.ReconnectDelay,
+                    MaximumAttempts = config.ReconnectAttempts
+                }
+            });
+
+            _sock.OnRetry += OnRetryAsync;
             _sock.OnReceive += OnReceiveAsync;
             _sock.OnConnected += OnConnectedAsync;
             _sock.OnDisconnected += OnDisconnectedAsync;
@@ -362,6 +373,12 @@ namespace Victoria
 
             await _sock.SendAsync(payload)
                 .ConfigureAwait(false);
+        }
+
+        private Task OnRetryAsync(RetryEventArgs args)
+        {
+            Log(LogSeverity.Warning, args.Message);
+            return Task.CompletedTask;
         }
 
         private async Task OnConnectedAsync()
