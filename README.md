@@ -5,7 +5,7 @@
 		<img src="https://img.shields.io/badge/Discord-Support-%237289DA.svg?logo=discord&style=for-the-badge&logoWidth=20&labelColor=0d0d0d" />
 	</a>
 	<a href="https://ci.appveyor.com/project/Yucked/victoria">
-		<img src="https://img.shields.io/appveyor/ci/gruntjs/grunt.svg?label=Appveyor&logo=appveyor&style=for-the-badge&logoWidth=20&labelColor=0d0d0d" />
+		<img src="https://img.shields.io/appveyor/ci/yucked/victoria.svg?label=Appveyor&logo=appveyor&style=for-the-badge&logoWidth=20&labelColor=0d0d0d" />
 	</a>
 	<a href="https://www.nuget.org/packages/Victoria/">
 		<img src="https://img.shields.io/nuget/dt/Victoria.svg?label=Downloads&logo=nuget&style=for-the-badge&logoWidth=20&labelColor=0d0d0d" />
