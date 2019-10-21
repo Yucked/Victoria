@@ -85,12 +85,9 @@ namespace Victoria
         /// </summary>
         public async Task StopAsync()
         {
-            if (PlayerState != PlayerState.Connected
-                || PlayerState != PlayerState.Playing
-                || PlayerState != PlayerState.Paused)
+            if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
-                    "Player isn't in any of these states: Connected, Playing or Paused.");
-
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new StopPayload(VoiceChannel.GuildId);
             await _sock.SendAsync(payload)
@@ -104,11 +101,9 @@ namespace Victoria
         /// </summary>
         public async Task PauseAsync()
         {
-            if (PlayerState != PlayerState.Connected
-                || PlayerState != PlayerState.Playing
-                || PlayerState != PlayerState.Paused)
+            if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
-                    "Player isn't in any of these states: Connected, Playing or Paused.");
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new PausePayload(VoiceChannel.GuildId, true);
             await _sock.SendAsync(payload)
@@ -122,11 +117,9 @@ namespace Victoria
         /// </summary>
         public async Task ResumeAsync()
         {
-            if (PlayerState != PlayerState.Connected
-                || PlayerState != PlayerState.Playing
-                || PlayerState != PlayerState.Paused)
+            if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
-                    "Player isn't in any of these states: Connected, Playing or Paused.");
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new PausePayload(VoiceChannel.GuildId, false);
             await _sock.SendAsync(payload)
@@ -146,11 +139,9 @@ namespace Victoria
         /// </returns>
         public async Task<LavaTrack> SkipAsync(TimeSpan? delay = default)
         {
-            if (PlayerState != PlayerState.Connected
-                || PlayerState != PlayerState.Playing
-                || PlayerState != PlayerState.Paused)
+            if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
-                    "Player isn't in any of these states: Connected, Playing or Paused.");
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             if (!Queue.TryDequeue(out var track))
                 throw new InvalidOperationException("There are no more items in Queue.");
@@ -172,11 +163,9 @@ namespace Victoria
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
 
-            if (PlayerState != PlayerState.Connected
-                || PlayerState != PlayerState.Playing
-                || PlayerState != PlayerState.Paused)
+            if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
-                    "Player isn't in any of these states: Connected, Playing or Paused.");
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             if (position.Value.TotalMilliseconds > Track.Duration.TotalMilliseconds)
                 throw new ArgumentOutOfRangeException(nameof(position),
@@ -256,11 +245,9 @@ namespace Victoria
         /// </param>
         public async Task EqualizerAsync(IEnumerable<Band> bands)
         {
-            if (PlayerState != PlayerState.Connected
-                || PlayerState != PlayerState.Playing
-                || PlayerState != PlayerState.Paused)
+            if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
-                    "Player isn't in any of these states: Connected, Playing or Paused.");
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _sock.SendAsync(payload)
@@ -275,11 +262,9 @@ namespace Victoria
         /// </param>
         public async Task EqualizerAsync(params Band[] bands)
         {
-            if (PlayerState != PlayerState.Connected
-                || PlayerState != PlayerState.Playing
-                || PlayerState != PlayerState.Paused)
+            if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
-                    "Player isn't in any of these states: Connected, Playing or Paused.");
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _sock.SendAsync(payload)
