@@ -29,9 +29,13 @@ namespace Victoria.Converters
                     continue;
 
                 var index = reader.ValueSpan[0];
+                var raw = reader.GetString();
+
                 if (index == 111)
                 {
                     reader.Read();
+                    raw = reader.GetString();
+
                     if (reader.ValueTextEquals("playerUpdate"))
                     {
                         ProcessPlayerUpdate(ref reader, out var playerUpdateResponse);
@@ -86,16 +90,13 @@ namespace Victoria.Converters
                                 break;
                             }
 
-                            if (reader.ValueTextEquals("time"))
-                            {
-                                reader.Read();
-                                state.Time = DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64());
-                            }
-                            else if (reader.ValueTextEquals("position"))
-                            {
-                                reader.Read();
-                                state.Position = TimeSpan.FromMilliseconds(reader.GetInt64());
-                            }
+                            if (reader.TokenType != JsonTokenType.PropertyName)
+                                continue;
+
+                            if (reader.ValueTextEquals("time") && reader.Read())                                                            
+                                state.Time = DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64());                            
+                            else if (reader.ValueTextEquals("position") && reader.Read())                           
+                                state.Position = TimeSpan.FromMilliseconds(reader.GetInt64());                            
                         }
 
                         break;
@@ -196,7 +197,6 @@ namespace Victoria.Converters
         {
             //{"op":"event","reason":"FINISHED","type":"TrackEndEvent","track":"QAAAcwIADUxhdGUgRm9y...","guildId":"522440206494728203"}
 
-            eventResponse = new BaseEventResponse();
             var dictionary = new Dictionary<string, string>();
 
             while (reader.Read())
@@ -215,15 +215,17 @@ namespace Victoria.Converters
             }
 
             if (!dictionary.TryGetValue("type", out var type))
+            {
+                eventResponse = default;
                 return;
-
-            eventResponse.GuildId = ulong.Parse(dictionary["guildId"]);
+            }
 
             switch (type)
             {
                 case "TrackEndEvent":
                     eventResponse = new TrackEndEvent
                     {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
                         Reason = Enum.Parse<TrackEndReason>(dictionary["reason"], true),
                         Hash = dictionary["track"]
                     };
@@ -232,6 +234,7 @@ namespace Victoria.Converters
                 case "TrackExceptionEvent":
                     eventResponse = new TrackExceptionEvent
                     {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
                         Hash = dictionary["hash"],
                         Error = dictionary["error"]
                     };
@@ -240,6 +243,7 @@ namespace Victoria.Converters
                 case "TrackStuckEvent":
                     eventResponse = new TrackStuckEvent
                     {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
                         Hash = dictionary["hash"],
                         ThresholdMs = long.Parse(dictionary["thresholdMs"])
                     };
@@ -248,12 +252,18 @@ namespace Victoria.Converters
                 case "WebSocketClosedEvent":
                     eventResponse = new WebSocketClosedEvent
                     {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
                         Code = int.Parse(dictionary["code"]),
                         Reason = dictionary["reason"],
                         ByRemote = bool.Parse(dictionary["byRemote"])
                     };
                     break;
+
+                default:
+                    eventResponse = default;
+                    break;
             }
+            
         }
     }
 }
