@@ -249,9 +249,6 @@ namespace Victoria
             if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player))
                 return;
 
-            await player.StopAsync()
-                .ConfigureAwait(false);
-
             await player.DisposeAsync()
                 .ConfigureAwait(false);
 
@@ -270,6 +267,14 @@ namespace Victoria
         /// </returns>
         public bool HasPlayer(IGuild guild)
             => _playerCache.ContainsKey(guild.Id);
+
+        /// <summary>
+        /// Returns the player for the specified guild.
+        /// </summary>
+        /// <param name="guild">An instance of <see cref="IGuild"/>.</param>
+        /// <returns><see cref="bool"/></returns>
+        public LavaPlayer GetPlayer(IGuild guild)
+            => _playerCache[guild.Id];
 
         /// <summary>
         ///     Returns either an existing or null player.
@@ -423,29 +428,35 @@ namespace Victoria
                     OnStatsReceived?.Invoke(new StatsEventArgs(statsResponse));
                     break;
 
-                case TrackEndEvent trackEndEvent:
-                    if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out player))
-                        return;
+                case BaseEventResponse eventResponse:
+                    switch (eventResponse)
+                    {
+                        case TrackEndEvent trackEndEvent:
+                            if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out player))
+                                return;
 
-                    OnTrackEnded?.Invoke(new TrackEndedEventArgs(player, trackEndEvent));
-                    break;
+                            OnTrackEnded?.Invoke(new TrackEndedEventArgs(player, trackEndEvent));
+                            break;
 
-                case TrackStuckEvent trackStuckEvent:
-                    if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out player))
-                        return;
+                        case TrackStuckEvent trackStuckEvent:
+                            if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out player))
+                                return;
 
-                    OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
-                    break;
+                            OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
+                            break;
 
-                case TrackExceptionEvent trackExceptionEvent:
-                    if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out player))
-                        return;
+                        case TrackExceptionEvent trackExceptionEvent:
+                            if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out player))
+                                return;
 
-                    OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
-                    break;
+                            OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
+                            break;
 
-                case WebSocketClosedEvent socketClosedEvent:
-                    OnWebSocketClosed?.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
+                        case WebSocketClosedEvent socketClosedEvent:
+                            OnWebSocketClosed?.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
+                            break;
+                    }
+
                     break;
             }
 
