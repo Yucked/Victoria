@@ -55,7 +55,7 @@ namespace Victoria
 
         private readonly ClientSock _sock;
 
-        internal LavaPlayer(ClientSock sock, IVoiceChannel voiceChannel, ITextChannel textChannel)
+        public LavaPlayer(ClientSock sock, IVoiceChannel voiceChannel, ITextChannel textChannel)
         {
             _sock = sock;
             VoiceChannel = voiceChannel;
