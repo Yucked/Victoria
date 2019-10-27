@@ -391,6 +391,13 @@ namespace Victoria
             Volatile.Write(ref _refConnected, true);
             Log(LogSeverity.Info, "Websocket connection established.");
 
+            if (_config.EnableResume)
+            {
+                var payload = new ResumePayload(_config.ResumeKey, _config.ResumeTimeout);
+                await _sock.SendAsync(payload)
+                    .ConfigureAwait(false);
+            }
+
             await Task.Delay(0)
                 .ConfigureAwait(false);
         }

@@ -8,7 +8,7 @@ namespace Victoria.Payloads
     internal sealed class EqualizerPayload : PlayerPayload
     {
         [JsonPropertyName("bands")]
-        private IEnumerable<Band> Bands { get; }
+        public IEnumerable<Band> Bands { get; }
 
         public EqualizerPayload(ulong guildId, params Band[] bands) : base(guildId, "equalizer")
         {
