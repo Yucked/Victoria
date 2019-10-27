@@ -33,7 +33,9 @@ namespace Victoria
     }
 
     /// <summary>
+    /// Represents a single connection to a Lavalink server.
     /// </summary>
+    /// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer"/></typeparam>.
     public class LavaNode<TPlayer> : IAsyncDisposable
         where TPlayer : LavaPlayer
 
@@ -80,7 +82,7 @@ namespace Victoria
             => Volatile.Read(ref _refConnected);
 
         /// <summary>
-        ///     Collection of <see cref="TPlayer" />.
+        ///     Collection of <typeparamref name="TPlayer"/>.
         /// </summary>
         public IEnumerable<TPlayer> Players
             => _playerCache.Values;
@@ -196,12 +198,12 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Joins the specified voice channel and returns the connected <see cref="TPlayer" />.
+        ///     Joins the specified voice channel and returns the connected <typeparamref name="TPlayer"/>.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <param name="textChannel">An instance of <see cref="ITextChannel" />.</param>
         /// <returns>
-        ///     <see cref="TPlayer"/>
+        ///     <typeparamref name="TPlayer"/>
         /// </returns>
         public async Task<TPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default)
         {
@@ -252,7 +254,7 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Leaves the specified channel only if <see cref="TPlayer" /> is connected to it.
+        ///     Leaves the specified channel only if <typeparamref name="TPlayer"/> is connected to it.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
@@ -274,7 +276,7 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Checks if <see cref="TPlayer" /> exists for specified guild.
+        ///     Checks if <typeparamref name="TPlayer"/> exists for specified guild.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
         /// <returns>
@@ -295,7 +297,7 @@ namespace Victoria
         ///     Returns either an existing or null player.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
-        /// <param name="player">An instance of <see cref="TPlayer" /></param>
+        /// <param name="player">An instance of <typeparamref name="TPlayer"/></param>
         /// <returns>
         ///     <see cref="bool" />
         /// </returns>
