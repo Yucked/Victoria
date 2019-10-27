@@ -6,7 +6,7 @@ namespace Victoria.Payloads
     internal sealed class SeekPayload : PlayerPayload
     {
         [JsonPropertyName("position")]
-        private long Position { get; }
+        public long Position { get; }
 
         public SeekPayload(ulong guildId, TimeSpan position) : base(guildId, "seek")
         {

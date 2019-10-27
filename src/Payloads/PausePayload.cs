@@ -5,7 +5,7 @@ namespace Victoria.Payloads
     internal sealed class PausePayload : PlayerPayload
     {
         [JsonPropertyName("pause")]
-        private bool Pause { get; }
+        public bool Pause { get; }
 
         public PausePayload(ulong guildId, bool pause) : base(guildId, "pause")
         {
