@@ -55,6 +55,12 @@ namespace Victoria
 
         private readonly ClientSock _sock;
 
+        /// <summary>
+        /// Represents a <see cref="IGuild"/> voice connection.
+        /// </summary>
+        /// <param name="sock"><see cref="ClientSock"/></param>
+        /// <param name="voiceChannel">Voice channel to connect to.</param>
+        /// <param name="textChannel">Text channel this player is bound to.</param>
         public LavaPlayer(ClientSock sock, IVoiceChannel voiceChannel, ITextChannel textChannel)
         {
             _sock = sock;
