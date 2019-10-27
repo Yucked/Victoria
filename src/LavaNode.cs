@@ -18,9 +18,24 @@ using Victoria.Responses.WebSocket;
 
 namespace Victoria
 {
+    /// <inheritdoc />
+    public class LavaNode : LavaNode<LavaPlayer>
+    {
+        /// <inheritdoc />
+        public LavaNode(DiscordSocketClient socketClient, LavaConfig config) : base(socketClient, config)
+        {
+        }
+
+        /// <inheritdoc />
+        public LavaNode(DiscordShardedClient shardedClient, LavaConfig config) : base(shardedClient, config)
+        {
+        }
+    }
+
     /// <summary>
     /// </summary>
-    public class LavaNode : IAsyncDisposable
+    public class LavaNode<TPlayer> : IAsyncDisposable
+        where TPlayer : LavaPlayer
 
     {
         /// <summary>
@@ -65,9 +80,9 @@ namespace Victoria
             => Volatile.Read(ref _refConnected);
 
         /// <summary>
-        ///     Collection of <see cref="LavaPlayer" />.
+        ///     Collection of <see cref="TPlayer" />.
         /// </summary>
-        public IEnumerable<LavaPlayer> Players
+        public IEnumerable<TPlayer> Players
             => _playerCache.Values;
 
         private bool _refConnected;
@@ -76,7 +91,7 @@ namespace Victoria
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly BaseSocketClient _socketClient;
         private readonly ClientSock _sock;
-        private readonly ConcurrentDictionary<ulong, LavaPlayer> _playerCache;
+        private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
         private readonly HttpClient _httpClient;
 
         /// <inheritdoc />
@@ -120,7 +135,7 @@ namespace Victoria
             _jsonOptions.Converters.Add(new SearchResponseConverter());
             _jsonOptions.Converters.Add(new WebsocketResponseConverter());
 
-            _playerCache = new ConcurrentDictionary<ulong, LavaPlayer>();
+            _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri($"http://{config.Hostname}:{config.Port}")
@@ -181,14 +196,14 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Joins the specified voice channel and returns the connected <see cref="LavaPlayer" />.
+        ///     Joins the specified voice channel and returns the connected <see cref="TPlayer" />.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <param name="textChannel">An instance of <see cref="ITextChannel" />.</param>
         /// <returns>
-        ///     <see cref="LavaPlayer"/>
+        ///     <see cref="TPlayer"/>
         /// </returns>
-        public async Task<LavaPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default)
+        public async Task<TPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default)
         {
             if (voiceChannel == null)
                 throw new ArgumentNullException(nameof(voiceChannel));
@@ -199,7 +214,7 @@ namespace Victoria
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = new LavaPlayer(_sock, voiceChannel, textChannel);
+            player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _sock, voiceChannel, textChannel);
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -237,7 +252,7 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Leaves the specified channel only if <see cref="LavaPlayer" /> is connected to it.
+        ///     Leaves the specified channel only if <see cref="TPlayer" /> is connected to it.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
@@ -259,7 +274,7 @@ namespace Victoria
         }
 
         /// <summary>
-        ///     Checks if <see cref="LavaPlayer" /> exists for specified guild.
+        ///     Checks if <see cref="TPlayer" /> exists for specified guild.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
         /// <returns>
@@ -273,18 +288,18 @@ namespace Victoria
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild"/>.</param>
         /// <returns><see cref="bool"/></returns>
-        public LavaPlayer GetPlayer(IGuild guild)
+        public TPlayer GetPlayer(IGuild guild)
             => _playerCache[guild.Id];
 
         /// <summary>
         ///     Returns either an existing or null player.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
-        /// <param name="player">An instance of <see cref="LavaPlayer" /></param>
+        /// <param name="player">An instance of <see cref="TPlayer" /></param>
         /// <returns>
         ///     <see cref="bool" />
         /// </returns>
-        public bool TryGetPlayer(IGuild guild, out LavaPlayer player)
+        public bool TryGetPlayer(IGuild guild, out TPlayer player)
             => _playerCache.TryGetValue(guild.Id, out player);
 
         /// <inheritdoc />
