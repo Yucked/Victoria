@@ -87,6 +87,37 @@ namespace Victoria
         }
 
         /// <summary>
+        ///     Plays the specified track with a custom start and end time.
+        /// </summary>
+        /// <param name="track">An instance of <see cref="LavaTrack" />.</param>
+        /// <param name="startTime">Custom start time for track. Must be greater than 0.</param>
+        /// <param name="endTime">Custom end time for track. Must be less than <see cref="LavaTrack.Duration" />.</param>
+        /// <param name="noReplace">If true, this operation will be ignored if a track is already playing or paused.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Throws when start or end time are out of range.</exception>
+        /// <exception cref="InvalidOperationException">Throws when star time is bigger than end time.</exception>
+        public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan endTime, bool noReplace = false)
+        {
+            if (track == null)
+                throw new ArgumentNullException(nameof(track));
+
+            if (startTime.TotalMilliseconds < 0)
+                throw new ArgumentOutOfRangeException(nameof(startTime), "Value must be greater than 0.");
+
+            if (endTime.TotalMilliseconds < 0)
+                throw new ArgumentOutOfRangeException(nameof(endTime), "Value must be greater than 0.");
+
+            if (startTime <= endTime)
+                throw new InvalidOperationException($"{nameof(endTime)} must be greather than {nameof(startTime)}.");
+
+            var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, endTime, noReplace);
+            await _sock.SendAsync(payload)
+                .ConfigureAwait(false);
+
+            Track = track;
+            PlayerState = PlayerState.Playing;
+        }
+
+        /// <summary>
         ///     Stops the current track if any is playing.
         /// </summary>
         public async Task StopAsync()
@@ -193,56 +224,6 @@ namespace Victoria
                 .ConfigureAwait(false);
         }
 
-        /// <inheritdoc />
-        public async ValueTask DisposeAsync()
-        {
-            await StopAsync()
-                .ConfigureAwait(false);
-
-            var payload = new DestroyPayload(VoiceChannel.GuildId);
-            await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
-
-            GC.SuppressFinalize(this);
-
-            Queue.Clear();
-            Queue = default;
-            Track = null;
-            VoiceChannel = null;
-            PlayerState = PlayerState.Disconnected;
-        }
-
-        /// <summary>
-        ///     Plays the specified track with a custom start and end time.
-        /// </summary>
-        /// <param name="track">An instance of <see cref="LavaTrack" />.</param>
-        /// <param name="startTime">Custom start time for track. Must be greater than 0.</param>
-        /// <param name="endTime">Custom end time for track. Must be less than <see cref="LavaTrack.Duration" />.</param>
-        /// <param name="noReplace">If true, this operation will be ignored if a track is already playing or paused.</param>
-        /// <exception cref="ArgumentOutOfRangeException">Throws when start or end time are out of range.</exception>
-        /// <exception cref="InvalidOperationException">Throws when star time is bigger than end time.</exception>
-        public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan endTime, bool noReplace = false)
-        {
-            if (track == null)
-                throw new ArgumentNullException(nameof(track));
-
-            if (startTime.TotalMilliseconds < 0)
-                throw new ArgumentOutOfRangeException(nameof(startTime), "Value must be greater than 0.");
-
-            if (endTime.TotalMilliseconds < 0)
-                throw new ArgumentOutOfRangeException(nameof(endTime), "Value must be greater than 0.");
-
-            if (startTime <= endTime)
-                throw new InvalidOperationException($"{nameof(endTime)} must be greather than {nameof(startTime)}.");
-
-            var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, endTime, noReplace);
-            await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
-
-            Track = track;
-            PlayerState = PlayerState.Playing;
-        }
-
         /// <summary>
         ///     Change the <see cref="LavaPlayer" />'s equalizer. There are 15 bands (0-14) that can be changed.
         /// </summary>
@@ -275,6 +256,25 @@ namespace Victoria
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _sock.SendAsync(payload)
                 .ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
+        {
+            await StopAsync()
+                .ConfigureAwait(false);
+
+            var payload = new DestroyPayload(VoiceChannel.GuildId);
+            await _sock.SendAsync(payload)
+                .ConfigureAwait(false);
+
+            GC.SuppressFinalize(this);
+
+            Queue.Clear();
+            Queue = default;
+            Track = null;
+            VoiceChannel = null;
+            PlayerState = PlayerState.Disconnected;
         }
 
         internal void UpdatePlayer(Action<LavaPlayer> action)
