@@ -235,7 +235,7 @@ namespace Victoria.Converters
                     eventResponse = new TrackExceptionEvent
                     {
                         GuildId = ulong.Parse(dictionary["guildId"]),
-                        Hash = dictionary["hash"],
+                        Hash = dictionary["track"],
                         Error = dictionary["error"]
                     };
                     break;
@@ -244,7 +244,7 @@ namespace Victoria.Converters
                     eventResponse = new TrackStuckEvent
                     {
                         GuildId = ulong.Parse(dictionary["guildId"]),
-                        Hash = dictionary["hash"],
+                        Hash = dictionary["track"],
                         ThresholdMs = long.Parse(dictionary["thresholdMs"])
                     };
                     break;
