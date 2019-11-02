@@ -72,7 +72,7 @@ namespace Victoria
 
         internal LavaTrack WithDuration(long duration)
         {
-            Duration = TimeSpan.FromMilliseconds(duration);
+            Duration = duration < TimeSpan.MaxValue.Ticks ? TimeSpan.FromMilliseconds(duration) : TimeSpan.MaxValue;
             return this;
         }
 
