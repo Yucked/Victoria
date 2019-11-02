@@ -361,21 +361,20 @@ namespace Victoria
             return searchResponse;
         }
 
-        private async Task OnUserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldState,
+        private Task OnUserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldState,
             SocketVoiceState newState)
         {
             if (user.Id != _socketClient.CurrentUser.Id)
-                return;
+                return Task.CompletedTask;
 
             var guildId = newState.VoiceChannel?.Guild.Id;
 
             if (!_playerCache.TryGetValue(guildId.GetValueOrDefault(), out var player))
-                return;
+                return Task.CompletedTask;
 
             player.VoiceState = newState;
-
-            await Task.Delay(0)
-                .ConfigureAwait(false);
+            
+            return Task.CompletedTask;
         }
 
         private async Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer)
@@ -414,17 +413,14 @@ namespace Victoria
                 await _sock.SendAsync(payload)
                     .ConfigureAwait(false);
             }
-
-            await Task.Delay(0)
-                .ConfigureAwait(false);
         }
 
-        private async Task OnDisconnectedAsync(DisconnectEventArgs eventArgs)
+        private Task OnDisconnectedAsync(DisconnectEventArgs eventArgs)
         {
             Volatile.Write(ref _refConnected, false);
             Log(LogSeverity.Info, eventArgs.Message ?? eventArgs.Exception.Message);
-            await Task.Delay(0)
-                .ConfigureAwait(false);
+            
+            return Task.CompletedTask;
         }
 
         private async Task OnReceiveAsync(ReceivedEventArgs eventArgs)
@@ -438,54 +434,71 @@ namespace Victoria
             Log(LogSeverity.Debug, eventArgs.Raw);
 
             var baseWsResponse = JsonSerializer.Deserialize<BaseWsResponse>(eventArgs.Data.Span, _jsonOptions);
-
+            
             switch (baseWsResponse)
             {
                 case PlayerUpdateResponse playerUpdateResponse:
+                {
                     if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player))
                         return;
 
-                    OnPlayerUpdated?.Invoke(new PlayerUpdateEventArgs(player, playerUpdateResponse));
-                    break;
-
+                    if (OnPlayerUpdated != null)
+                        await OnPlayerUpdated.Invoke(new PlayerUpdateEventArgs(player, playerUpdateResponse));
+                
+                    return;
+                }
                 case StatsResponse statsResponse:
-                    OnStatsReceived?.Invoke(new StatsEventArgs(statsResponse));
-                    break;
-
+                {
+                    if (OnStatsReceived != null)
+                        await OnStatsReceived.Invoke(new StatsEventArgs(statsResponse));
+                
+                    return;
+                }
                 case BaseEventResponse eventResponse:
+                {
                     switch (eventResponse)
                     {
                         case TrackEndEvent trackEndEvent:
-                            if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out player))
+                        {
+                            if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out var player))
                                 return;
+                
+                            if (OnTrackEnded != null)
+                                await OnTrackEnded.Invoke(new TrackEndedEventArgs(player, trackEndEvent));
 
-                            OnTrackEnded?.Invoke(new TrackEndedEventArgs(player, trackEndEvent));
-                            break;
-
+                            return;
+                        }
                         case TrackStuckEvent trackStuckEvent:
-                            if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out player))
+                        {
+                            if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out var player))
                                 return;
+                
+                            if (OnTrackStuck != null)
+                                await OnTrackStuck.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
 
-                            OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
-                            break;
-
+                            return;
+                        }
                         case TrackExceptionEvent trackExceptionEvent:
-                            if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out player))
+                        {
+                            if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out var player))
                                 return;
+                
+                            if (OnTrackException != null)
+                                await OnTrackException.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
 
-                            OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
-                            break;
-
+                            return;
+                        }
                         case WebSocketClosedEvent socketClosedEvent:
-                            OnWebSocketClosed?.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
-                            break;
+                        {
+                            if (OnWebSocketClosed != null)
+                                await OnWebSocketClosed.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
+                            return;
+                        }
                     }
 
-                    break;
+                    return;
+                }
             }
-
-            await Task.Delay(0)
-                .ConfigureAwait(false);
         }
 
         private void Log(LogSeverity severity, string message, Exception exception = null)
