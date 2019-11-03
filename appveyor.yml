@@ -23,7 +23,7 @@ artifacts:
 deploy:
   - provider: NuGet
     api_key:
-      secure: $env:NUGET_KEY
+      secure: YqHKpsfWIqCfUbYDSv9ZgXjkg/1ddBOCIg1ClmXAr/aS5/4GPEfgh4ag+HCWVicg
 
 on_success:
   - ps: Invoke-RestMethod https://raw.githubusercontent.com/Yucked/Krypts/master/VeyorHook.ps1 -o VeyorHook.ps1
