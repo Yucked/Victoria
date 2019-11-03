@@ -46,7 +46,7 @@ namespace Victoria
         /// <summary>
         ///     Voice channel this player is connected to.
         /// </summary>
-        public IVoiceChannel VoiceChannel { get; private set; }
+        public IVoiceChannel VoiceChannel { get; internal set; }
 
         /// <summary>
         ///     Channel bound to this player.
