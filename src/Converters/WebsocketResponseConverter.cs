@@ -29,12 +29,9 @@ namespace Victoria.Converters
                     continue;
 
                 var index = reader.ValueSpan[0];
-                var raw = reader.GetString();
-
                 if (index == 111)
                 {
                     reader.Read();
-                    raw = reader.GetString();
 
                     if (reader.ValueTextEquals("playerUpdate"))
                     {
@@ -93,10 +90,10 @@ namespace Victoria.Converters
                             if (reader.TokenType != JsonTokenType.PropertyName)
                                 continue;
 
-                            if (reader.ValueTextEquals("time") && reader.Read())                                                            
-                                state.Time = DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64());                            
-                            else if (reader.ValueTextEquals("position") && reader.Read())                           
-                                state.Position = TimeSpan.FromMilliseconds(reader.GetInt64());                            
+                            if (reader.ValueTextEquals("time") && reader.Read())
+                                state.Time = DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64());
+                            else if (reader.ValueTextEquals("position") && reader.Read())
+                                state.Position = TimeSpan.FromMilliseconds(reader.GetInt64());
                         }
 
                         break;
@@ -226,7 +223,7 @@ namespace Victoria.Converters
                     eventResponse = new TrackEndEvent
                     {
                         GuildId = ulong.Parse(dictionary["guildId"]),
-                        Reason = Enum.Parse<TrackEndReason>(dictionary["reason"], true),
+                        Reason = (TrackEndReason) dictionary["reason"][0],
                         Hash = dictionary["track"]
                     };
                     break;
@@ -263,7 +260,6 @@ namespace Victoria.Converters
                     eventResponse = default;
                     break;
             }
-            
         }
     }
 }
