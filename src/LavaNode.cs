@@ -164,7 +164,7 @@ namespace Victoria
                 DiscordSocketClient socketClient => await socketClient.GetRecommendedShardCountAsync()
                     .ConfigureAwait(false),
                 DiscordShardedClient shardedClient => shardedClient.Shards.Count,
-                _                                  => 1
+                _ => 1
             };
 
             _sock.AddHeader("User-Id", $"{_socketClient.CurrentUser.Id}");
@@ -373,7 +373,7 @@ namespace Victoria
                 return Task.CompletedTask;
 
             player.VoiceState = newState;
-            
+
             return Task.CompletedTask;
         }
 
@@ -419,7 +419,7 @@ namespace Victoria
         {
             Volatile.Write(ref _refConnected, false);
             Log(LogSeverity.Info, eventArgs.Message ?? eventArgs.Exception.Message);
-            
+
             return Task.CompletedTask;
         }
 
@@ -434,7 +434,7 @@ namespace Victoria
             Log(LogSeverity.Debug, eventArgs.Raw);
 
             var baseWsResponse = JsonSerializer.Deserialize<BaseWsResponse>(eventArgs.Data.Span, _jsonOptions);
-            
+
             switch (baseWsResponse)
             {
                 case PlayerUpdateResponse playerUpdateResponse:
@@ -444,14 +444,14 @@ namespace Victoria
 
                     if (OnPlayerUpdated != null)
                         await OnPlayerUpdated.Invoke(new PlayerUpdateEventArgs(player, playerUpdateResponse));
-                
+
                     return;
                 }
                 case StatsResponse statsResponse:
                 {
                     if (OnStatsReceived != null)
                         await OnStatsReceived.Invoke(new StatsEventArgs(statsResponse));
-                
+
                     return;
                 }
                 case BaseEventResponse eventResponse:
@@ -462,7 +462,7 @@ namespace Victoria
                         {
                             if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out var player))
                                 return;
-                
+
                             if (OnTrackEnded != null)
                                 await OnTrackEnded.Invoke(new TrackEndedEventArgs(player, trackEndEvent));
 
@@ -472,7 +472,7 @@ namespace Victoria
                         {
                             if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out var player))
                                 return;
-                
+
                             if (OnTrackStuck != null)
                                 await OnTrackStuck.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
 
@@ -482,7 +482,7 @@ namespace Victoria
                         {
                             if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out var player))
                                 return;
-                
+
                             if (OnTrackException != null)
                                 await OnTrackException.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
 
