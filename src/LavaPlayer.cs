@@ -80,7 +80,7 @@ namespace Victoria
 
             var payload = new PlayPayload(VoiceChannel.GuildId, track, false);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
 
             Track = track;
             PlayerState = PlayerState.Playing;
@@ -111,7 +111,7 @@ namespace Victoria
 
             var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, endTime, noReplace);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
 
             Track = track;
             PlayerState = PlayerState.Playing;
@@ -122,13 +122,9 @@ namespace Victoria
         /// </summary>
         public async Task StopAsync()
         {
-            if (!PlayerState.EnsureState())
-                throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
-
             var payload = new StopPayload(VoiceChannel.GuildId);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
 
             PlayerState = PlayerState.Stopped;
         }
@@ -144,7 +140,7 @@ namespace Victoria
 
             var payload = new PausePayload(VoiceChannel.GuildId, true);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
 
             PlayerState = PlayerState.Paused;
         }
@@ -160,7 +156,7 @@ namespace Victoria
 
             var payload = new PausePayload(VoiceChannel.GuildId, false);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
 
             PlayerState = Track is null
                 ? PlayerState.Stopped
@@ -184,8 +180,8 @@ namespace Victoria
                 throw new InvalidOperationException("There are no more items in Queue.");
 
             await await Task.Delay(delay ?? TimeSpan.Zero)
-                .ContinueWith(_ => PlayAsync(track))
-                .ConfigureAwait(false);
+                            .ContinueWith(_ => PlayAsync(track))
+                            .ConfigureAwait(false);
 
             return track;
         }
@@ -210,7 +206,7 @@ namespace Victoria
 
             var payload = new SeekPayload(VoiceChannel.GuildId, position.Value);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -221,7 +217,7 @@ namespace Victoria
             Volume = volume;
             var payload = new VolumePayload(VoiceChannel.GuildId, volume);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -238,7 +234,7 @@ namespace Victoria
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -255,7 +251,7 @@ namespace Victoria
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -266,7 +262,7 @@ namespace Victoria
 
             var payload = new DestroyPayload(VoiceChannel.GuildId);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
 
             GC.SuppressFinalize(this);
 
