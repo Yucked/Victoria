@@ -373,6 +373,7 @@ namespace Victoria
                 return Task.CompletedTask;
 
             player.VoiceState = newState;
+            player.VoiceChannel = newState.VoiceChannel;
 
             return Task.CompletedTask;
         }
