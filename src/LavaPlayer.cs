@@ -51,7 +51,7 @@ namespace Victoria
         /// <summary>
         ///     Channel bound to this player.
         /// </summary>
-        public ITextChannel TextChannel { get; }
+        public ITextChannel TextChannel { get; internal set; }
 
         private readonly ClientSock _sock;
 
