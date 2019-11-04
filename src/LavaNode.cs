@@ -33,9 +33,10 @@ namespace Victoria
     }
 
     /// <summary>
-    /// Represents a single connection to a Lavalink server.
+    ///     Represents a single connection to a Lavalink server.
     /// </summary>
-    /// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer"/></typeparam>.
+    /// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer" /></typeparam>
+    /// .
     public class LavaNode<TPlayer> : IAsyncDisposable
         where TPlayer : LavaPlayer
 
@@ -82,7 +83,7 @@ namespace Victoria
             => Volatile.Read(ref _refConnected);
 
         /// <summary>
-        ///     Collection of <typeparamref name="TPlayer"/>.
+        ///     Collection of <typeparamref name="TPlayer" />.
         /// </summary>
         public IEnumerable<TPlayer> Players
             => _playerCache.Values;
@@ -162,9 +163,9 @@ namespace Victoria
             var shards = _socketClient switch
             {
                 DiscordSocketClient socketClient => await socketClient.GetRecommendedShardCountAsync()
-                    .ConfigureAwait(false),
+                                                                      .ConfigureAwait(false),
                 DiscordShardedClient shardedClient => shardedClient.Shards.Count,
-                _ => 1
+                _                                  => 1
             };
 
             _sock.AddHeader("User-Id", $"{_socketClient.CurrentUser.Id}");
@@ -175,7 +176,7 @@ namespace Victoria
                 _sock.AddHeader("Resume-Key", _config.ResumeKey);
 
             await _sock.ConnectAsync()
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -189,21 +190,21 @@ namespace Victoria
 
             foreach (var (_, value) in _playerCache)
                 await value.DisposeAsync()
-                    .ConfigureAwait(false);
+                           .ConfigureAwait(false);
 
             _playerCache.Clear();
 
             await _sock.DisconnectAsync()
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
         }
 
         /// <summary>
-        ///     Joins the specified voice channel and returns the connected <typeparamref name="TPlayer"/>.
+        ///     Joins the specified voice channel and returns the connected <typeparamref name="TPlayer" />.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <param name="textChannel">An instance of <see cref="ITextChannel" />.</param>
         /// <returns>
-        ///     <typeparamref name="TPlayer"/>
+        ///     <typeparamref name="TPlayer" />
         /// </returns>
         public async Task<TPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default)
         {
@@ -214,7 +215,7 @@ namespace Victoria
                 return player;
 
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
-                .ConfigureAwait(false);
+                              .ConfigureAwait(false);
 
             player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _sock, voiceChannel, textChannel);
             _playerCache.TryAdd(voiceChannel.GuildId, player);
@@ -242,19 +243,21 @@ namespace Victoria
 
             var payload = new DestroyPayload(voiceChannel.GuildId);
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
 
             await player.VoiceChannel.DisconnectAsync()
-                .ConfigureAwait(false);
+                        .ConfigureAwait(false);
 
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
-                .ConfigureAwait(false);
+                              .ConfigureAwait(false);
+
+            player.VoiceChannel = voiceChannel;
 
             Log(LogSeverity.Info, $"Moved {voiceChannel.GuildId} player to {voiceChannel.Name}.");
         }
 
         /// <summary>
-        ///     Leaves the specified channel only if <typeparamref name="TPlayer"/> is connected to it.
+        ///     Leaves the specified channel only if <typeparamref name="TPlayer" /> is connected to it.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
@@ -267,16 +270,16 @@ namespace Victoria
                 return;
 
             await player.DisposeAsync()
-                .ConfigureAwait(false);
+                        .ConfigureAwait(false);
 
             await voiceChannel.DisconnectAsync()
-                .ConfigureAwait(false);
+                              .ConfigureAwait(false);
 
             _playerCache.TryRemove(voiceChannel.GuildId, out _);
         }
 
         /// <summary>
-        ///     Checks if <typeparamref name="TPlayer"/> exists for specified guild.
+        ///     Checks if <typeparamref name="TPlayer" /> exists for specified guild.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
         /// <returns>
@@ -286,10 +289,12 @@ namespace Victoria
             => _playerCache.ContainsKey(guild.Id);
 
         /// <summary>
-        /// Returns the player for the specified guild.
+        ///     Returns the player for the specified guild.
         /// </summary>
-        /// <param name="guild">An instance of <see cref="IGuild"/>.</param>
-        /// <returns><see cref="bool"/></returns>
+        /// <param name="guild">An instance of <see cref="IGuild" />.</param>
+        /// <returns>
+        ///     <see cref="bool" />
+        /// </returns>
         public TPlayer GetPlayer(IGuild guild)
             => _playerCache[guild.Id];
 
@@ -297,12 +302,33 @@ namespace Victoria
         ///     Returns either an existing or null player.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
-        /// <param name="player">An instance of <typeparamref name="TPlayer"/></param>
+        /// <param name="player">An instance of <typeparamref name="TPlayer" /></param>
         /// <returns>
         ///     <see cref="bool" />
         /// </returns>
         public bool TryGetPlayer(IGuild guild, out TPlayer player)
             => _playerCache.TryGetValue(guild.Id, out player);
+
+        /// <summary>
+        ///     Updates text channel for the specified guild.
+        /// </summary>
+        /// <param name="guild">An instance of <see cref="IGuild" />.</param>
+        /// <param name="textChannel">An instance of <see cref="ITextChannel" />.</param>
+        /// <exception cref="ArgumentNullException">Throws if either guild or text channel is null.</exception>
+        /// <exception cref="InvalidOperationException">Throws if player doesn't exist in cache.</exception>
+        public void UpdateTextChannel(IGuild guild, ITextChannel textChannel)
+        {
+            if (guild == null)
+                throw new ArgumentNullException(nameof(textChannel), "Guild cannot be null.");
+
+            if (textChannel == null)
+                throw new ArgumentNullException(nameof(textChannel), "Text channel cannot be null.");
+
+            if (!_playerCache.TryGetValue(guild.Id, out var player))
+                throw new InvalidOperationException("Player doesn't exist in cache.");
+
+            player.TextChannel = textChannel;
+        }
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
@@ -311,7 +337,7 @@ namespace Victoria
                 .ConfigureAwait(false);
 
             await _sock.DisposeAsync()
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
 
             _playerCache.Clear();
         }
@@ -352,10 +378,10 @@ namespace Victoria
                 $"/loadtracks?identifier={WebUtility.UrlEncode(query)}");
 
             var response = await _httpClient.SendAsync(request)
-                .ConfigureAwait(false);
+                                            .ConfigureAwait(false);
 
             var content = await response.Content.ReadAsByteArrayAsync()
-                .ConfigureAwait(false);
+                                        .ConfigureAwait(false);
 
             var searchResponse = JsonSerializer.Deserialize<SearchResponse>(content.AsSpan(), _jsonOptions);
             return searchResponse;
@@ -394,7 +420,7 @@ namespace Victoria
             };
 
             await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+                       .ConfigureAwait(false);
         }
 
         private Task OnRetryAsync(RetryEventArgs args)
@@ -412,7 +438,7 @@ namespace Victoria
             {
                 var payload = new ResumePayload(_config.ResumeKey, _config.ResumeTimeout);
                 await _sock.SendAsync(payload)
-                    .ConfigureAwait(false);
+                           .ConfigureAwait(false);
             }
         }
 
@@ -509,7 +535,7 @@ namespace Victoria
 
             var logMessage = new LogMessage(severity, nameof(Victoria), message, exception);
             OnLog?.Invoke(logMessage)
-                .ConfigureAwait(false);
+                 .ConfigureAwait(false);
         }
     }
 }
