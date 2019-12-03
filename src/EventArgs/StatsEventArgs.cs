@@ -1,13 +1,11 @@
 using System;
 using Victoria.Responses.WebSocket;
 
-namespace Victoria.EventArgs
-{
+namespace Victoria.EventArgs {
     /// <summary>
     ///     Information about Lavalink statistics.
     /// </summary>
-    public sealed class StatsEventArgs
-    {
+    public sealed class StatsEventArgs {
         /// <summary>
         ///     Connected players.
         /// </summary>
@@ -38,8 +36,7 @@ namespace Victoria.EventArgs
         /// </summary>
         public Cpu Cpu { get; }
 
-        internal StatsEventArgs(StatsResponse response)
-        {
+        internal StatsEventArgs(StatsResponse response) {
             Players = response.Players;
             PlayingPlayers = response.PlayingPlayers;
             Uptime = new TimeSpan(response.Uptime);
@@ -52,8 +49,7 @@ namespace Victoria.EventArgs
     /// <summary>
     ///     General memory information about Lavalink.
     /// </summary>
-    public struct Memory
-    {
+    public struct Memory {
         /// <summary>
         ///     Memory used by Lavalink.
         /// </summary>
@@ -78,8 +74,7 @@ namespace Victoria.EventArgs
     /// <summary>
     ///     Audio frames.
     /// </summary>
-    public struct Frames
-    {
+    public struct Frames {
         /// <summary>
         ///     Audio frames sent.
         /// </summary>
@@ -99,8 +94,7 @@ namespace Victoria.EventArgs
     /// <summary>
     ///     Machine's CPU info.
     /// </summary>
-    public struct Cpu
-    {
+    public struct Cpu {
         /// <summary>
         ///     CPU Cores.
         /// </summary>

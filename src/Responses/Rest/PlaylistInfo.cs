@@ -1,10 +1,8 @@
-namespace Victoria.Responses.Rest
-{
+namespace Victoria.Responses.Rest {
     /// <summary>
     ///     Only available if LoadType was PlaylistLoaded.
     /// </summary>
-    public struct PlaylistInfo
-    {
+    public struct PlaylistInfo {
         /// <summary>
         ///     Playlist name.
         /// </summary>
@@ -15,10 +13,12 @@ namespace Victoria.Responses.Rest
         /// </summary>
         public int SelectedTrack { get; private set; }
 
-        internal void WithName(string name)
-            => Name = name;
+        internal void WithName(string name) {
+            Name = name;
+        }
 
-        internal void WithTrack(int track)
-            => SelectedTrack = track;
+        internal void WithTrack(int track) {
+            SelectedTrack = track;
+        }
     }
 }

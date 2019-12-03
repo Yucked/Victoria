@@ -2,12 +2,10 @@
 using System.Buffers.Text;
 using System.Text;
 
-namespace Victoria.Decoder
-{
+namespace Victoria.Decoder {
     /// <summary>
     /// </summary>
-    public readonly struct TrackDecoder
-    {
+    public readonly struct TrackDecoder {
         /// <summary>
         ///     Decodes the hash for the specified track.
         /// </summary>
@@ -15,8 +13,7 @@ namespace Victoria.Decoder
         /// <returns>
         ///     <see cref="LavaTrack" />
         /// </returns>
-        public static LavaTrack Decode(string hash)
-        {
+        public static LavaTrack Decode(string hash) {
             Span<byte> hashBuffer = stackalloc byte[hash.Length];
             Encoding.ASCII.GetBytes(hash, hashBuffer);
             Base64.DecodeFromUtf8InPlace(hashBuffer, out var bytesWritten);

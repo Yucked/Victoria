@@ -1,33 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <LangVersion>8.0</LangVersion>
-        <TargetFramework>netcoreapp3.0</TargetFramework>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
+	<PropertyGroup>
+		<LangVersion>8.0</LangVersion>
+		<TargetFramework>netcoreapp3.0</TargetFramework>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
 
-    <PropertyGroup>
-        <Version>5.0.3</Version>
-        <Title>Victoria</Title>
-        <Authors>Yucked</Authors>
-        <Copyright>2018 - 2019 Yucked. All rights reserved.</Copyright>
-        <PackageIcon>Logo.png</PackageIcon>
-        <PackageTags>Lavalink, Wrapper, Discord, Discord.NET, Music, Yucked, Lavalink NET, Sharplink</PackageTags>
-        <PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
-        <Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
-        <PackageReleaseNotes>
-            https://github.com/Yucked/Victoria/wiki/📔-RELEASE-NOTES#v5x
-        </PackageReleaseNotes>
-    </PropertyGroup>
+	<PropertyGroup>
+		<Version>5.0.4</Version>
+		<Title>Victoria</Title>
+		<Authors>Yucked</Authors>
+		<Copyright>2018 - 2019 Yucked. All rights reserved.</Copyright>
+		<PackageIcon>Logo.png</PackageIcon>
+		<PackageTags>Lavalink, Wrapper, Discord, Discord.NET, Music, Yucked, Lavalink NET, Sharplink</PackageTags>
+		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
+		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
+		<PackageReleaseNotes>
+			Fixed events that require player updating: TrackEnded, PlayerUpdated.
+		</PackageReleaseNotes>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Discord.Net.WebSocket" Version="2.1.1"/>
-        <PackageReference Include="Socks" Version="1.1.0"/>
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Discord.Net.WebSocket" Version="2.1.1"/>
+		<PackageReference Include="Socks" Version="1.1.0"/>
+	</ItemGroup>
 
-    <ItemGroup>
-        <None Include="Logo.png" Pack="true" Visible="false" PackagePath=""/>
-    </ItemGroup>
+	<ItemGroup>
+		<None Include="Logo.png" Pack="true" Visible="false" PackagePath=""/>
+	</ItemGroup>
 
 </Project>

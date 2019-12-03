@@ -1,22 +1,21 @@
 using Victoria.Enums;
 
-namespace Victoria
-{
+namespace Victoria {
     /// <summary>
-    ///   
     /// </summary>
-    public static class VictoriaExtensions
-    {
+    public static class VictoriaExtensions {
         /// <summary>
-        /// Whether the next track should be played or not.
+        ///     Whether the next track should be played or not.
         /// </summary>
         /// <param name="trackEndReason">Track end reason given by Lavalink.</param>
-        public static bool ShouldPlayNext(this TrackEndReason trackEndReason)
-            => trackEndReason == TrackEndReason.Finished || trackEndReason == TrackEndReason.LoadFailed;
+        public static bool ShouldPlayNext(this TrackEndReason trackEndReason) {
+            return trackEndReason == TrackEndReason.Finished || trackEndReason == TrackEndReason.LoadFailed;
+        }
 
-        internal static bool EnsureState(this PlayerState state)
-            => state == PlayerState.Connected
-               || state == PlayerState.Playing
-               || state == PlayerState.Paused;
+        internal static bool EnsureState(this PlayerState state) {
+            return state == PlayerState.Connected
+                   || state == PlayerState.Playing
+                   || state == PlayerState.Paused;
+        }
     }
 }
