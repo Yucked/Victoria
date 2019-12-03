@@ -1,10 +1,8 @@
-namespace Victoria.Enums
-{
+namespace Victoria.Enums {
     /// <summary>
     ///     Specifies the reason for why the track ended.
     /// </summary>
-    public enum TrackEndReason : byte
-    {
+    public enum TrackEndReason : byte {
         /// <summary>
         ///     This means that the track itself emitted a terminator. This is usually caused by the track reaching the end,
         ///     however it will also be used when it ends due to an exception.
@@ -18,7 +16,7 @@ namespace Victoria.Enums
 
         /// <summary>
         ///     The track was stopped due to the player being stopped by either calling
-        ///     <see cref="LavaPlayer.StopAsync"/> or <see cref="LavaPlayer.PlayAsync(null)"/>.
+        ///     <see cref="LavaPlayer.StopAsync" /> or <see cref="LavaPlayer.PlayAsync(LavaTrack)" />.
         /// </summary>
         Stopped = (byte) 'S',
 
