@@ -1,10 +1,8 @@
-namespace Victoria.Responses.Rest
-{
+namespace Victoria.Responses.Rest {
     /// <summary>
     ///     If LoadType was LoadFailed then Exception is returned.
     /// </summary>
-    public struct RestException
-    {
+    public struct RestException {
         /// <summary>
         ///     Details why the track failed to load.
         /// </summary>
@@ -16,10 +14,12 @@ namespace Victoria.Responses.Rest
         /// </summary>
         public string Severity { get; private set; }
 
-        internal void WithMessage(string message)
-            => Message = message;
+        internal void WithMessage(string message) {
+            Message = message;
+        }
 
-        internal void WithSeverity(string severity)
-            => Severity = severity;
+        internal void WithSeverity(string severity) {
+            Severity = severity;
+        }
     }
 }

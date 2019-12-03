@@ -1,9 +1,7 @@
-namespace Victoria.Enums
-{
+namespace Victoria.Enums {
     /// <summary>
     /// </summary>
-    public enum LoadType : byte
-    {
+    public enum LoadType : byte {
         /// <summary>
         ///     Returned when a single track is loaded.
         /// </summary>

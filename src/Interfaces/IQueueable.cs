@@ -1,8 +1,5 @@
-namespace Victoria.Interfaces
-{
+namespace Victoria.Interfaces {
     /// <summary>
     /// </summary>
-    public interface IQueueable
-    {
-    }
+    public interface IQueueable { }
 }

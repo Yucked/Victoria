@@ -1,12 +1,10 @@
 using Victoria.Responses.WebSocket;
 
-namespace Victoria.EventArgs
-{
+namespace Victoria.EventArgs {
     /// <summary>
     ///     Discord's voice websocket event.
     /// </summary>
-    public struct WebSocketClosedEventArgs
-    {
+    public struct WebSocketClosedEventArgs {
         /// <summary>
         ///     Guild's voice connection.
         /// </summary>
@@ -27,8 +25,7 @@ namespace Victoria.EventArgs
         /// </summary>
         public bool ByRemote { get; }
 
-        internal WebSocketClosedEventArgs(WebSocketClosedEvent closedEvent)
-        {
+        internal WebSocketClosedEventArgs(WebSocketClosedEvent closedEvent) {
             GuildId = closedEvent.GuildId;
             Code = closedEvent.Code;
             Reason = closedEvent.Reason;

@@ -1,12 +1,10 @@
 using System;
 using Discord;
 
-namespace Victoria
-{
+namespace Victoria {
     /// <summary>
     /// </summary>
-    public sealed class LavaConfig
-    {
+    public sealed class LavaConfig {
         /// <summary>
         /// </summary>
         public bool EnableResume { get; set; } = false;
@@ -52,7 +50,7 @@ namespace Victoria
         /// <summary>
         ///     Log serverity for logging everything.
         /// </summary>
-        public LogSeverity LogSeverity { get; set; } = Discord.LogSeverity.Debug;
+        public LogSeverity LogSeverity { get; set; } = LogSeverity.Debug;
 
         /// <summary>
         ///     Max buffer size for receiving websocket message.

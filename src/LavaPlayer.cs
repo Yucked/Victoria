@@ -6,13 +6,10 @@ using Socks;
 using Victoria.Enums;
 using Victoria.Payloads;
 
-namespace Victoria
-{
+namespace Victoria {
     /// <summary>
     /// </summary>
-    public class LavaPlayer : IAsyncDisposable
-
-    {
+    public class LavaPlayer : IAsyncDisposable {
         /// <summary>
         ///     Player's current voice state.
         /// </summary>
@@ -56,31 +53,49 @@ namespace Victoria
         private readonly ClientSock _sock;
 
         /// <summary>
-        /// Represents a <see cref="IGuild"/> voice connection.
+        ///     Represents a <see cref="IGuild" /> voice connection.
         /// </summary>
-        /// <param name="sock"><see cref="ClientSock"/></param>
+        /// <param name="sock">
+        ///     <see cref="ClientSock" />
+        /// </param>
         /// <param name="voiceChannel">Voice channel to connect to.</param>
         /// <param name="textChannel">Text channel this player is bound to.</param>
-        public LavaPlayer(ClientSock sock, IVoiceChannel voiceChannel, ITextChannel textChannel)
-        {
+        public LavaPlayer(ClientSock sock, IVoiceChannel voiceChannel, ITextChannel textChannel) {
             _sock = sock;
             VoiceChannel = voiceChannel;
             TextChannel = textChannel;
             Queue = new DefaultQueue<LavaTrack>(69);
         }
 
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync() {
+            await StopAsync()
+                .ConfigureAwait(false);
+
+            var payload = new DestroyPayload(VoiceChannel.GuildId);
+            await _sock.SendAsync(payload)
+                .ConfigureAwait(false);
+
+            GC.SuppressFinalize(this);
+
+            Queue.Clear();
+            Queue = default;
+            Track = null;
+            VoiceChannel = null;
+            PlayerState = PlayerState.Disconnected;
+        }
+
         /// <summary>
         ///     Plays the specified track.
         /// </summary>
         /// <param name="track">An instance of <see cref="LavaTrack" />.</param>
-        public async Task PlayAsync(LavaTrack track)
-        {
+        public async Task PlayAsync(LavaTrack track) {
             if (track == null)
                 throw new ArgumentNullException(nameof(track));
 
             var payload = new PlayPayload(VoiceChannel.GuildId, track, false);
             await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             Track = track;
             PlayerState = PlayerState.Playing;
@@ -95,8 +110,7 @@ namespace Victoria
         /// <param name="noReplace">If true, this operation will be ignored if a track is already playing or paused.</param>
         /// <exception cref="ArgumentOutOfRangeException">Throws when start or end time are out of range.</exception>
         /// <exception cref="InvalidOperationException">Throws when star time is bigger than end time.</exception>
-        public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan endTime, bool noReplace = false)
-        {
+        public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan endTime, bool noReplace = false) {
             if (track == null)
                 throw new ArgumentNullException(nameof(track));
 
@@ -111,7 +125,7 @@ namespace Victoria
 
             var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, endTime, noReplace);
             await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             Track = track;
             PlayerState = PlayerState.Playing;
@@ -120,11 +134,10 @@ namespace Victoria
         /// <summary>
         ///     Stops the current track if any is playing.
         /// </summary>
-        public async Task StopAsync()
-        {
+        public async Task StopAsync() {
             var payload = new StopPayload(VoiceChannel.GuildId);
             await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             PlayerState = PlayerState.Stopped;
         }
@@ -132,15 +145,14 @@ namespace Victoria
         /// <summary>
         ///     Pauses the current track if any is playing.
         /// </summary>
-        public async Task PauseAsync()
-        {
+        public async Task PauseAsync() {
             if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new PausePayload(VoiceChannel.GuildId, true);
             await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             PlayerState = PlayerState.Paused;
         }
@@ -148,15 +160,14 @@ namespace Victoria
         /// <summary>
         ///     Resumes the current track if any is playing.
         /// </summary>
-        public async Task ResumeAsync()
-        {
+        public async Task ResumeAsync() {
             if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new PausePayload(VoiceChannel.GuildId, false);
             await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             PlayerState = Track is null
                 ? PlayerState.Stopped
@@ -170,8 +181,7 @@ namespace Victoria
         /// <returns>
         ///     <see cref="LavaTrack" />
         /// </returns>
-        public async Task<LavaTrack> SkipAsync(TimeSpan? delay = default)
-        {
+        public async Task<LavaTrack> SkipAsync(TimeSpan? delay = default) {
             if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
@@ -180,8 +190,8 @@ namespace Victoria
                 throw new InvalidOperationException("There are no more items in Queue.");
 
             await await Task.Delay(delay ?? TimeSpan.Zero)
-                            .ContinueWith(_ => PlayAsync(track))
-                            .ConfigureAwait(false);
+                .ContinueWith(_ => PlayAsync(track))
+                .ConfigureAwait(false);
 
             return track;
         }
@@ -191,8 +201,7 @@ namespace Victoria
         /// </summary>
         /// <param name="position">Position must be less than <see cref="LavaTrack.Duration" />.</param>
         /// <returns></returns>
-        public async Task SeekAsync(TimeSpan? position)
-        {
+        public async Task SeekAsync(TimeSpan? position) {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
 
@@ -206,75 +215,52 @@ namespace Victoria
 
             var payload = new SeekPayload(VoiceChannel.GuildId, position.Value);
             await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         ///     Changes the current volume and updates <see cref="Volume" />.
         /// </summary>
-        public async Task UpdateVolumeAsync(ushort volume)
-        {
+        public async Task UpdateVolumeAsync(ushort volume) {
             Volume = volume;
             var payload = new VolumePayload(VoiceChannel.GuildId, volume);
             await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        ///     Change the <see cref="LavaPlayer" />'s equalizer. There are 15 bands (0-14) that can be changed.
-        /// </summary>
-        /// <param name="bands">
-        ///     <see cref="Band" />
-        /// </param>
-        public async Task EqualizerAsync(IEnumerable<Band> bands)
-        {
-            if (!PlayerState.EnsureState())
-                throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
-
-            var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
-            await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        ///     Change the <see cref="LavaPlayer" />'s equalizer. There are 15 bands (0-14) that can be changed.
-        /// </summary>
-        /// <param name="bands">
-        ///     <see cref="Band" />
-        /// </param>
-        public async Task EqualizerAsync(params Band[] bands)
-        {
-            if (!PlayerState.EnsureState())
-                throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
-
-            var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
-            await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
-        }
-
-        /// <inheritdoc />
-        public async ValueTask DisposeAsync()
-        {
-            await StopAsync()
                 .ConfigureAwait(false);
-
-            var payload = new DestroyPayload(VoiceChannel.GuildId);
-            await _sock.SendAsync(payload)
-                       .ConfigureAwait(false);
-
-            GC.SuppressFinalize(this);
-
-            Queue.Clear();
-            Queue = default;
-            Track = null;
-            VoiceChannel = null;
-            PlayerState = PlayerState.Disconnected;
         }
 
-        internal void UpdatePlayer(Action<LavaPlayer> action)
-        {
+        /// <summary>
+        ///     Change the <see cref="LavaPlayer" />'s equalizer. There are 15 bands (0-14) that can be changed.
+        /// </summary>
+        /// <param name="bands">
+        ///     <see cref="Band" />
+        /// </param>
+        public async Task EqualizerAsync(IEnumerable<Band> bands) {
+            if (!PlayerState.EnsureState())
+                throw new InvalidOperationException(
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
+
+            var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
+            await _sock.SendAsync(payload)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        ///     Change the <see cref="LavaPlayer" />'s equalizer. There are 15 bands (0-14) that can be changed.
+        /// </summary>
+        /// <param name="bands">
+        ///     <see cref="Band" />
+        /// </param>
+        public async Task EqualizerAsync(params Band[] bands) {
+            if (!PlayerState.EnsureState())
+                throw new InvalidOperationException(
+                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
+
+            var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
+            await _sock.SendAsync(payload)
+                .ConfigureAwait(false);
+        }
+
+        internal void UpdatePlayer(Action<LavaPlayer> action) {
             action.Invoke(this);
         }
     }

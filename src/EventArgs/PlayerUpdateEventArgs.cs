@@ -1,13 +1,11 @@
 ﻿using System;
 using Victoria.Responses.WebSocket;
 
-namespace Victoria.EventArgs
-{
+namespace Victoria.EventArgs {
     /// <summary>
     ///     Contains information about track position.
     /// </summary>
-    public readonly struct PlayerUpdateEventArgs
-    {
+    public readonly struct PlayerUpdateEventArgs {
         /// <summary>
         ///     Player for which this event fired.
         /// </summary>
@@ -23,14 +21,12 @@ namespace Victoria.EventArgs
         /// </summary>
         public TimeSpan Position { get; }
 
-        internal PlayerUpdateEventArgs(LavaPlayer player, PlayerUpdateResponse response)
-        {
+        internal PlayerUpdateEventArgs(LavaPlayer player, PlayerUpdateResponse response) {
             Player = player;
             Track = player.Track;
             Position = response.State.Position;
 
-            player.UpdatePlayer(x =>
-            {
+            player.UpdatePlayer(x => {
                 player.Track.WithPosition((long) response.State.Position.TotalMilliseconds);
                 player.LastUpdate = response.State.Time;
             });

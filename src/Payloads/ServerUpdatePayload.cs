@@ -1,9 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Victoria.Payloads
-{
-    internal sealed class ServerUpdatePayload : BaseLavaPayload
-    {
+namespace Victoria.Payloads {
+    internal sealed class ServerUpdatePayload : BaseLavaPayload {
         [JsonPropertyName("sessionId")]
         public string SessionId { get; set; }
 
@@ -13,13 +11,10 @@ namespace Victoria.Payloads
         [JsonPropertyName("event")]
         public VoiceServerPayload VoiceServerPayload { get; set; }
 
-        public ServerUpdatePayload() : base("voiceUpdate")
-        {
-        }
+        public ServerUpdatePayload() : base("voiceUpdate") { }
     }
 
-    internal struct VoiceServerPayload
-    {
+    internal struct VoiceServerPayload {
         [JsonPropertyName("token")]
         public string Token { get; set; }
 

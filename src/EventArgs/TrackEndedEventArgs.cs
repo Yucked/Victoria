@@ -3,13 +3,11 @@ using Victoria.Enums;
 using Victoria.Responses.WebSocket;
 using PlayerState = Victoria.Enums.PlayerState;
 
-namespace Victoria.EventArgs
-{
+namespace Victoria.EventArgs {
     /// <summary>
     ///     Information about track that ended.
     /// </summary>
-    public readonly struct TrackEndedEventArgs
-    {
+    public readonly struct TrackEndedEventArgs {
         /// <summary>
         ///     Player for which this event fired.
         /// </summary>
@@ -25,8 +23,7 @@ namespace Victoria.EventArgs
         /// </summary>
         public TrackEndReason Reason { get; }
 
-        internal TrackEndedEventArgs(LavaPlayer player, TrackEndEvent endEvent)
-        {
+        internal TrackEndedEventArgs(LavaPlayer player, TrackEndEvent endEvent) {
             Player = player;
             Track = TrackDecoder.Decode(endEvent.Hash);
             Reason = endEvent.Reason;
@@ -34,8 +31,7 @@ namespace Victoria.EventArgs
             if (endEvent.Reason == TrackEndReason.Replaced)
                 return;
 
-            player.UpdatePlayer(x =>
-            {
+            player.UpdatePlayer(x => {
                 x.PlayerState = PlayerState.Stopped;
                 x.Track = default;
             });
