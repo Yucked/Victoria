@@ -2,13 +2,11 @@ using System;
 using Victoria.Decoder;
 using Victoria.Responses.WebSocket;
 
-namespace Victoria.EventArgs
-{
+namespace Victoria.EventArgs {
     /// <summary>
     ///     Information about track that got stuck.
     /// </summary>
-    public readonly struct TrackStuckEventArgs
-    {
+    public readonly struct TrackStuckEventArgs {
         /// <summary>
         ///     Player for which this event fired.
         /// </summary>
@@ -24,8 +22,7 @@ namespace Victoria.EventArgs
         /// </summary>
         public TimeSpan Threshold { get; }
 
-        internal TrackStuckEventArgs(LavaPlayer player, TrackStuckEvent stuckEvent)
-        {
+        internal TrackStuckEventArgs(LavaPlayer player, TrackStuckEvent stuckEvent) {
             Player = player;
             Track = TrackDecoder.Decode(stuckEvent.Hash);
             Threshold = new TimeSpan(stuckEvent.ThresholdMs);

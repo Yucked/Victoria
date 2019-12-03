@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using Victoria.Interfaces;
 
-namespace Victoria
-{
+namespace Victoria {
     /// <summary>
     ///     A queue based off of <see cref="LinkedList{T}" />.
     /// </summary>
     /// <typeparam name="T">
     ///     <see cref="IQueueable" />
     /// </typeparam>
-    public readonly struct DefaultQueue<T> where T : IQueueable
-    {
+    public readonly struct DefaultQueue<T> where T : IQueueable {
         private readonly LinkedList<T> _list;
         private readonly Random _random;
 
@@ -22,8 +20,7 @@ namespace Victoria
         {
             get
             {
-                lock (_list)
-                {
+                lock (_list) {
                     return _list.Count;
                 }
             }
@@ -34,8 +31,7 @@ namespace Victoria
         {
             get
             {
-                lock (_list)
-                {
+                lock (_list) {
                     for (var node = _list.First; node != null; node = node.Next)
                         yield return node.Value;
                 }
@@ -43,8 +39,7 @@ namespace Victoria
         }
 
         /// <inheritdoc cref="DefaultQueue{T}" />
-        public DefaultQueue(int randomSeed)
-        {
+        public DefaultQueue(int randomSeed) {
             _list = new LinkedList<T>();
             _random = new Random(randomSeed);
         }
@@ -55,10 +50,8 @@ namespace Victoria
         /// <param name="value">
         ///     Any object that inherits <see cref="IQueueable" />.
         /// </param>
-        public void Enqueue(T value)
-        {
-            lock (_list)
-            {
+        public void Enqueue(T value) {
+            lock (_list) {
                 _list.AddLast(value);
             }
         }
@@ -70,19 +63,15 @@ namespace Victoria
         /// <returns>
         ///     <see cref="bool" />
         /// </returns>
-        public bool TryDequeue(out T value)
-        {
-            lock (_list)
-            {
-                if (_list.Count < 1)
-                {
+        public bool TryDequeue(out T value) {
+            lock (_list) {
+                if (_list.Count < 1) {
                     value = default;
                     return false;
                 }
 
                 var result = _list.First.Value;
-                if (result == null)
-                {
+                if (result == null) {
                     value = default;
                     return false;
                 }
@@ -99,10 +88,8 @@ namespace Victoria
         /// <returns>
         ///     Returns first item of type <see cref="IQueueable" />.
         /// </returns>
-        public T Peek()
-        {
-            lock (_list)
-            {
+        public T Peek() {
+            lock (_list) {
                 return _list.First.Value;
             }
         }
@@ -111,10 +98,8 @@ namespace Victoria
         ///     Removes an item from queue.
         /// </summary>
         /// <param name="value">Item to remove.</param>
-        public void Remove(T value)
-        {
-            lock (_list)
-            {
+        public void Remove(T value) {
+            lock (_list) {
                 _list.Remove(value);
             }
         }
@@ -122,10 +107,8 @@ namespace Victoria
         /// <summary>
         ///     Clears the queue.
         /// </summary>
-        public void Clear()
-        {
-            lock (_list)
-            {
+        public void Clear() {
+            lock (_list) {
                 _list.Clear();
             }
         }
@@ -133,17 +116,14 @@ namespace Victoria
         /// <summary>
         ///     Shuffles all the items in the queue.
         /// </summary>
-        public void Shuffle()
-        {
-            lock (_list)
-            {
+        public void Shuffle() {
+            lock (_list) {
                 if (_list.Count < 2)
                     return;
 
                 var shadow = new T[_list.Count];
                 var i = 0;
-                for (var node = _list.First; !(node is null); node = node.Next)
-                {
+                for (var node = _list.First; !(node is null); node = node.Next) {
                     var j = _random.Next(i + 1);
                     if (i != j)
                         shadow[i] = shadow[j];
@@ -164,16 +144,12 @@ namespace Victoria
         /// <returns>
         ///     Returns the removed item.
         /// </returns>
-        public T RemoveAt(int index)
-        {
-            lock (_list)
-            {
+        public T RemoveAt(int index) {
+            lock (_list) {
                 var currentNode = _list.First;
 
-                for (var i = 0; i <= index && currentNode != null; i++)
-                {
-                    if (i != index)
-                    {
+                for (var i = 0; i <= index && currentNode != null; i++) {
+                    if (i != index) {
                         currentNode = currentNode.Next;
                         continue;
                     }
@@ -191,15 +167,11 @@ namespace Victoria
         /// </summary>
         /// <param name="from">Start index.</param>
         /// <param name="to">End index.</param>
-        public void RemoveRange(int from, int to)
-        {
-            lock (_list)
-            {
+        public void RemoveRange(int from, int to) {
+            lock (_list) {
                 var currentNode = _list.First;
-                for (var i = 0; i <= to && currentNode != null; i++)
-                {
-                    if (from <= i)
-                    {
+                for (var i = 0; i <= to && currentNode != null; i++) {
+                    if (from <= i) {
                         _list.Remove(currentNode);
                         currentNode = currentNode.Next;
                         continue;

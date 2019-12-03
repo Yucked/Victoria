@@ -1,9 +1,7 @@
-namespace Victoria.Enums
-{
+namespace Victoria.Enums {
     /// <summary>
     /// </summary>
-    public enum PlayerState
-    {
+    public enum PlayerState {
         /// <summary>
         /// </summary>
         Connected,

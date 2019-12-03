@@ -8,20 +8,16 @@ using Victoria.EventArgs;
 using Victoria.Responses.WebSocket;
 using PlayerState = Victoria.Responses.WebSocket.PlayerState;
 
-namespace Victoria.Converters
-{
-    internal sealed class WebsocketResponseConverter : JsonConverter<BaseWsResponse>
-    {
+namespace Victoria.Converters {
+    internal sealed class WebsocketResponseConverter : JsonConverter<BaseWsResponse> {
         /// <inheritdoc />
         public override BaseWsResponse Read(ref Utf8JsonReader reader, Type typeToConvert,
-            JsonSerializerOptions options)
-        {
+                                            JsonSerializerOptions options) {
             if (reader.TokenType != JsonTokenType.StartObject)
                 throw new JsonException();
 
             var response = new BaseWsResponse();
-            while (reader.Read())
-            {
+            while (reader.Read()) {
                 if (reader.TokenType == JsonTokenType.EndObject)
                     break;
 
@@ -29,48 +25,44 @@ namespace Victoria.Converters
                     continue;
 
                 var index = reader.ValueSpan[0];
-                if (index == 111)
-                {
+                if (index == 111) {
                     reader.Read();
 
-                    if (reader.ValueTextEquals("playerUpdate"))
-                    {
+                    if (reader.ValueTextEquals("playerUpdate")) {
                         ProcessPlayerUpdate(ref reader, out var playerUpdateResponse);
                         response = playerUpdateResponse;
                     }
-                    else if (reader.ValueTextEquals("event"))
-                    {
+                    else if (reader.ValueTextEquals("event")) {
                         ProcessEvent(ref reader, out var eventResponse);
                         response = eventResponse;
                     }
-                    else
+                    else {
                         throw new JsonException("Unhandled OP.");
+                    }
                 }
-                else if (index == 112)
-                {
+                else if (index == 112) {
                     ProcessStats(ref reader, out var statsResponse);
                     response = statsResponse;
                 }
-                else
+                else {
                     throw new JsonException("Index was out of range. Only handled indexes are: 111, 112.");
+                }
             }
 
             return response;
         }
 
         /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, BaseWsResponse value, JsonSerializerOptions options)
-            => throw new NotImplementedException("This method can't be used for writing.'");
+        public override void Write(Utf8JsonWriter writer, BaseWsResponse value, JsonSerializerOptions options) {
+            throw new NotImplementedException("This method can't be used for writing.'");
+        }
 
-        private void ProcessPlayerUpdate(ref Utf8JsonReader reader, out PlayerUpdateResponse playerUpdateResponse)
-        {
+        private void ProcessPlayerUpdate(ref Utf8JsonReader reader, out PlayerUpdateResponse playerUpdateResponse) {
             //    {"op":"playerUpdate","state":{"position":4720,"time":1566866929606},"guildId":"522440206494728203"}
 
             playerUpdateResponse = new PlayerUpdateResponse();
             while (reader.Read())
-            {
-                switch (reader.TokenType)
-                {
+                switch (reader.TokenType) {
                     case JsonTokenType.PropertyName when reader.ValueTextEquals("guildId"):
                         reader.Read();
                         playerUpdateResponse.GuildId = ulong.Parse(reader.GetString());
@@ -79,10 +71,8 @@ namespace Victoria.Converters
                     case JsonTokenType.PropertyName when reader.ValueTextEquals("state"):
                         var state = new PlayerState();
 
-                        while (reader.Read())
-                        {
-                            if (reader.TokenType == JsonTokenType.EndObject)
-                            {
+                        while (reader.Read()) {
+                            if (reader.TokenType == JsonTokenType.EndObject) {
                                 playerUpdateResponse.State = state;
                                 break;
                             }
@@ -98,11 +88,9 @@ namespace Victoria.Converters
 
                         break;
                 }
-            }
         }
 
-        private void ProcessStats(ref Utf8JsonReader reader, out StatsResponse statsResponse)
-        {
+        private void ProcessStats(ref Utf8JsonReader reader, out StatsResponse statsResponse) {
             //    {"playingPlayers":0,"op":"stats",
             //    "memory":{"reservable":1234567890,"used":1234567890,"free":1234567890,"allocated":1234567890},
             //    "players":0,"cpu":{"cores":4,"systemLoad":0,"lavalinkLoad":0.27354256456787324},"uptime":33731}
@@ -112,8 +100,7 @@ namespace Victoria.Converters
             if (reader.ValueTextEquals("playingPlayers") && reader.Read())
                 statsResponse.Players = reader.GetInt32();
 
-            while (reader.Read())
-            {
+            while (reader.Read()) {
                 if (reader.TokenType == JsonTokenType.EndObject)
                     break;
 
@@ -121,11 +108,9 @@ namespace Victoria.Converters
                     continue;
 
                 // MEMORY OBJECT
-                if (reader.ValueTextEquals("memory") && reader.Read())
-                {
+                if (reader.ValueTextEquals("memory") && reader.Read()) {
                     var memory = new Memory();
-                    while (reader.Read())
-                    {
+                    while (reader.Read()) {
                         if (reader.TokenType == JsonTokenType.EndObject)
                             break;
 
@@ -141,15 +126,14 @@ namespace Victoria.Converters
 
                     statsResponse.Memory = memory;
                 }
-                else if (reader.ValueTextEquals("players") && reader.Read())
+                else if (reader.ValueTextEquals("players") && reader.Read()) {
                     statsResponse.Players = reader.GetInt32();
+                }
 
                 // CPU RESPOSNE
-                else if (reader.ValueTextEquals("cpu") && reader.Read())
-                {
+                else if (reader.ValueTextEquals("cpu") && reader.Read()) {
                     var cpu = new Cpu();
-                    while (reader.Read())
-                    {
+                    while (reader.Read()) {
                         if (reader.TokenType == JsonTokenType.EndObject)
                             break;
 
@@ -164,16 +148,15 @@ namespace Victoria.Converters
                     statsResponse.Cpu = cpu;
                 }
 
-                else if (reader.ValueTextEquals("uptime") && reader.Read())
+                else if (reader.ValueTextEquals("uptime") && reader.Read()) {
                     statsResponse.Uptime = reader.GetInt64();
+                }
 
                 // FRAMES (MIGHT THROW EXCEPTION)
-                else if (reader.ValueTextEquals("frames"))
-                {
+                else if (reader.ValueTextEquals("frames")) {
                     var frames = new Frames();
 
-                    while (reader.Read())
-                    {
+                    while (reader.Read()) {
                         if (reader.TokenType == JsonTokenType.EndObject)
                             break;
 
@@ -190,14 +173,12 @@ namespace Victoria.Converters
             }
         }
 
-        private void ProcessEvent(ref Utf8JsonReader reader, out BaseEventResponse eventResponse)
-        {
+        private void ProcessEvent(ref Utf8JsonReader reader, out BaseEventResponse eventResponse) {
             //{"op":"event","reason":"FINISHED","type":"TrackEndEvent","track":"QAAAcwIADUxhdGUgRm9y...","guildId":"522440206494728203"}
 
             var dictionary = new Dictionary<string, string>();
 
-            while (reader.Read())
-            {
+            while (reader.Read()) {
                 if (reader.TokenType == JsonTokenType.EndObject)
                     break;
 
@@ -211,17 +192,14 @@ namespace Victoria.Converters
                 dictionary.Add(Encoding.UTF8.GetString(propName), Encoding.UTF8.GetString(propValue));
             }
 
-            if (!dictionary.TryGetValue("type", out var type))
-            {
+            if (!dictionary.TryGetValue("type", out var type)) {
                 eventResponse = default;
                 return;
             }
 
-            switch (type)
-            {
+            switch (type) {
                 case "TrackEndEvent":
-                    eventResponse = new TrackEndEvent
-                    {
+                    eventResponse = new TrackEndEvent {
                         GuildId = ulong.Parse(dictionary["guildId"]),
                         Reason = (TrackEndReason) dictionary["reason"][0],
                         Hash = dictionary["track"]
@@ -229,8 +207,7 @@ namespace Victoria.Converters
                     break;
 
                 case "TrackExceptionEvent":
-                    eventResponse = new TrackExceptionEvent
-                    {
+                    eventResponse = new TrackExceptionEvent {
                         GuildId = ulong.Parse(dictionary["guildId"]),
                         Hash = dictionary["track"],
                         Error = dictionary["error"]
@@ -238,8 +215,7 @@ namespace Victoria.Converters
                     break;
 
                 case "TrackStuckEvent":
-                    eventResponse = new TrackStuckEvent
-                    {
+                    eventResponse = new TrackStuckEvent {
                         GuildId = ulong.Parse(dictionary["guildId"]),
                         Hash = dictionary["track"],
                         ThresholdMs = long.Parse(dictionary["thresholdMs"])
@@ -247,8 +223,7 @@ namespace Victoria.Converters
                     break;
 
                 case "WebSocketClosedEvent":
-                    eventResponse = new WebSocketClosedEvent
-                    {
+                    eventResponse = new WebSocketClosedEvent {
                         GuildId = ulong.Parse(dictionary["guildId"]),
                         Code = int.Parse(dictionary["code"]),
                         Reason = dictionary["reason"],

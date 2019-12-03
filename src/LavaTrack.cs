@@ -1,12 +1,10 @@
 using System;
 using Victoria.Interfaces;
 
-namespace Victoria
-{
+namespace Victoria {
     /// <summary>
     /// </summary>
-    public class LavaTrack : IQueueable
-    {
+    public class LavaTrack : IQueueable {
         /// <summary>
         ///     Track's encoded hash.
         /// </summary>
@@ -52,52 +50,47 @@ namespace Victoria
         /// </summary>
         public string Url { get; private set; }
 
-        internal LavaTrack WithHash(string hash)
-        {
+        internal LavaTrack WithHash(string hash) {
             Hash = hash;
             return this;
         }
 
-        internal LavaTrack WithTitle(string title)
-        {
+        internal LavaTrack WithTitle(string title) {
             Title = title;
             return this;
         }
 
-        internal LavaTrack WithAuthor(string author)
-        {
+        internal LavaTrack WithAuthor(string author) {
             Author = author;
             return this;
         }
 
-        internal LavaTrack WithDuration(long duration)
-        {
+        internal LavaTrack WithDuration(long duration) {
             Duration = duration < TimeSpan.MaxValue.Ticks ? TimeSpan.FromMilliseconds(duration) : TimeSpan.MaxValue;
             return this;
         }
 
-        internal LavaTrack WithId(string id)
-        {
+        internal LavaTrack WithId(string id) {
             Id = id;
             return this;
         }
 
-        internal LavaTrack WithStream(bool isStream)
-        {
+        internal LavaTrack WithStream(bool isStream) {
             IsStream = isStream;
             return this;
         }
 
-        internal LavaTrack WithUrl(string url)
-        {
+        internal LavaTrack WithUrl(string url) {
             Url = url;
             return this;
         }
 
-        internal void WithPosition(long position)
-            => Position = TimeSpan.FromMilliseconds(position);
+        internal void WithPosition(long position) {
+            Position = TimeSpan.FromMilliseconds(position);
+        }
 
-        internal void WithSeek(bool isSeekable)
-            => CanSeek = isSeekable;
+        internal void WithSeek(bool isSeekable) {
+            CanSeek = isSeekable;
+        }
     }
 }

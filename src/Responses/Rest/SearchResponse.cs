@@ -1,13 +1,11 @@
 using System.Collections.Generic;
 using Victoria.Enums;
 
-namespace Victoria.Responses.Rest
-{
+namespace Victoria.Responses.Rest {
     /// <summary>
     ///     Lavalink's REST response.
     /// </summary>
-    public struct SearchResponse
-    {
+    public struct SearchResponse {
         /// <summary>
         ///     Search load type.
         /// </summary>
