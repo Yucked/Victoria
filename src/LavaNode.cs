@@ -15,6 +15,7 @@ using Victoria.EventArgs;
 using Victoria.Payloads;
 using Victoria.Responses.Rest;
 using Victoria.Responses.WebSocket;
+using PlayerState = Victoria.Enums.PlayerState;
 
 namespace Victoria {
     /// <inheritdoc />
@@ -230,17 +231,16 @@ namespace Victoria {
             if (player.VoiceChannel.Id == voiceChannel.Id)
                 throw new InvalidOperationException("Connected and new voice channel ids are the same.");
 
-            var payload = new DestroyPayload(voiceChannel.GuildId);
-            await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
+            if (player.PlayerState == PlayerState.Playing)
+                await player.PauseAsync()
+                    .ConfigureAwait(false);
 
-            await player.VoiceChannel.DisconnectAsync()
-                .ConfigureAwait(false);
-
+            player.VoiceChannel = voiceChannel;
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player.VoiceChannel = voiceChannel;
+            if (player.PlayerState == PlayerState.Paused)
+                await player.ResumeAsync();
 
             Log(LogSeverity.Info, $"Moved {voiceChannel.GuildId} player to {voiceChannel.Name}.");
         }
@@ -353,16 +353,16 @@ namespace Victoria {
             if (string.IsNullOrWhiteSpace(query))
                 throw new ArgumentNullException(nameof(query));
 
-            var request = new HttpRequestMessage(HttpMethod.Get,
+            using var request = new HttpRequestMessage(HttpMethod.Get,
                 $"/loadtracks?identifier={WebUtility.UrlEncode(query)}");
 
-            var response = await _httpClient.SendAsync(request)
+            using var response = await _httpClient.SendAsync(request)
                 .ConfigureAwait(false);
 
             var content = await response.Content.ReadAsByteArrayAsync()
                 .ConfigureAwait(false);
 
-            var searchResponse = JsonSerializer.Deserialize<SearchResponse>(content.AsSpan(), _jsonOptions);
+            var searchResponse = JsonSerializer.Deserialize<SearchResponse>(content, _jsonOptions);
             return searchResponse;
         }
 
@@ -386,11 +386,13 @@ namespace Victoria {
             if (!_playerCache.TryGetValue(voiceServer.Guild.Id, out var player))
                 return;
 
+            player.VoiceServer = voiceServer;
             var payload = new ServerUpdatePayload {
                 SessionId = player.VoiceState.VoiceSessionId,
                 GuildId = $"{voiceServer.Guild.Id}",
                 VoiceServerPayload = new VoiceServerPayload {
-                    Token = voiceServer.Token, Endpoint = voiceServer.Endpoint
+                    Token = voiceServer.Token,
+                    Endpoint = voiceServer.Endpoint
                 }
             };
 
