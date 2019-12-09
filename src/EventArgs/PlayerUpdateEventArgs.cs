@@ -27,7 +27,7 @@ namespace Victoria.EventArgs {
             Position = response.State.Position;
 
             player.UpdatePlayer(x => {
-                player.Track.WithPosition((long) response.State.Position.TotalMilliseconds);
+                player.Track?.WithPosition(response.State.Position);
                 player.LastUpdate = response.State.Time;
             });
         }

@@ -85,8 +85,8 @@ namespace Victoria {
             return this;
         }
 
-        internal void WithPosition(long position) {
-            Position = TimeSpan.FromMilliseconds(position);
+        internal void WithPosition(TimeSpan position) {
+            Position = position;
         }
 
         internal void WithSeek(bool isSeekable) {
