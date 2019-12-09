@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
+using Discord.WebSocket;
 using Socks;
 using Victoria.Enums;
 using Victoria.Payloads;
@@ -14,6 +15,11 @@ namespace Victoria {
         ///     Player's current voice state.
         /// </summary>
         public IVoiceState VoiceState { get; internal set; }
+
+        /// <summary>
+        /// Voice server this player is connected to.
+        /// </summary>
+        public SocketVoiceServer VoiceServer { get; internal set; }
 
         /// <summary>
         ///     Player's current volume.
@@ -65,24 +71,6 @@ namespace Victoria {
             VoiceChannel = voiceChannel;
             TextChannel = textChannel;
             Queue = new DefaultQueue<LavaTrack>(69);
-        }
-
-        /// <inheritdoc />
-        public async ValueTask DisposeAsync() {
-            await StopAsync()
-                .ConfigureAwait(false);
-
-            var payload = new DestroyPayload(VoiceChannel.GuildId);
-            await _sock.SendAsync(payload)
-                .ConfigureAwait(false);
-
-            GC.SuppressFinalize(this);
-
-            Queue.Clear();
-            Queue = default;
-            Track = null;
-            VoiceChannel = null;
-            PlayerState = PlayerState.Disconnected;
         }
 
         /// <summary>
@@ -258,6 +246,24 @@ namespace Victoria {
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _sock.SendAsync(payload)
                 .ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync() {
+            await StopAsync()
+                .ConfigureAwait(false);
+
+            var payload = new DestroyPayload(VoiceChannel.GuildId);
+            await _sock.SendAsync(payload)
+                .ConfigureAwait(false);
+
+            GC.SuppressFinalize(this);
+
+            Queue.Clear();
+            Queue = default;
+            Track = null;
+            VoiceChannel = null;
+            PlayerState = PlayerState.Disconnected;
         }
 
         internal void UpdatePlayer(Action<LavaPlayer> action) {
