@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.0.5</Version>
+		<Version>5.0.5-patch</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2019 Yucked. All rights reserved.</Copyright>
@@ -17,8 +17,7 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Fixed MoveAsync();
-			- Added VoiceServer property in LavaPlayer.
+			Fixed NRE
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
