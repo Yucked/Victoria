@@ -368,7 +368,7 @@ namespace Victoria {
 
         private Task OnUserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldState,
                                                   SocketVoiceState newState) {
-            if (_socketClient?.CurrentUser != null || user.Id != _socketClient.CurrentUser.Id)
+            if (_socketClient?.CurrentUser == null || user.Id != _socketClient.CurrentUser.Id)
                 return Task.CompletedTask;
 
             var guildId = newState.VoiceChannel?.Guild.Id;
