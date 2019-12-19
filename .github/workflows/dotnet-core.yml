@@ -1,0 +1,39 @@
+name: Yeehaw Workflow
+
+on:
+  push:  
+    branches:
+      - v4
+      - v5
+
+  pull_request:
+    branches:
+      - v4
+      - v5
+
+jobs:
+   build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.100
+
+    - name: Build Project
+      run: dotnet build --configuration Release -o Output
+
+    - name: NutGet Upload
+      if: success() && contains(github.event.head_commit.message, 'publish')
+      working-directory: Output
+      run: dotnet nuget push *.nupkg -k ${{ secrets.MAGIC }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+    
+    - name: WebHook Trigger
+      if: always()
+      shell: bash
+      run: |
+        git clone https://github.com/WKED/ActionsWebHook webhook
+        bash webhook/send.sh ${{ job.status }} ${{ secrets.WEBHOOK_URL }}
