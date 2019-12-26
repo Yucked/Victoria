@@ -1,7 +1,6 @@
 ﻿using Victoria.Decoder;
 using Victoria.Enums;
 using Victoria.Responses.WebSocket;
-using PlayerState = Victoria.Enums.PlayerState;
 
 namespace Victoria.EventArgs {
     /// <summary>
@@ -27,14 +26,6 @@ namespace Victoria.EventArgs {
             Player = player;
             Track = TrackDecoder.Decode(endEvent.Hash);
             Reason = endEvent.Reason;
-
-            if (endEvent.Reason == TrackEndReason.Replaced)
-                return;
-
-            player.UpdatePlayer(x => {
-                x.PlayerState = PlayerState.Stopped;
-                x.Track = default;
-            });
         }
     }
 }

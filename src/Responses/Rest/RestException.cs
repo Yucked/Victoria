@@ -1,6 +1,6 @@
 namespace Victoria.Responses.Rest {
     /// <summary>
-    ///     If LoadType was LoadFailed then Exception is returned.
+    ///     If LoadStatus was LoadFailed then Exception is returned.
     /// </summary>
     public struct RestException {
         /// <summary>
