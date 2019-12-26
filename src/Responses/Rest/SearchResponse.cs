@@ -9,7 +9,7 @@ namespace Victoria.Responses.Rest {
         /// <summary>
         ///     Search load type.
         /// </summary>
-        public LoadType LoadType { get; internal set; }
+        public LoadStatus LoadStatus { get; internal set; }
 
         /// <summary>
         ///     If loadtype is a playlist then playlist info is returned.
@@ -22,7 +22,7 @@ namespace Victoria.Responses.Rest {
         public ICollection<LavaTrack> Tracks { get; internal set; }
 
         /// <summary>
-        ///     If LoadType was LoadFailed then Exception is returned.
+        ///     If LoadStatus was LoadFailed then Exception is returned.
         /// </summary>
         public RestException Exception { get; internal set; }
     }

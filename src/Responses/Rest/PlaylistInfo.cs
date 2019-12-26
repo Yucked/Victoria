@@ -1,6 +1,6 @@
 namespace Victoria.Responses.Rest {
     /// <summary>
-    ///     Only available if LoadType was PlaylistLoaded.
+    ///     Only available if LoadStatus was PlaylistLoaded.
     /// </summary>
     public struct PlaylistInfo {
         /// <summary>
