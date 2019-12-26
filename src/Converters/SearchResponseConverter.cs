@@ -24,23 +24,24 @@ namespace Victoria.Converters {
                 var index = reader.ValueSpan[0];
                 reader.Read();
 
-                if (index == 108)
-                    GetLoadType(ref searchResponse, ref reader);
-                else if (index == 112)
+                if (index == 108) {
+                    searchResponse.LoadStatus = (LoadStatus) reader.ValueSpan[0];
+                }
+                else if (index == 112) {
                     BuildPlaylistInfo(ref searchResponse, ref reader);
-                else if (index == 101)
+                }
+                else if (index == 101) {
                     BuildRestException(ref searchResponse, ref reader);
-                else if (index == 116)
+                }
+                else if (index == 116) {
                     BuildTracksList(ref searchResponse, ref reader);
-                else
+                }
+                else {
                     throw new JsonException($"Unhandled index type: {index}");
+                }
             }
 
             return searchResponse;
-        }
-
-        private void GetLoadType(ref SearchResponse response, ref Utf8JsonReader reader) {
-            response.LoadType = (LoadType) reader.ValueSpan[0];
         }
 
         private void BuildPlaylistInfo(ref SearchResponse response, ref Utf8JsonReader reader) {

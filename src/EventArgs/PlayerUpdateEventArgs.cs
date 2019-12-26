@@ -25,11 +25,6 @@ namespace Victoria.EventArgs {
             Player = player;
             Track = player.Track;
             Position = response.State.Position;
-
-            player.UpdatePlayer(x => {
-                player.Track?.WithPosition(response.State.Position);
-                player.LastUpdate = response.State.Time;
-            });
         }
     }
 }

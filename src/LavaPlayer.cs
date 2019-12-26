@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Socks;
 using Victoria.Enums;
+using Victoria.Interfaces;
 using Victoria.Payloads;
 
 namespace Victoria {
@@ -44,7 +44,7 @@ namespace Victoria {
         /// <summary>
         ///     Default queue.
         /// </summary>
-        public DefaultQueue<LavaTrack> Queue { get; private set; }
+        public DefaultQueue<IQueueable> Queue { get; private set; }
 
         /// <summary>
         ///     Voice channel this player is connected to.
@@ -56,21 +56,21 @@ namespace Victoria {
         /// </summary>
         public ITextChannel TextChannel { get; internal set; }
 
-        private readonly ClientSock _sock;
+        private readonly LavaSocket _lavaSocket;
 
         /// <summary>
         ///     Represents a <see cref="IGuild" /> voice connection.
         /// </summary>
-        /// <param name="sock">
-        ///     <see cref="ClientSock" />
+        /// <param name="lavaSocket">
+        ///     <see cref="LavaSocket" />
         /// </param>
         /// <param name="voiceChannel">Voice channel to connect to.</param>
         /// <param name="textChannel">Text channel this player is bound to.</param>
-        public LavaPlayer(ClientSock sock, IVoiceChannel voiceChannel, ITextChannel textChannel) {
-            _sock = sock;
+        public LavaPlayer(LavaSocket lavaSocket, IVoiceChannel voiceChannel, ITextChannel textChannel) {
+            _lavaSocket = lavaSocket;
             VoiceChannel = voiceChannel;
             TextChannel = textChannel;
-            Queue = new DefaultQueue<LavaTrack>(69);
+            Queue = new DefaultQueue<IQueueable>(69);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Victoria {
                 throw new ArgumentNullException(nameof(track));
 
             var payload = new PlayPayload(VoiceChannel.GuildId, track, false);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
 
             Track = track;
@@ -112,7 +112,7 @@ namespace Victoria {
                 throw new InvalidOperationException($"{nameof(endTime)} must be greather than {nameof(startTime)}.");
 
             var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, endTime, noReplace);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
 
             Track = track;
@@ -124,7 +124,7 @@ namespace Victoria {
         /// </summary>
         public async Task StopAsync() {
             var payload = new StopPayload(VoiceChannel.GuildId);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
 
             PlayerState = PlayerState.Stopped;
@@ -139,7 +139,7 @@ namespace Victoria {
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new PausePayload(VoiceChannel.GuildId, true);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
 
             PlayerState = PlayerState.Paused;
@@ -154,7 +154,7 @@ namespace Victoria {
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new PausePayload(VoiceChannel.GuildId, false);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
 
             PlayerState = Track is null
@@ -174,8 +174,11 @@ namespace Victoria {
                 throw new InvalidOperationException(
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
-            if (!Queue.TryDequeue(out var track))
+            if (!Queue.TryDequeue(out var queueable))
                 throw new InvalidOperationException("There are no more items in Queue.");
+
+            if (!(queueable is LavaTrack track))
+                throw new InvalidCastException($"Couldn't cast {queueable.GetType()} to {typeof(LavaTrack)}.");
 
             await await Task.Delay(delay ?? TimeSpan.Zero)
                 .ContinueWith(_ => PlayAsync(track))
@@ -202,7 +205,7 @@ namespace Victoria {
                     $"Value must be no bigger than {Track.Duration.TotalMilliseconds}ms.");
 
             var payload = new SeekPayload(VoiceChannel.GuildId, position.Value);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
         }
 
@@ -212,7 +215,7 @@ namespace Victoria {
         public async Task UpdateVolumeAsync(ushort volume) {
             Volume = volume;
             var payload = new VolumePayload(VoiceChannel.GuildId, volume);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
         }
 
@@ -220,15 +223,15 @@ namespace Victoria {
         ///     Change the <see cref="LavaPlayer" />'s equalizer. There are 15 bands (0-14) that can be changed.
         /// </summary>
         /// <param name="bands">
-        ///     <see cref="Band" />
+        ///     <see cref="EqualizerBand" />
         /// </param>
-        public async Task EqualizerAsync(IEnumerable<Band> bands) {
+        public async Task EqualizerAsync(IEnumerable<EqualizerBand> bands) {
             if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
         }
 
@@ -236,15 +239,15 @@ namespace Victoria {
         ///     Change the <see cref="LavaPlayer" />'s equalizer. There are 15 bands (0-14) that can be changed.
         /// </summary>
         /// <param name="bands">
-        ///     <see cref="Band" />
+        ///     <see cref="EqualizerBand" />
         /// </param>
-        public async Task EqualizerAsync(params Band[] bands) {
+        public async Task EqualizerAsync(params EqualizerBand[] bands) {
             if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
         }
 
@@ -254,7 +257,7 @@ namespace Victoria {
                 .ConfigureAwait(false);
 
             var payload = new DestroyPayload(VoiceChannel.GuildId);
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
 
             GC.SuppressFinalize(this);
@@ -264,10 +267,6 @@ namespace Victoria {
             Track = null;
             VoiceChannel = null;
             PlayerState = PlayerState.Disconnected;
-        }
-
-        internal void UpdatePlayer(Action<LavaPlayer> action) {
-            action.Invoke(this);
         }
     }
 }

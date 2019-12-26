@@ -1,10 +1,10 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Victoria {
+namespace Victoria.Payloads {
     /// <summary>
     ///     Equalizer band
     /// </summary>
-    public struct Band {
+    public struct EqualizerBand {
         /// <summary>
         ///     15 bands (0-14) that can be changed.
         /// </summary>

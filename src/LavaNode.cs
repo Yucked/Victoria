@@ -3,14 +3,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Socks;
-using Socks.EventArgs;
 using Victoria.Converters;
+using Victoria.Enums;
 using Victoria.EventArgs;
 using Victoria.Payloads;
 using Victoria.Responses.Rest;
@@ -85,7 +85,7 @@ namespace Victoria {
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
-        private readonly ClientSock _sock;
+        private readonly LavaSocket _lavaSocket;
         private readonly BaseSocketClient _socketClient;
 
         private bool _refConnected;
@@ -105,19 +105,11 @@ namespace Victoria {
             socketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdatedAsync;
             socketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
 
-            _sock = new ClientSock(new SockConfig {
-                Endpoint = new Endpoint(config.Hostname, config.Port, false),
-                BufferSize = config.BufferSize,
-                ReconnectSettings = new ReconnectSettings {
-                    Interval = config.ReconnectDelay,
-                    MaximumAttempts = config.ReconnectAttempts
-                }
-            });
-
-            _sock.OnRetry += OnRetryAsync;
-            _sock.OnReceive += OnReceiveAsync;
-            _sock.OnConnected += OnConnectedAsync;
-            _sock.OnDisconnected += OnDisconnectedAsync;
+            _lavaSocket = new LavaSocket(config);
+            _lavaSocket.OnRetry += OnRetryAsync;
+            _lavaSocket.OnReceive += OnReceiveAsync;
+            _lavaSocket.OnConnected += OnConnectedAsync;
+            _lavaSocket.OnDisconnected += OnDisconnectedAsync;
 
             _jsonOptions = new JsonSerializerOptions();
             _jsonOptions.Converters.Add(new SearchResponseConverter());
@@ -135,7 +127,7 @@ namespace Victoria {
             await DisconnectAsync()
                 .ConfigureAwait(false);
 
-            await _sock.DisposeAsync()
+            await _lavaSocket.DisposeAsync()
                 .ConfigureAwait(false);
 
             _playerCache.Clear();
@@ -161,14 +153,15 @@ namespace Victoria {
                 _                                  => 1
             };
 
-            _sock.AddHeader("User-Id", $"{_socketClient.CurrentUser.Id}");
-            _sock.AddHeader("Num-Shards", $"{shards}");
-            _sock.AddHeader("Authorization", _config.Authorization);
+            _lavaSocket.SetHeader("User-Id", $"{_socketClient.CurrentUser.Id}");
+            _lavaSocket.SetHeader("Num-Shards", $"{shards}");
+            _lavaSocket.SetHeader("Authorization", _config.Authorization);
 
-            if (_config.EnableResume)
-                _sock.AddHeader("Resume-Key", _config.ResumeKey);
+            if (_config.EnableResume) {
+                _lavaSocket.SetHeader("Resume-Key", _config.ResumeKey);
+            }
 
-            await _sock.ConnectAsync()
+            await _lavaSocket.ConnectAsync()
                 .ConfigureAwait(false);
         }
 
@@ -186,7 +179,7 @@ namespace Victoria {
 
             _playerCache.Clear();
 
-            await _sock.DisconnectAsync()
+            await _lavaSocket.DisconnectAsync()
                 .ConfigureAwait(false);
         }
 
@@ -208,7 +201,7 @@ namespace Victoria {
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _sock, voiceChannel, textChannel);
+            player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _lavaSocket, voiceChannel, textChannel);
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -396,12 +389,12 @@ namespace Victoria {
                 }
             };
 
-            await _sock.SendAsync(payload)
+            await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
         }
 
-        private Task OnRetryAsync(RetryEventArgs args) {
-            Log(LogSeverity.Warning, args.Message);
+        private Task OnRetryAsync(string retryMessage) {
+            Log(LogSeverity.Warning, retryMessage);
             return Task.CompletedTask;
         }
 
@@ -411,78 +404,76 @@ namespace Victoria {
 
             if (_config.EnableResume) {
                 var payload = new ResumePayload(_config.ResumeKey, _config.ResumeTimeout);
-                await _sock.SendAsync(payload)
+                await _lavaSocket.SendAsync(payload)
                     .ConfigureAwait(false);
             }
         }
 
-        private Task OnDisconnectedAsync(DisconnectEventArgs eventArgs) {
+        private Task OnDisconnectedAsync(string disconnectMessage) {
             Volatile.Write(ref _refConnected, false);
-            Log(LogSeverity.Info, eventArgs.Message ?? eventArgs.Exception.Message);
+            Log(LogSeverity.Error, disconnectMessage);
 
             return Task.CompletedTask;
         }
 
-        private async Task OnReceiveAsync(ReceivedEventArgs eventArgs) {
-            if (eventArgs.DataSize == 0) {
+        private async Task OnReceiveAsync(byte[] data) {
+            if (data.Length == 0) {
                 Log(LogSeverity.Warning, "Received empty payload from Lavalink.");
                 return;
             }
 
-            Log(LogSeverity.Debug, eventArgs.Raw);
-
-            var baseWsResponse = JsonSerializer.Deserialize<BaseWsResponse>(eventArgs.Data.Span, _jsonOptions);
+            Log(LogSeverity.Debug, Encoding.UTF8.GetString(data));
+            var baseWsResponse = JsonSerializer.Deserialize<BaseWsResponse>(data, _jsonOptions);
 
             switch (baseWsResponse) {
                 case PlayerUpdateResponse playerUpdateResponse: {
                     if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player))
                         return;
 
+                    player.Track?.WithPosition(playerUpdateResponse.State.Position);
+                    player.LastUpdate = playerUpdateResponse.State.Time;
+
                     var playerUpdateEventArgs = new PlayerUpdateEventArgs(player, playerUpdateResponse);
-                    if (OnPlayerUpdated != null)
-                        await OnPlayerUpdated.Invoke(playerUpdateEventArgs);
-
+                    OnPlayerUpdated?.Invoke(playerUpdateEventArgs);
                     return;
                 }
+
                 case StatsResponse statsResponse: {
-                    if (OnStatsReceived != null)
-                        await OnStatsReceived.Invoke(new StatsEventArgs(statsResponse));
-
+                    OnStatsReceived?.Invoke(new StatsEventArgs(statsResponse));
                     return;
                 }
+
                 case BaseEventResponse eventResponse: {
                     switch (eventResponse) {
                         case TrackEndEvent trackEndEvent: {
                             if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out var player))
                                 return;
 
-                            var trackEndedEventArgs = new TrackEndedEventArgs(player, trackEndEvent);
-                            if (OnTrackEnded != null)
-                                await OnTrackEnded.Invoke(trackEndedEventArgs);
+                            if (trackEndEvent.Reason != TrackEndReason.Replaced) {
+                                player.PlayerState = PlayerState.Stopped;
+                                player.Track = default;
+                            }
 
+                            var trackEndedEventArgs = new TrackEndedEventArgs(player, trackEndEvent);
+                            OnTrackEnded?.Invoke(trackEndedEventArgs);
                             return;
                         }
                         case TrackStuckEvent trackStuckEvent: {
                             if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out var player))
                                 return;
 
-                            if (OnTrackStuck != null)
-                                await OnTrackStuck.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
-
+                            OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
                             return;
                         }
                         case TrackExceptionEvent trackExceptionEvent: {
                             if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out var player))
                                 return;
 
-                            if (OnTrackException != null)
-                                await OnTrackException.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
-
+                            OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
                             return;
                         }
                         case WebSocketClosedEvent socketClosedEvent: {
-                            if (OnWebSocketClosed != null)
-                                await OnWebSocketClosed.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
+                            OnWebSocketClosed?.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
                             return;
                         }
                     }
