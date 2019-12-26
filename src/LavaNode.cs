@@ -81,6 +81,11 @@ namespace Victoria {
         public IEnumerable<TPlayer> Players
             => _playerCache.Values;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public RoutePlanner RoutePlanner { get; }
+
         private readonly LavaConfig _config;
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
@@ -120,6 +125,8 @@ namespace Victoria {
                 BaseAddress = new Uri($"http://{config.Hostname}:{config.Port}")
             };
             _httpClient.DefaultRequestHeaders.Add("Authorization", _config.Authorization);
+
+            RoutePlanner = new RoutePlanner(_httpClient);
         }
 
         /// <inheritdoc />
