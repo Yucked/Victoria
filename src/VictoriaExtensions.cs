@@ -3,8 +3,8 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Victoria.Addons;
 using Victoria.Enums;
+using Victoria.Resolvers;
 
 namespace Victoria {
     /// <summary>
@@ -19,29 +19,29 @@ namespace Victoria {
         }
 
         /// <summary>
-        /// 
+        /// Fetches artwork for Youtube, Twitch, SoundCloud and Vimeo.
         /// </summary>
         /// <param name="track"></param>
         /// <returns></returns>
-        public static ValueTask<string> FetchThumbnailAsync(this LavaTrack track) {
+        public static ValueTask<string> FetchArtworkAsync(this LavaTrack track) {
             return ArtworkResolver.FetchAsync(track);
         }
 
         /// <summary>
-        /// 
+        /// Fetches lyrics from Genius.
         /// </summary>
         /// <param name="track"></param>
         /// <returns></returns>
-        public static ValueTask<string> FetchLyricsFromGenius(this LavaTrack track) {
+        public static ValueTask<string> FetchLyricsFromGeniusAsync(this LavaTrack track) {
             return LyricsResolver.SearchGeniusAsync(track);
         }
 
         /// <summary>
-        /// 
+        /// Fetches lyrics from OVH API.
         /// </summary>
         /// <param name="track"></param>
         /// <returns></returns>
-        public static ValueTask<string> FetchLyricsFromOVH(this LavaTrack track) {
+        public static ValueTask<string> FetchLyricsFromOVHAsync(this LavaTrack track) {
             return LyricsResolver.SearchOVHAsync(track);
         }
 
@@ -84,6 +84,9 @@ namespace Victoria {
             bytes = bytes.Slice(0, bytes.LastIndexOf(end));
 
             var rawHtml = Encoding.UTF8.GetString(bytes);
+            if (rawHtml.Contains("Genius.ads"))
+                return string.Empty;
+
             var htmlRegex = new Regex("<[^>]*?>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             return htmlRegex.Replace(rawHtml, string.Empty);
         }

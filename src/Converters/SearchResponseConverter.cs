@@ -90,7 +90,7 @@ namespace Victoria.Converters {
         }
 
         private void BuildTracksList(ref SearchResponse response, ref Utf8JsonReader reader) {
-            var set = new HashSet<LavaTrack>();
+            var set = new List<LavaTrack>();
 
             while (reader.Read()) {
                 if (reader.TokenType == JsonTokenType.EndArray)
