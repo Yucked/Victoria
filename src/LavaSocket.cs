@@ -154,7 +154,7 @@ namespace Victoria {
                     switch (result.MessageType) {
                         case WebSocketMessageType.Close:
                             Volatile.Write(ref _refIsUsable, false);
-                            OnDisconnected?.Invoke("");
+                            OnDisconnected?.Invoke("Server closed the connection!");
 
                             await RetryConnectionAsync()
                                 .ConfigureAwait(false);
@@ -164,14 +164,19 @@ namespace Victoria {
                             if (!result.EndOfMessage)
                                 continue;
 
-                            OnReceive?.Invoke(buffer);
+                            var startLength = buffer.Length - 1;
+                            while (buffer[startLength] == 0)
+                                --startLength;
+                            var cleaned = new byte[startLength + 1];
+                            Array.Copy(buffer, cleaned, startLength + 1);
+                            OnReceive?.Invoke(cleaned);
                             break;
                     }
                 }
             }
             catch (Exception ex) {
                 OnDisconnected?.Invoke(ex.Message);
-                await RetryConnectionAsync()
+                await ConnectAsync()
                     .ConfigureAwait(false);
             }
         }

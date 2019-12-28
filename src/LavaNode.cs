@@ -455,10 +455,10 @@ namespace Victoria {
                         case TrackEndEvent trackEndEvent: {
                             if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out var player))
                                 return;
-
+                            
                             if (trackEndEvent.Reason != TrackEndReason.Replaced) {
-                                player.PlayerState = PlayerState.Stopped;
                                 player.Track = default;
+                                player.PlayerState = PlayerState.Stopped;
                             }
 
                             var trackEndedEventArgs = new TrackEndedEventArgs(player, trackEndEvent);

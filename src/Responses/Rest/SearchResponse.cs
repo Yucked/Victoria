@@ -19,7 +19,7 @@ namespace Victoria.Responses.Rest {
         /// <summary>
         ///     Collection of tracks returned.
         /// </summary>
-        public ICollection<LavaTrack> Tracks { get; internal set; }
+        public IReadOnlyList<LavaTrack> Tracks { get; internal set; }
 
         /// <summary>
         ///     If LoadStatus was LoadFailed then Exception is returned.

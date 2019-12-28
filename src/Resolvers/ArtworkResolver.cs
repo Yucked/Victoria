@@ -3,13 +3,13 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace Victoria.Addons {
+namespace Victoria.Resolvers {
     /// <summary>
     /// Resolver for fetching track artwork.
     /// </summary>
     public readonly struct ArtworkResolver {
         /// <summary>
-        /// 
+        /// Fetches artwork for Youtube, Twitch, SoundCloud and Vimeo.
         /// </summary>
         /// <param name="track"></param>
         /// <returns></returns>
