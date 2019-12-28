@@ -142,7 +142,9 @@ namespace Victoria {
             await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
 
-            PlayerState = PlayerState.Paused;
+            PlayerState = Track is null
+                ? PlayerState.Stopped
+                : PlayerState.Paused;
         }
 
         /// <summary>
@@ -167,7 +169,7 @@ namespace Victoria {
         /// </summary>
         /// <param name="delay">If set to null, skips instantly otherwise after the specified value.</param>
         /// <returns>
-        ///     <see cref="LavaTrack" />
+        ///     The next <see cref="LavaTrack" />.
         /// </returns>
         public async Task<LavaTrack> SkipAsync(TimeSpan? delay = default) {
             if (!PlayerState.EnsureState())
@@ -175,7 +177,7 @@ namespace Victoria {
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
 
             if (!Queue.TryDequeue(out var queueable))
-                throw new InvalidOperationException("There are no more items in Queue.");
+                throw new InvalidOperationException("Can't skip to the next item in queue.");
 
             if (!(queueable is LavaTrack track))
                 throw new InvalidCastException($"Couldn't cast {queueable.GetType()} to {typeof(LavaTrack)}.");

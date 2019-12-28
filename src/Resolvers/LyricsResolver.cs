@@ -5,9 +5,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace Victoria.Addons {
+namespace Victoria.Resolvers {
     /// <summary>
-    /// Lyrics providers for fetching lyrics.
+    /// Lyrics resolver for fetching lyrics from Genius and OVH.
     /// </summary>
     public readonly struct LyricsResolver {
         /// <summary>
@@ -41,7 +41,7 @@ namespace Victoria.Addons {
                 throw new ArgumentNullException(nameof(lavaTrack));
 
             var (author, title) = lavaTrack.GetAuthorAndTitle();
-            var url = $"https://api.lyrics.ovh/{author.Encode()}/{title.Encode()}";
+            var url = $"https://api.lyrics.ovh/v1/{author.Encode()}/{title.Encode()}";
             var bytes = await GetBytesAsync(url)
                 .ConfigureAwait(false);
 
