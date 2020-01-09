@@ -214,38 +214,6 @@ namespace Victoria {
         }
 
         /// <summary>
-        ///     Moves from one voice channel to another.
-        /// </summary>
-        /// <param name="voiceChannel">Voice channel to connect to.</param>
-        /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
-        public async Task MoveAsync(IVoiceChannel voiceChannel) {
-            if (voiceChannel == null)
-                throw new ArgumentNullException(nameof(voiceChannel));
-
-            if (!Volatile.Read(ref _refConnected))
-                throw new InvalidOperationException("Can't execute this operation when client isn't connected.");
-
-            if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player))
-                throw new InvalidOperationException($"No player was found for {voiceChannel.Guild.Name}.");
-
-            if (player.VoiceChannel.Id == voiceChannel.Id)
-                throw new InvalidOperationException("Connected and new voice channel ids are the same.");
-
-            if (player.PlayerState == PlayerState.Playing)
-                await player.PauseAsync()
-                    .ConfigureAwait(false);
-
-            player.VoiceChannel = voiceChannel;
-            await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
-                .ConfigureAwait(false);
-
-            if (player.PlayerState == PlayerState.Paused)
-                await player.ResumeAsync();
-
-            Log(LogSeverity.Info, $"Moved {voiceChannel.GuildId} player to {voiceChannel.Name}.");
-        }
-
-        /// <summary>
         ///     Leaves the specified channel only if <typeparamref name="TPlayer" /> is connected to it.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
@@ -265,6 +233,13 @@ namespace Victoria {
 
             _playerCache.TryRemove(voiceChannel.GuildId, out _);
         }
+
+        /// <summary>
+        ///     Moves from one voice channel to another.
+        /// </summary>
+        /// <param name="voiceChannel">Voice channel to connect to.</param>
+        /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
+        public async Task MoveAsync(IVoiceChannel voiceChannel) { }
 
         /// <summary>
         ///     Checks if <typeparamref name="TPlayer" /> exists for specified guild.
@@ -289,35 +264,57 @@ namespace Victoria {
         }
 
         /// <summary>
-        ///     Returns either an existing or null player.
+        /// Moves either a voice channel or text channel. 
         /// </summary>
-        /// <param name="guild">An instance of <see cref="IGuild" />.</param>
-        /// <param name="player">An instance of <typeparamref name="TPlayer" /></param>
-        /// <returns>
-        ///     <see cref="bool" />
-        /// </returns>
-        public bool TryGetPlayer(IGuild guild, out TPlayer player) {
-            return _playerCache.TryGetValue(guild.Id, out player);
-        }
+        /// <param name="channel">An instance of <see cref="IChannel"/>.</param>
+        /// <typeparam name="T"></typeparam>
+        /// <exception cref="InvalidOperationException">Throws if client isn't connected or if player doesn't exist in cache.</exception>
+        /// <exception cref="ArgumentNullException">Throws if channel is null.</exception>
+        /// <exception cref="ArgumentException">Throws if channel isn't an <see cref="IVoiceChannel"/> or <see cref="ITextChannel"/>.</exception>
+        public async Task MoveChannelAsync<T>(T channel) where T : IChannel {
+            switch (channel) {
+                case IVoiceChannel voiceChannel: {
+                    if (!Volatile.Read(ref _refConnected))
+                        throw new InvalidOperationException(
+                            "Can't execute this operation when client isn't connected.");
 
-        /// <summary>
-        ///     Updates text channel for the specified guild.
-        /// </summary>
-        /// <param name="guild">An instance of <see cref="IGuild" />.</param>
-        /// <param name="textChannel">An instance of <see cref="ITextChannel" />.</param>
-        /// <exception cref="ArgumentNullException">Throws if either guild or text channel is null.</exception>
-        /// <exception cref="InvalidOperationException">Throws if player doesn't exist in cache.</exception>
-        public void UpdateTextChannel(IGuild guild, ITextChannel textChannel) {
-            if (guild == null)
-                throw new ArgumentNullException(nameof(textChannel), "Guild cannot be null.");
+                    if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player))
+                        throw new InvalidOperationException($"No player was found for {voiceChannel.Guild.Name}.");
 
-            if (textChannel == null)
-                throw new ArgumentNullException(nameof(textChannel), "Text channel cannot be null.");
+                    if (player.VoiceChannel.Id == voiceChannel.Id)
+                        throw new InvalidOperationException("Connected and new voice channel ids are the same.");
 
-            if (!_playerCache.TryGetValue(guild.Id, out var player))
-                throw new InvalidOperationException("Player doesn't exist in cache.");
+                    if (player.PlayerState == PlayerState.Playing)
+                        await player.PauseAsync()
+                            .ConfigureAwait(false);
 
-            player.TextChannel = textChannel;
+                    player.VoiceChannel = voiceChannel;
+                    await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
+                        .ConfigureAwait(false);
+
+                    if (player.PlayerState == PlayerState.Paused)
+                        await player.ResumeAsync();
+
+                    Log(LogSeverity.Info, $"Moved {voiceChannel.GuildId} player to {voiceChannel.Name}.");
+                    break;
+                }
+
+                case ITextChannel textChannel: {
+                    if (!_playerCache.TryGetValue(textChannel.Guild.Id, out var player))
+                        throw new InvalidOperationException("Player doesn't exist in cache.");
+
+                    player.TextChannel = textChannel;
+                    break;
+                }
+
+                case null: {
+                    throw new ArgumentNullException(nameof(channel), "Channel cannot be null.");
+                }
+
+                default: {
+                    throw new ArgumentException("Channel must be an IVoiceChannel, ITextChannel.", nameof(channel));
+                }
+            }
         }
 
         /// <summary>
@@ -455,7 +452,7 @@ namespace Victoria {
                         case TrackEndEvent trackEndEvent: {
                             if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out var player))
                                 return;
-                            
+
                             if (trackEndEvent.Reason != TrackEndReason.Replaced) {
                                 player.Track = default;
                                 player.PlayerState = PlayerState.Stopped;
@@ -465,6 +462,7 @@ namespace Victoria {
                             OnTrackEnded?.Invoke(trackEndedEventArgs);
                             return;
                         }
+
                         case TrackStuckEvent trackStuckEvent: {
                             if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out var player))
                                 return;
@@ -472,6 +470,7 @@ namespace Victoria {
                             OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
                             return;
                         }
+
                         case TrackExceptionEvent trackExceptionEvent: {
                             if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out var player))
                                 return;
@@ -479,6 +478,7 @@ namespace Victoria {
                             OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
                             return;
                         }
+
                         case WebSocketClosedEvent socketClosedEvent: {
                             OnWebSocketClosed?.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
                             return;
