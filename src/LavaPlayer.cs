@@ -56,7 +56,14 @@ namespace Victoria {
         /// </summary>
         public ITextChannel TextChannel { get; internal set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public IReadOnlyCollection<EqualizerBand> Equalizer
+            => _equalizer;
+
         private readonly LavaSocket _lavaSocket;
+        private readonly List<EqualizerBand> _equalizer;
 
         /// <summary>
         ///     Represents a <see cref="IGuild" /> voice connection.
@@ -71,6 +78,7 @@ namespace Victoria {
             VoiceChannel = voiceChannel;
             TextChannel = textChannel;
             Queue = new DefaultQueue<IQueueable>(69);
+            _equalizer = new List<EqualizerBand>(15);
         }
 
         /// <summary>
@@ -227,26 +235,14 @@ namespace Victoria {
         /// <param name="bands">
         ///     <see cref="EqualizerBand" />
         /// </param>
-        public async Task EqualizerAsync(IEnumerable<EqualizerBand> bands) {
-            if (!PlayerState.EnsureState())
-                throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
-
-            var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
-            await _lavaSocket.SendAsync(payload)
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        ///     Change the <see cref="LavaPlayer" />'s equalizer. There are 15 bands (0-14) that can be changed.
-        /// </summary>
-        /// <param name="bands">
-        ///     <see cref="EqualizerBand" />
-        /// </param>
         public async Task EqualizerAsync(params EqualizerBand[] bands) {
             if (!PlayerState.EnsureState())
                 throw new InvalidOperationException(
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
+
+            foreach (var band in bands) {
+                _equalizer[band.Band] = band;
+            }
 
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _lavaSocket.SendAsync(payload)
