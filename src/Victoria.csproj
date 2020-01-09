@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.1.0</Version>
+		<Version>5.1.1</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2019 Yucked. All rights reserved.</Copyright>
@@ -17,8 +17,10 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Adding Track and Artwork Resolvers.
-			- Added RoutePlanner API.
+			- Added Equalizer property in LavaPlayer and fixed bands.
+			- Added MoveChannelAsync(T) in LavaNode.
+			- Removed MoveAsync
+			- Remove UpdateTextChannelAsync
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
