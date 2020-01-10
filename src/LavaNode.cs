@@ -235,13 +235,6 @@ namespace Victoria {
         }
 
         /// <summary>
-        ///     Moves from one voice channel to another.
-        /// </summary>
-        /// <param name="voiceChannel">Voice channel to connect to.</param>
-        /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
-        public async Task MoveAsync(IVoiceChannel voiceChannel) { }
-
-        /// <summary>
         ///     Checks if <typeparamref name="TPlayer" /> exists for specified guild.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
@@ -261,6 +254,16 @@ namespace Victoria {
         /// </returns>
         public TPlayer GetPlayer(IGuild guild) {
             return _playerCache[guild.Id];
+        }
+
+        /// <summary>
+        /// Returns either an existing or null player.
+        /// </summary>
+        /// <param name="guild">An instance of <see cref="IGuild" />.</param>
+        /// <param name="player">An instance of <typeparamref name="TPlayer" /></param>
+        /// <returns><see cref="bool"/></returns>
+        public bool TryGetPlayer(IGuild guild, out TPlayer player) {
+            return _playerCache.TryGetValue(guild.Id, out player);
         }
 
         /// <summary>
