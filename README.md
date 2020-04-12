@@ -20,7 +20,81 @@
 
 ---
 
-## `⚗️ GUIDE:`
-- To setup Lavalink: https://github.com/Yucked/Victoria/wiki/🔋-SETUP
-- For v4 -> v5 changelog: https://github.com/Yucked/Victoria/wiki/📔-RELEASE-NOTES
-- For examples/samples: https://github.com/Yucked/Victoria/wiki/🔰-SAMPLES
+## `⚔️ Features:`
+With the release of Version 5, Victoria has now features from all previous versions. Some of these features are:
+- Keeping up to date with Lavalink features
+- Ability to extend Victoria for your needs
+- Lyrics support from OVH and Genius
+- Artwork support for YouTube, Vimeo, SoundCloud, Twitch
+- Built-in Queue support, built on top of `LinkedList`
+- Completely asynchronous
+- Fast deserialization and serialization with STJ and custom converters
+- Decoding track string with supernova speed (Thanks to Pluspy!)
+- Easy to understand API with complete documentation
+- AND a loving community without whom this project wouldn't be possible!
+
+> #### 👉 Please read the release notes to see what got changed, removed and, modified!
+
+## `⚗️ Quick Start:`
+Getting started with Victoria is fairly simple and quick:
+- Add Victoria package from Nuget.
+- Add `LavaNode` and `LavaConfig` to `ServiceCollection`.
+```cs
+
+// Make sure there is ONLY ONE instance of LavaNode and LavaConfig in your program unless you have several
+// Lavalink instances running and would like to create node pool (which majority of the users don't).
+
+	var services = new ServiceCollection()
+		// Other services DiscordSocketClient, CommandService, etc
+		.AddSingleton<LavaNode>()
+		.AddSingleton<LavaConfig>();
+		
+	var provider = services.BuildServiceProvider();
+```
+- In your `DiscordSocketClient` or `DiscordShardedClient` `Ready` event call `_instanceOfLavaNode.ConnectAsync();`
+```cs
+	discordSocketClient.Ready += OnReadyAsync;
+	....
+	
+	private async Task OnReadyAsync() {
+	// Avoid calling ConnectAsync again if it's already connected 
+	// (It throws InvalidOperationException if it's already connected).
+		if (!_instanceOfLavaNode.IsConnected) {
+			_instanceOfLavaNode.ConnectAsync();
+		}
+		
+		// Other ready related stuff
+	}
+```
+- Create a Music/Audio command module and start writing Victoria related commands!
+```cs
+public sealed class MusicModule : SocketCommandContext {
+	private readonly LavaNode _lavaNode;
+	
+	public MusicModule(LavaNode lavaNode)
+		=> _lavaNode = lavaNode;
+		
+	[Command("Join")]
+	public async Task JoinAsync() {	
+            if (_lavaNode.HasPlayer(Context.Guild)) {
+                await ReplyAsync("I'm already connected to a voice channel!");
+                return;
+            }
+
+            var voiceState = Context.User as IVoiceState;
+            if (voiceState?.VoiceChannel == null) {
+                await ReplyAsync("You must be connected to a voice channel!");
+                return;
+            }
+
+            try {
+                await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
+                await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+            }
+            catch (Exception exception) {
+                await ReplyAsync(exception.Message);
+            }
+	}
+}
+```
+> #### 👉 If you'd like a complete example, head over to Wiki!
