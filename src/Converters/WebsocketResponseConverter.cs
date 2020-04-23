@@ -13,16 +13,19 @@ namespace Victoria.Converters {
 		/// <inheritdoc />
 		public override BaseWsResponse Read(ref Utf8JsonReader reader, Type typeToConvert,
 			JsonSerializerOptions options) {
-			if (reader.TokenType != JsonTokenType.StartObject)
+			if (reader.TokenType != JsonTokenType.StartObject) {
 				throw new JsonException();
+			}
 
 			var response = new BaseWsResponse();
 			while (reader.Read()) {
-				if (reader.TokenType == JsonTokenType.EndObject)
+				if (reader.TokenType == JsonTokenType.EndObject) {
 					break;
+				}
 
-				if (reader.TokenType != JsonTokenType.PropertyName)
+				if (reader.TokenType != JsonTokenType.PropertyName) {
 					continue;
+				}
 
 				var index = reader.ValueSpan[0];
 				if (index == 111) {
@@ -61,7 +64,7 @@ namespace Victoria.Converters {
 			//    {"op":"playerUpdate","state":{"position":4720,"time":1566866929606},"guildId":"522440206494728203"}
 
 			playerUpdateResponse = new PlayerUpdateResponse();
-			while (reader.Read())
+			while (reader.Read()) {
 				switch (reader.TokenType) {
 					case JsonTokenType.PropertyName when reader.ValueTextEquals("guildId"):
 						reader.Read();
@@ -77,17 +80,21 @@ namespace Victoria.Converters {
 								break;
 							}
 
-							if (reader.TokenType != JsonTokenType.PropertyName)
+							if (reader.TokenType != JsonTokenType.PropertyName) {
 								continue;
+							}
 
-							if (reader.ValueTextEquals("time") && reader.Read())
+							if (reader.ValueTextEquals("time") && reader.Read()) {
 								state.Time = DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64());
-							else if (reader.ValueTextEquals("position") && reader.Read())
+							}
+							else if (reader.ValueTextEquals("position") && reader.Read()) {
 								state.Position = TimeSpan.FromMilliseconds(reader.GetInt64());
+							}
 						}
 
 						break;
 				}
+			}
 		}
 
 		private void ProcessStats(ref Utf8JsonReader reader, out StatsResponse statsResponse) {
@@ -97,31 +104,39 @@ namespace Victoria.Converters {
 
 			statsResponse = new StatsResponse();
 
-			if (reader.ValueTextEquals("playingPlayers") && reader.Read())
+			if (reader.ValueTextEquals("playingPlayers") && reader.Read()) {
 				statsResponse.Players = reader.GetInt32();
+			}
 
 			while (reader.Read()) {
-				if (reader.TokenType == JsonTokenType.EndObject)
+				if (reader.TokenType == JsonTokenType.EndObject) {
 					break;
+				}
 
-				if (reader.TokenType != JsonTokenType.PropertyName)
+				if (reader.TokenType != JsonTokenType.PropertyName) {
 					continue;
+				}
 
 				// MEMORY OBJECT
 				if (reader.ValueTextEquals("memory") && reader.Read()) {
 					var memory = new Memory();
 					while (reader.Read()) {
-						if (reader.TokenType == JsonTokenType.EndObject)
+						if (reader.TokenType == JsonTokenType.EndObject) {
 							break;
+						}
 
-						if (reader.ValueTextEquals("free") && reader.Read())
+						if (reader.ValueTextEquals("free") && reader.Read()) {
 							memory.Free = reader.GetInt32();
-						else if (reader.ValueTextEquals("used") && reader.Read())
+						}
+						else if (reader.ValueTextEquals("used") && reader.Read()) {
 							memory.Used = reader.GetInt32();
-						else if (reader.ValueTextEquals("allocated") && reader.Read())
+						}
+						else if (reader.ValueTextEquals("allocated") && reader.Read()) {
 							memory.Allocated = reader.GetInt32();
-						else if (reader.ValueTextEquals("reservable") && reader.Read())
+						}
+						else if (reader.ValueTextEquals("reservable") && reader.Read()) {
 							memory.Reservable = reader.GetInt32();
+						}
 					}
 
 					statsResponse.Memory = memory;
@@ -134,15 +149,19 @@ namespace Victoria.Converters {
 				else if (reader.ValueTextEquals("cpu") && reader.Read()) {
 					var cpu = new Cpu();
 					while (reader.Read()) {
-						if (reader.TokenType == JsonTokenType.EndObject)
+						if (reader.TokenType == JsonTokenType.EndObject) {
 							break;
+						}
 
-						if (reader.ValueTextEquals("cores") && reader.Read())
+						if (reader.ValueTextEquals("cores") && reader.Read()) {
 							cpu.Cores = reader.GetInt32();
-						else if (reader.ValueTextEquals("systemLoad") && reader.Read())
+						}
+						else if (reader.ValueTextEquals("systemLoad") && reader.Read()) {
 							cpu.SystemLoad = reader.GetDouble();
-						else if (reader.ValueTextEquals("lavalinkLoad") && reader.Read())
+						}
+						else if (reader.ValueTextEquals("lavalinkLoad") && reader.Read()) {
 							cpu.LavalinkLoad = reader.GetDouble();
+						}
 					}
 
 					statsResponse.Cpu = cpu;
@@ -157,15 +176,19 @@ namespace Victoria.Converters {
 					var frames = new Frames();
 
 					while (reader.Read()) {
-						if (reader.TokenType == JsonTokenType.EndObject)
+						if (reader.TokenType == JsonTokenType.EndObject) {
 							break;
+						}
 
-						if (reader.ValueTextEquals("sent") && reader.Read())
+						if (reader.ValueTextEquals("sent") && reader.Read()) {
 							frames.Sent = reader.GetInt32();
-						else if (reader.ValueTextEquals("nulled") && reader.Read())
+						}
+						else if (reader.ValueTextEquals("nulled") && reader.Read()) {
 							frames.Nulled = reader.GetInt32();
-						else if (reader.ValueTextEquals("deficit") && reader.Read())
+						}
+						else if (reader.ValueTextEquals("deficit") && reader.Read()) {
 							frames.Deficit = reader.GetInt32();
+						}
 					}
 
 					statsResponse.Frames = frames;
@@ -179,11 +202,13 @@ namespace Victoria.Converters {
 			var dictionary = new Dictionary<string, string>();
 
 			while (reader.Read()) {
-				if (reader.TokenType == JsonTokenType.EndObject)
+				if (reader.TokenType == JsonTokenType.EndObject) {
 					break;
+				}
 
-				if (reader.TokenType != JsonTokenType.PropertyName)
+				if (reader.TokenType != JsonTokenType.PropertyName) {
 					continue;
+				}
 
 				var propName = reader.ValueSpan;
 				reader.Read();

@@ -14,12 +14,12 @@ namespace Victoria.Responses.Rest {
         /// </summary>
         public string Severity { get; private set; }
 
-        internal void WithMessage(string message) {
-            Message = message;
-        }
+		internal void WithMessage(string message) {
+			Message = message;
+		}
 
-        internal void WithSeverity(string severity) {
-            Severity = severity;
-        }
-    }
+		internal void WithSeverity(string severity) {
+			Severity = severity;
+		}
+	}
 }

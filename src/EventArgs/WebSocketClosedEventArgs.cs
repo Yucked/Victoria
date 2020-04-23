@@ -25,11 +25,11 @@ namespace Victoria.EventArgs {
         /// </summary>
         public bool ByRemote { get; }
 
-        internal WebSocketClosedEventArgs(WebSocketClosedEvent closedEvent) {
-            GuildId = closedEvent.GuildId;
-            Code = closedEvent.Code;
-            Reason = closedEvent.Reason;
-            ByRemote = closedEvent.ByRemote;
-        }
-    }
+		internal WebSocketClosedEventArgs(WebSocketClosedEvent closedEvent) {
+			GuildId = closedEvent.GuildId;
+			Code = closedEvent.Code;
+			Reason = closedEvent.Reason;
+			ByRemote = closedEvent.ByRemote;
+		}
+	}
 }

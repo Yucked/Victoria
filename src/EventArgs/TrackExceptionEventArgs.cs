@@ -21,10 +21,10 @@ namespace Victoria.EventArgs {
         /// </summary>
         public string ErrorMessage { get; }
 
-        internal TrackExceptionEventArgs(LavaPlayer player, TrackExceptionEvent exceptionEvent) {
-            Player = player;
-            Track = TrackDecoder.Decode(exceptionEvent.Hash);
-            ErrorMessage = exceptionEvent.Error;
-        }
-    }
+		internal TrackExceptionEventArgs(LavaPlayer player, TrackExceptionEvent exceptionEvent) {
+			Player = player;
+			Track = TrackDecoder.Decode(exceptionEvent.Hash);
+			ErrorMessage = exceptionEvent.Error;
+		}
+	}
 }

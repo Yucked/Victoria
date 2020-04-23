@@ -11,69 +11,69 @@ namespace Victoria.Payloads {
         ///     15 bands (0-14) that can be changed.
         /// </summary>
         [JsonPropertyName("band")]
-        public ushort Band { get; }
+		public ushort Band { get; }
 
         /// <summary>
         ///     Gain is the multiplier for the given band. The default value is 0. Valid values range from -0.25 to 1.0,
         ///     where -0.25 means the given band is completely muted, and 0.25 means it is doubled.
         /// </summary>
         [JsonPropertyName("gain")]
-        public double Gain { get; }
+		public double Gain { get; }
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="band"></param>
         /// <param name="gain"></param>
         public EqualizerBand(ushort band, double gain) {
-            if (!Enumerable.Range(0, 14).Contains(band))
-                throw new ArgumentOutOfRangeException(nameof(band), "Valid bands are from 0 - 14.");
+			if (!Enumerable.Range(0, 14).Contains(band)) {
+				throw new ArgumentOutOfRangeException(nameof(band), "Valid bands are from 0 - 14.");
+			}
 
-            if (gain < -0.25 || gain > 1.0)
-                throw new ArgumentOutOfRangeException(nameof(gain), "Valid gains are from -0.25 - 1.0.");
+			if (gain < -0.25 || gain > 1.0) {
+				throw new ArgumentOutOfRangeException(nameof(gain), "Valid gains are from -0.25 - 1.0.");
+			}
 
-            Band = band;
-            Gain = gain;
-        }
+			Band = band;
+			Gain = gain;
+		}
 
-        /// <inheritdoc />
-        public override bool Equals(object? obj) {
-            if (obj == null || !(obj is EqualizerBand equalizerBand))
-                return false;
+		/// <inheritdoc />
+		public override bool Equals(object? obj) {
+			if (obj == null || !(obj is EqualizerBand equalizerBand)) {
+				return false;
+			}
 
-            return equalizerBand.Band == Band;
-        }
+			return equalizerBand.Band == Band;
+		}
 
-        /// <inheritdoc />
-        public bool Equals(EqualizerBand other) {
-            return Band == other.Band;
-        }
+		/// <inheritdoc />
+		public bool Equals(EqualizerBand other) {
+			return Band == other.Band;
+		}
 
-        /// <inheritdoc />
-        public override int GetHashCode() {
-            unchecked {
-                return (Band.GetHashCode() * 397) ^ Gain.GetHashCode();
-            }
-        }
+		/// <inheritdoc />
+		public override int GetHashCode() {
+			unchecked {
+				return (Band.GetHashCode() * 397) ^ Gain.GetHashCode();
+			}
+		}
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
         public static bool operator ==(EqualizerBand left, EqualizerBand right) {
-            return left.Equals(right);
-        }
+			return left.Equals(right);
+		}
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
         public static bool operator !=(EqualizerBand left, EqualizerBand right) {
-            return !left.Equals(right);
-        }
-    }
+			return !left.Equals(right);
+		}
+	}
 }
