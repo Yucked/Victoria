@@ -17,13 +17,12 @@ namespace Victoria.Responses.WebSocket {
 	}
 
 	internal sealed class StatsResponse : BaseWsResponse {
+		public Cpu Cpu { get; set; }
+		public Frames Frames { get; set; }
+		public Memory Memory { get; set; }
 		public int Players { get; set; }
 		public int PlayingPlayers { get; set; }
 		public long Uptime { get; set; }
-
-		public Cpu Cpu { get; set; }
-		public Memory Memory { get; set; }
-		public Frames Frames { get; set; }
 	}
 
 	internal class BaseEventResponse : BaseWsResponse {
@@ -40,8 +39,8 @@ namespace Victoria.Responses.WebSocket {
 	}
 
 	internal sealed class TrackExceptionEvent : BaseEventResponse {
-		public string Hash { get; set; }
 		public string Error { get; set; }
+		public string Hash { get; set; }
 	}
 
 	internal sealed class TrackStuckEvent : BaseEventResponse {
@@ -50,8 +49,8 @@ namespace Victoria.Responses.WebSocket {
 	}
 
 	internal sealed class WebSocketClosedEvent : BaseEventResponse {
+		public bool ByRemote { get; set; }
 		public int Code { get; set; }
 		public string Reason { get; set; }
-		public bool ByRemote { get; set; }
 	}
 }

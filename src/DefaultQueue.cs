@@ -10,39 +10,36 @@ namespace Victoria {
     ///     <see cref="IQueueable" />
     /// </typeparam>
     public readonly struct DefaultQueue<T> where T : IQueueable {
-        private readonly LinkedList<T> _list;
-        private readonly Random _random;
+		private readonly LinkedList<T> _list;
+		private readonly Random _random;
 
         /// <summary>
         ///     Returns the total count of items.
         /// </summary>
-        public int Count
-        {
-            get
-            {
-                lock (_list) {
-                    return _list.Count;
-                }
-            }
-        }
+        public int Count {
+			get {
+				lock (_list) {
+					return _list.Count;
+				}
+			}
+		}
 
-        /// <inheritdoc cref="IEnumerable{T}" />
-        public IEnumerable<T> Items
-        {
-            get
-            {
-                lock (_list) {
-                    for (var node = _list.First; node != null; node = node.Next)
-                        yield return node.Value;
-                }
-            }
-        }
+		/// <inheritdoc cref="IEnumerable{T}" />
+		public IEnumerable<T> Items {
+			get {
+				lock (_list) {
+					for (var node = _list.First; node != null; node = node.Next) {
+						yield return node.Value;
+					}
+				}
+			}
+		}
 
-        /// <inheritdoc cref="DefaultQueue{T}" />
-        public DefaultQueue(int randomSeed) {
-            _list = new LinkedList<T>();
-            _random = new Random(randomSeed);
-        }
+		/// <inheritdoc cref="DefaultQueue{T}" />
+		public DefaultQueue(int randomSeed) {
+			_list = new LinkedList<T>();
+			_random = new Random(randomSeed);
+		}
 
         /// <summary>
         ///     Adds an object.
@@ -51,10 +48,10 @@ namespace Victoria {
         ///     Any object that inherits <see cref="IQueueable" />.
         /// </param>
         public void Enqueue(T value) {
-            lock (_list) {
-                _list.AddLast(value);
-            }
-        }
+			lock (_list) {
+				_list.AddLast(value);
+			}
+		}
 
         /// <summary>
         ///     Safe way to dequeue an item.
@@ -64,23 +61,23 @@ namespace Victoria {
         ///     <see cref="bool" />
         /// </returns>
         public bool TryDequeue(out T value) {
-            lock (_list) {
-                if (_list.Count < 1) {
-                    value = default;
-                    return false;
-                }
+			lock (_list) {
+				if (_list.Count < 1) {
+					value = default;
+					return false;
+				}
 
-                var result = _list.First.Value;
-                if (result == null) {
-                    value = default;
-                    return false;
-                }
+				var result = _list.First.Value;
+				if (result == null) {
+					value = default;
+					return false;
+				}
 
-                _list.RemoveFirst();
-                value = result;
-                return true;
-            }
-        }
+				_list.RemoveFirst();
+				value = result;
+				return true;
+			}
+		}
 
         /// <summary>
         ///     Sneaky peaky the first time in list.
@@ -89,53 +86,57 @@ namespace Victoria {
         ///     Returns first item of type <see cref="IQueueable" />.
         /// </returns>
         public T Peek() {
-            lock (_list) {
-                return _list.First.Value;
-            }
-        }
+			lock (_list) {
+				return _list.First.Value;
+			}
+		}
 
         /// <summary>
         ///     Removes an item from queue.
         /// </summary>
         /// <param name="value">Item to remove.</param>
         public void Remove(T value) {
-            lock (_list) {
-                _list.Remove(value);
-            }
-        }
+			lock (_list) {
+				_list.Remove(value);
+			}
+		}
 
         /// <summary>
         ///     Clears the queue.
         /// </summary>
         public void Clear() {
-            lock (_list) {
-                _list.Clear();
-            }
-        }
+			lock (_list) {
+				_list.Clear();
+			}
+		}
 
         /// <summary>
         ///     Shuffles all the items in the queue.
         /// </summary>
         public void Shuffle() {
-            lock (_list) {
-                if (_list.Count < 2)
-                    return;
+			lock (_list) {
+				if (_list.Count < 2) {
+					return;
+				}
 
-                var shadow = new T[_list.Count];
-                var i = 0;
-                for (var node = _list.First; !(node is null); node = node.Next) {
-                    var j = _random.Next(i + 1);
-                    if (i != j)
-                        shadow[i] = shadow[j];
-                    shadow[j] = node.Value;
-                    i++;
-                }
+				var shadow = new T[_list.Count];
+				var i = 0;
+				for (var node = _list.First; !(node is null); node = node.Next) {
+					var j = _random.Next(i + 1);
+					if (i != j) {
+						shadow[i] = shadow[j];
+					}
 
-                _list.Clear();
-                foreach (var value in shadow)
-                    _list.AddLast(value);
-            }
-        }
+					shadow[j] = node.Value;
+					i++;
+				}
+
+				_list.Clear();
+				foreach (var value in shadow) {
+					_list.AddLast(value);
+				}
+			}
+		}
 
         /// <summary>
         ///     Removes an item based on the given index.
@@ -145,22 +146,22 @@ namespace Victoria {
         ///     Returns the removed item.
         /// </returns>
         public T RemoveAt(int index) {
-            lock (_list) {
-                var currentNode = _list.First;
+			lock (_list) {
+				var currentNode = _list.First;
 
-                for (var i = 0; i <= index && currentNode != null; i++) {
-                    if (i != index) {
-                        currentNode = currentNode.Next;
-                        continue;
-                    }
+				for (var i = 0; i <= index && currentNode != null; i++) {
+					if (i != index) {
+						currentNode = currentNode.Next;
+						continue;
+					}
 
-                    _list.Remove(currentNode);
-                    break;
-                }
+					_list.Remove(currentNode);
+					break;
+				}
 
-                return currentNode.Value;
-            }
-        }
+				return currentNode.Value;
+			}
+		}
 
         /// <summary>
         ///     Removes a item from given range.
@@ -168,18 +169,18 @@ namespace Victoria {
         /// <param name="from">Start index.</param>
         /// <param name="to">End index.</param>
         public void RemoveRange(int from, int to) {
-            lock (_list) {
-                var currentNode = _list.First;
-                for (var i = 0; i <= to && currentNode != null; i++) {
-                    if (from <= i) {
-                        _list.Remove(currentNode);
-                        currentNode = currentNode.Next;
-                        continue;
-                    }
+			lock (_list) {
+				var currentNode = _list.First;
+				for (var i = 0; i <= to && currentNode != null; i++) {
+					if (from <= i) {
+						_list.Remove(currentNode);
+						currentNode = currentNode.Next;
+						continue;
+					}
 
-                    _list.Remove(currentNode);
-                }
-            }
-        }
-    }
+					_list.Remove(currentNode);
+				}
+			}
+		}
+	}
 }

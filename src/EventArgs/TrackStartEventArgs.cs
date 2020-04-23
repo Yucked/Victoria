@@ -3,7 +3,7 @@ using Victoria.Responses.WebSocket;
 
 namespace Victoria.EventArgs {
 	/// <summary>
-	/// Information about the track that started.
+	///     Information about the track that started.
 	/// </summary>
 	public readonly struct TrackStartEventArgs {
 		/// <summary>

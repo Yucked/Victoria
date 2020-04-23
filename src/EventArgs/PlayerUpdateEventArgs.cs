@@ -21,10 +21,10 @@ namespace Victoria.EventArgs {
         /// </summary>
         public TimeSpan Position { get; }
 
-        internal PlayerUpdateEventArgs(LavaPlayer player, PlayerUpdateResponse response) {
-            Player = player;
-            Track = player.Track;
-            Position = response.State.Position;
-        }
-    }
+		internal PlayerUpdateEventArgs(LavaPlayer player, PlayerUpdateResponse response) {
+			Player = player;
+			Track = player.Track;
+			Position = response.State.Position;
+		}
+	}
 }

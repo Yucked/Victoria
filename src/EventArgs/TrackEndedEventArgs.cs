@@ -22,10 +22,10 @@ namespace Victoria.EventArgs {
         /// </summary>
         public TrackEndReason Reason { get; }
 
-        internal TrackEndedEventArgs(LavaPlayer player, TrackEndEvent endEvent) {
-            Player = player;
-            Track = TrackDecoder.Decode(endEvent.Hash);
-            Reason = endEvent.Reason;
-        }
-    }
+		internal TrackEndedEventArgs(LavaPlayer player, TrackEndEvent endEvent) {
+			Player = player;
+			Track = TrackDecoder.Decode(endEvent.Hash);
+			Reason = endEvent.Reason;
+		}
+	}
 }

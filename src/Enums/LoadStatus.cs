@@ -26,5 +26,5 @@ namespace Victoria.Enums {
         ///     Returned if Lavaplayer failed to load something for some reason.
         /// </summary>
         LoadFailed = 76
-    }
+	}
 }

@@ -25,5 +25,5 @@ namespace Victoria.Responses.Rest {
         ///     If LoadStatus was LoadFailed then Exception is returned.
         /// </summary>
         public RestException Exception { get; internal set; }
-    }
+	}
 }
