@@ -31,9 +31,9 @@ jobs:
       working-directory: Output
       run: dotnet nuget push *.nupkg -k ${{ secrets.MAGIC }} -s https://api.nuget.org/v3/index.json --skip-duplicate
     
-    - name: WebHook Trigger
-      if: always()
-      shell: bash
-      run: |
-        git clone https://github.com/WKED/ActionsWebHook webhook
-        bash webhook/send.sh ${{ job.status }} ${{ secrets.WEBHOOK_URL }}
+#    - name: WebHook Trigger
+#      if: always()
+#      shell: bash
+#      run: |
+#        git clone https://github.com/WKED/ActionsWebHook webhook
+#        bash webhook/send.sh ${{ job.status }} ${{ secrets.WEBHOOK_URL }}
