@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,11 +16,14 @@ namespace Victoria {
 		/// Shortcut method to add Victoria to <see cref="IServiceCollection"/>.
 		/// </summary>
 		/// <param name="serviceCollection"><see cref="IServiceProvider"/></param>
+		/// <param name="action">LavaConfig action.</param>
 		/// <returns><see cref="IServiceCollection"/></returns>
-		public static IServiceCollection AddVictoria(this IServiceCollection serviceCollection) {
-			return serviceCollection
-			   .AddSingleton<LavaNode>()
-			   .AddSingleton<LavaConfig>();
+		public static IServiceCollection AddLavaNode(this IServiceCollection serviceCollection, Action<LavaConfig> action = default) {
+			var lavaConfig = new LavaConfig();
+			action?.Invoke(lavaConfig);
+			serviceCollection.AddSingleton<LavaNode>();
+			serviceCollection.AddSingleton(lavaConfig);
+			return serviceCollection;
 		}
 
 		/// <summary>
@@ -27,7 +31,7 @@ namespace Victoria {
 		/// </summary>
 		/// <param name="serviceProvider"><see cref="IServiceProvider"/></param>
 		/// <exception cref="NullReferenceException">Throws if <see cref="LavaNode"/> is null in <see cref="IServiceProvider"/></exception>
-		public static Task UseVictoriaAsync(this IServiceProvider serviceProvider) {
+		public static Task UseLavaNodeAsync(this IServiceProvider serviceProvider) {
 			if (!(serviceProvider.GetService(typeof(LavaNode)) is LavaNode lavaNode)) {
 				throw new NullReferenceException(nameof(LavaNode));
 			}
@@ -70,6 +74,21 @@ namespace Victoria {
 			return LyricsResolver.SearchOVHAsync(track);
 		}
 
+		internal static bool TryRead(this ref Utf8JsonReader reader, string content) {
+			return reader.TokenType == JsonTokenType.PropertyName && reader.ValueTextEquals(content) && reader.Read();
+		}
+
+		internal static bool TryDeserialize<T>(this byte[] data, out T value, JsonSerializerOptions serializerOptions = default) {
+			try {
+				value = JsonSerializer.Deserialize<T>(data, serializerOptions);
+				return true;
+			}
+			catch {
+				value = default;
+				return false;
+			}
+		}
+
 		internal static bool EnsureState(this PlayerState state) {
 			return state == PlayerState.Connected
 			       || state == PlayerState.Playing
@@ -97,7 +116,6 @@ namespace Victoria {
 
 			return author switch {
 				""                                             => (lavaTrack.Author, title),
-				null                                           => (lavaTrack.Author, title),
 				_ when string.Equals(author, lavaTrack.Author) => (lavaTrack.Author, title),
 				_                                              => (author, title)
 			};
