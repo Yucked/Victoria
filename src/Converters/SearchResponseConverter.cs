@@ -47,7 +47,7 @@ namespace Victoria.Converters {
 			return searchResponse;
 		}
 
-		private void BuildPlaylistInfo(ref SearchResponse response, ref Utf8JsonReader reader) {
+		private static void BuildPlaylistInfo(ref SearchResponse response, ref Utf8JsonReader reader) {
 			var playlist = new PlaylistInfo();
 
 			while (reader.Read()) {
@@ -74,7 +74,7 @@ namespace Victoria.Converters {
 			response.Playlist = playlist;
 		}
 
-		private void BuildRestException(ref SearchResponse response, ref Utf8JsonReader reader) {
+		private static void BuildRestException(ref SearchResponse response, ref Utf8JsonReader reader) {
 			var exception = new RestException();
 			while (reader.Read()) {
 				if (reader.TokenType == JsonTokenType.EndObject) {
@@ -100,7 +100,7 @@ namespace Victoria.Converters {
 			response.Exception = exception;
 		}
 
-		private void BuildTracksList(ref SearchResponse response, ref Utf8JsonReader reader) {
+		private static void BuildTracksList(ref SearchResponse response, ref Utf8JsonReader reader) {
 			var set = new List<LavaTrack>();
 
 			while (reader.Read()) {
