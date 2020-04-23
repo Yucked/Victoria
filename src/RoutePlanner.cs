@@ -37,7 +37,12 @@ namespace Victoria {
 			var responseContent = await responseMessage.Content.ReadAsByteArrayAsync()
 			   .ConfigureAwait(false);
 
-			return JsonSerializer.Deserialize<RouteStatus>(responseContent, SerializerOptions);
+			if (responseContent.TryDeserialize<RouteStatus>(out var routeStatus, SerializerOptions)) {
+				return routeStatus;
+			}
+
+			var routeResponse = JsonSerializer.Deserialize<RouteResponse>(responseContent);
+			throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
 		}
 
 		/// <summary>
