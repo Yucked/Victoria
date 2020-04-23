@@ -60,7 +60,7 @@ namespace Victoria.Converters {
 			throw new NotImplementedException("This method can't be used for writing.'");
 		}
 
-		private void ProcessPlayerUpdate(ref Utf8JsonReader reader, out PlayerUpdateResponse playerUpdateResponse) {
+		private static void ProcessPlayerUpdate(ref Utf8JsonReader reader, out PlayerUpdateResponse playerUpdateResponse) {
 			//    {"op":"playerUpdate","state":{"position":4720,"time":1566866929606},"guildId":"522440206494728203"}
 
 			playerUpdateResponse = new PlayerUpdateResponse();
@@ -97,7 +97,7 @@ namespace Victoria.Converters {
 			}
 		}
 
-		private void ProcessStats(ref Utf8JsonReader reader, out StatsResponse statsResponse) {
+		private static void ProcessStats(ref Utf8JsonReader reader, out StatsResponse statsResponse) {
 			//    {"playingPlayers":0,"op":"stats",
 			//    "memory":{"reservable":1234567890,"used":1234567890,"free":1234567890,"allocated":1234567890},
 			//    "players":0,"cpu":{"cores":4,"systemLoad":0,"lavalinkLoad":0.27354256456787324},"uptime":33731}
@@ -196,7 +196,7 @@ namespace Victoria.Converters {
 			}
 		}
 
-		private void ProcessEvent(ref Utf8JsonReader reader, out BaseEventResponse eventResponse) {
+		private static void ProcessEvent(ref Utf8JsonReader reader, out BaseEventResponse eventResponse) {
 			//{"op":"event","reason":"FINISHED","type":"TrackEndEvent","track":"QAAAcwIADUxhdGUgRm9y...","guildId":"522440206494728203"}
 
 			var dictionary = new Dictionary<string, string>();
