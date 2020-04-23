@@ -22,10 +22,10 @@ namespace Victoria.EventArgs {
         /// </summary>
         public TimeSpan Threshold { get; }
 
-        internal TrackStuckEventArgs(LavaPlayer player, TrackStuckEvent stuckEvent) {
-            Player = player;
-            Track = TrackDecoder.Decode(stuckEvent.Hash);
-            Threshold = new TimeSpan(stuckEvent.ThresholdMs);
-        }
-    }
+		internal TrackStuckEventArgs(LavaPlayer player, TrackStuckEvent stuckEvent) {
+			Player = player;
+			Track = TrackDecoder.Decode(stuckEvent.Hash);
+			Threshold = new TimeSpan(stuckEvent.ThresholdMs);
+		}
+	}
 }

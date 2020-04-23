@@ -8,7 +8,7 @@ using Victoria.Responses.Rest;
 
 namespace Victoria {
 	/// <summary>
-	/// Interacting with Lavalink's RoutePlanner API.
+	///     Interacting with Lavalink's RoutePlanner API.
 	/// </summary>
 	public readonly struct RoutePlanner {
 		private readonly HttpClient _httpClient;
@@ -25,7 +25,7 @@ namespace Victoria {
 		}
 
 		/// <summary>
-		/// Returns the current status of route planner.
+		///     Returns the current status of route planner.
 		/// </summary>
 		/// <returns></returns>
 		/// <exception cref="NotImplementedException"></exception>
@@ -41,7 +41,7 @@ namespace Victoria {
 		}
 
 		/// <summary>
-		/// Unmark a failed address.
+		///     Unmark a failed address.
 		/// </summary>
 		/// <param name="address"></param>
 		/// <returns></returns>
@@ -67,7 +67,7 @@ namespace Victoria {
 		}
 
 		/// <summary>
-		/// Unmark all failed address.
+		///     Unmark all failed address.
 		/// </summary>
 		/// <returns></returns>
 		/// <exception cref="Exception">Throws if Lavalink throws an exception.</exception>
@@ -76,8 +76,9 @@ namespace Victoria {
 			using var responseMessage = await _httpClient.SendAsync(requestMessage)
 			   .ConfigureAwait(false);
 
-			if (responseMessage.StatusCode == HttpStatusCode.NoContent)
+			if (responseMessage.StatusCode == HttpStatusCode.NoContent) {
 				return;
+			}
 
 			var responseContent = await responseMessage.Content.ReadAsByteArrayAsync()
 			   .ConfigureAwait(false);

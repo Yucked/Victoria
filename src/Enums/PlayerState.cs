@@ -21,5 +21,5 @@ namespace Victoria.Enums {
         /// <summary>
         /// </summary>
         Disconnected
-    }
+	}
 }

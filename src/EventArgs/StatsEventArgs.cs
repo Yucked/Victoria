@@ -7,6 +7,21 @@ namespace Victoria.EventArgs {
     /// </summary>
     public sealed class StatsEventArgs {
         /// <summary>
+        ///     Machine's CPU info.
+        /// </summary>
+        public Cpu Cpu { get; }
+
+        /// <summary>
+        ///     Audio frames.
+        /// </summary>
+        public Frames Frames { get; }
+
+        /// <summary>
+        ///     General memory information about Lavalink.
+        /// </summary>
+        public Memory Memory { get; }
+
+        /// <summary>
         ///     Connected players.
         /// </summary>
         public int Players { get; }
@@ -21,30 +36,15 @@ namespace Victoria.EventArgs {
         /// </summary>
         public TimeSpan Uptime { get; }
 
-        /// <summary>
-        ///     General memory information about Lavalink.
-        /// </summary>
-        public Memory Memory { get; }
-
-        /// <summary>
-        ///     Audio frames.
-        /// </summary>
-        public Frames Frames { get; }
-
-        /// <summary>
-        ///     Machine's CPU info.
-        /// </summary>
-        public Cpu Cpu { get; }
-
-        internal StatsEventArgs(StatsResponse response) {
-            Players = response.Players;
-            PlayingPlayers = response.PlayingPlayers;
-            Uptime = new TimeSpan(response.Uptime);
-            Memory = response.Memory;
-            Frames = response.Frames;
-            Cpu = response.Cpu;
-        }
-    }
+		internal StatsEventArgs(StatsResponse response) {
+			Players = response.Players;
+			PlayingPlayers = response.PlayingPlayers;
+			Uptime = new TimeSpan(response.Uptime);
+			Memory = response.Memory;
+			Frames = response.Frames;
+			Cpu = response.Cpu;
+		}
+	}
 
     /// <summary>
     ///     General memory information about Lavalink.
@@ -69,7 +69,7 @@ namespace Victoria.EventArgs {
         ///     Reserved memory?
         /// </summary>
         public long Reservable { get; internal set; }
-    }
+	}
 
     /// <summary>
     ///     Audio frames.
@@ -89,7 +89,7 @@ namespace Victoria.EventArgs {
         ///     Frame deficit.
         /// </summary>
         public int Deficit { get; internal set; }
-    }
+	}
 
     /// <summary>
     ///     Machine's CPU info.
@@ -109,5 +109,5 @@ namespace Victoria.EventArgs {
         ///     Lavalink process load on CPU.
         /// </summary>
         public double LavalinkLoad { get; internal set; }
-    }
+	}
 }

@@ -32,5 +32,5 @@ namespace Victoria.Enums {
         ///     configuration. This may also indicate either a leaked audio player which was discarded, but not stopped.
         /// </summary>
         Cleanup = (byte) 'C'
-    }
+	}
 }

@@ -37,46 +37,6 @@ namespace Victoria {
 	public class LavaNode<TPlayer> : IAsyncDisposable
 		where TPlayer : LavaPlayer {
 		/// <summary>
-		///     Fires when a player update is received.
-		/// </summary>
-		public event Func<PlayerUpdateEventArgs, Task> OnPlayerUpdated;
-
-		/// <summary>
-		///     Fires when Lavalink server sends statistics.
-		/// </summary>
-		public event Func<StatsEventArgs, Task> OnStatsReceived;
-
-		/// <summary>
-		/// Fires when a track playback has started.
-		/// </summary>
-		public event Func<TrackStartEventArgs, Task> OnTrackStarted;
-
-		/// <summary>
-		///     Fires when a track playback has finished.
-		/// </summary>
-		public event Func<TrackEndedEventArgs, Task> OnTrackEnded;
-
-		/// <summary>
-		///     Fires when a track has thrown an exception.
-		/// </summary>
-		public event Func<TrackExceptionEventArgs, Task> OnTrackException;
-
-		/// <summary>
-		///     Fires when a track got stuck.
-		/// </summary>
-		public event Func<TrackStuckEventArgs, Task> OnTrackStuck;
-
-		/// <summary>
-		///     Fires when Discord closes the audio WebSocket connection.
-		/// </summary>
-		public event Func<WebSocketClosedEventArgs, Task> OnWebSocketClosed;
-
-		/// <summary>
-		///     Fires whenever a log message is sent.
-		/// </summary>
-		public event Func<LogMessage, Task> OnLog;
-
-		/// <summary>
 		///     Checks if the client has an active WebSocket connection.
 		/// </summary>
 		public bool IsConnected
@@ -89,15 +49,15 @@ namespace Victoria {
 			=> _playerCache.Values;
 
 		/// <summary>
-		/// IP rotation extension.
+		///     IP rotation extension.
 		/// </summary>
 		public RoutePlanner RoutePlanner { get; }
 
 		private readonly LavaConfig _config;
 		private readonly HttpClient _httpClient;
 		private readonly JsonSerializerOptions _jsonOptions;
-		private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
 		private readonly LavaSocket _lavaSocket;
+		private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
 		private readonly BaseSocketClient _socketClient;
 
 		private bool _refConnected;
@@ -150,17 +110,59 @@ namespace Victoria {
 		}
 
 		/// <summary>
+		///     Fires when a player update is received.
+		/// </summary>
+		public event Func<PlayerUpdateEventArgs, Task> OnPlayerUpdated;
+
+		/// <summary>
+		///     Fires when Lavalink server sends statistics.
+		/// </summary>
+		public event Func<StatsEventArgs, Task> OnStatsReceived;
+
+		/// <summary>
+		///     Fires when a track playback has started.
+		/// </summary>
+		public event Func<TrackStartEventArgs, Task> OnTrackStarted;
+
+		/// <summary>
+		///     Fires when a track playback has finished.
+		/// </summary>
+		public event Func<TrackEndedEventArgs, Task> OnTrackEnded;
+
+		/// <summary>
+		///     Fires when a track has thrown an exception.
+		/// </summary>
+		public event Func<TrackExceptionEventArgs, Task> OnTrackException;
+
+		/// <summary>
+		///     Fires when a track got stuck.
+		/// </summary>
+		public event Func<TrackStuckEventArgs, Task> OnTrackStuck;
+
+		/// <summary>
+		///     Fires when Discord closes the audio WebSocket connection.
+		/// </summary>
+		public event Func<WebSocketClosedEventArgs, Task> OnWebSocketClosed;
+
+		/// <summary>
+		///     Fires whenever a log message is sent.
+		/// </summary>
+		public event Func<LogMessage, Task> OnLog;
+
+		/// <summary>
 		///     Starts a WebSocket connection to the specified <see cref="LavaConfig.Hostname" />:<see cref="LavaConfig.Port" />
 		///     and hooks into <see cref="BaseSocketClient" /> events.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Throws if client is already connected.</exception>
 		public async Task ConnectAsync() {
-			if (Volatile.Read(ref _refConnected))
+			if (Volatile.Read(ref _refConnected)) {
 				throw new InvalidOperationException(
 					$"You must call {nameof(DisconnectAsync)} or {nameof(DisposeAsync)} before calling {nameof(ConnectAsync)}.");
+			}
 
-			if (_socketClient?.CurrentUser == null || _socketClient.CurrentUser.Id == 0)
+			if (_socketClient?.CurrentUser == null || _socketClient.CurrentUser.Id == 0) {
 				throw new InvalidOperationException($"{nameof(_socketClient)} is not in ready state.");
+			}
 
 			var shards = _socketClient switch {
 				DiscordSocketClient socketClient => await socketClient.GetRecommendedShardCountAsync()
@@ -186,12 +188,14 @@ namespace Victoria {
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
 		public async Task DisconnectAsync() {
-			if (!Volatile.Read(ref _refConnected))
+			if (!Volatile.Read(ref _refConnected)) {
 				throw new InvalidOperationException("Can't disconnect when client isn't connected.");
+			}
 
-			foreach (var (_, value) in _playerCache)
+			foreach (var (_, value) in _playerCache) {
 				await value.DisposeAsync()
 				   .ConfigureAwait(false);
+			}
 
 			_playerCache.Clear();
 
@@ -208,11 +212,13 @@ namespace Victoria {
 		///     <typeparamref name="TPlayer" />
 		/// </returns>
 		public async Task<TPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default) {
-			if (voiceChannel == null)
+			if (voiceChannel == null) {
 				throw new ArgumentNullException(nameof(voiceChannel));
+			}
 
-			if (_playerCache.TryGetValue(voiceChannel.GuildId, out var player))
+			if (_playerCache.TryGetValue(voiceChannel.GuildId, out var player)) {
 				return player;
+			}
 
 			await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
 			   .ConfigureAwait(false);
@@ -228,11 +234,13 @@ namespace Victoria {
 		/// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
 		/// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
 		public async Task LeaveAsync(IVoiceChannel voiceChannel) {
-			if (!Volatile.Read(ref _refConnected))
+			if (!Volatile.Read(ref _refConnected)) {
 				throw new InvalidOperationException("Can't execute this operation when client isn't connected.");
+			}
 
-			if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player))
+			if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player)) {
 				return;
+			}
 
 			await player.DisposeAsync()
 			   .ConfigureAwait(false);
@@ -266,54 +274,65 @@ namespace Victoria {
 		}
 
 		/// <summary>
-		/// Returns either an existing or null player.
+		///     Returns either an existing or null player.
 		/// </summary>
 		/// <param name="guild">An instance of <see cref="IGuild" />.</param>
 		/// <param name="player">An instance of <typeparamref name="TPlayer" /></param>
-		/// <returns><see cref="bool"/></returns>
+		/// <returns>
+		///     <see cref="bool" />
+		/// </returns>
 		public bool TryGetPlayer(IGuild guild, out TPlayer player) {
 			return _playerCache.TryGetValue(guild.Id, out player);
 		}
 
 		/// <summary>
-		/// Moves either a voice channel or text channel. 
+		///     Moves either a voice channel or text channel.
 		/// </summary>
-		/// <param name="channel">An instance of <see cref="IChannel"/>.</param>
+		/// <param name="channel">An instance of <see cref="IChannel" />.</param>
 		/// <typeparam name="T"></typeparam>
 		/// <exception cref="InvalidOperationException">Throws if client isn't connected or if player doesn't exist in cache.</exception>
 		/// <exception cref="ArgumentNullException">Throws if channel is null.</exception>
-		/// <exception cref="ArgumentException">Throws if channel isn't an <see cref="IVoiceChannel"/> or <see cref="ITextChannel"/>.</exception>
+		/// <exception cref="ArgumentException">
+		///     Throws if channel isn't an <see cref="IVoiceChannel" /> or
+		///     <see cref="ITextChannel" />.
+		/// </exception>
 		public async Task MoveChannelAsync<T>(T channel) where T : IChannel {
 			switch (channel) {
 				case IVoiceChannel voiceChannel: {
-					if (!Volatile.Read(ref _refConnected))
+					if (!Volatile.Read(ref _refConnected)) {
 						throw new InvalidOperationException(
 							"Can't execute this operation when client isn't connected.");
+					}
 
-					if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player))
+					if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player)) {
 						throw new InvalidOperationException($"No player was found for {voiceChannel.Guild.Name}.");
+					}
 
-					if (player.VoiceChannel.Id == voiceChannel.Id)
+					if (player.VoiceChannel.Id == voiceChannel.Id) {
 						throw new InvalidOperationException("Connected and new voice channel ids are the same.");
+					}
 
-					if (player.PlayerState == PlayerState.Playing)
+					if (player.PlayerState == PlayerState.Playing) {
 						await player.PauseAsync()
 						   .ConfigureAwait(false);
+					}
 
 					player.VoiceChannel = voiceChannel;
 					await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
 					   .ConfigureAwait(false);
 
-					if (player.PlayerState == PlayerState.Paused)
+					if (player.PlayerState == PlayerState.Paused) {
 						await player.ResumeAsync();
+					}
 
 					Log(LogSeverity.Info, $"Moved {voiceChannel.GuildId} player to {voiceChannel.Name}.");
 					break;
 				}
 
 				case ITextChannel textChannel: {
-					if (!_playerCache.TryGetValue(textChannel.Guild.Id, out var player))
+					if (!_playerCache.TryGetValue(textChannel.Guild.Id, out var player)) {
 						throw new InvalidOperationException("Player doesn't exist in cache.");
+					}
 
 					player.TextChannel = textChannel;
 					break;
@@ -359,8 +378,9 @@ namespace Victoria {
 		///     <see cref="SearchResponse" />
 		/// </returns>
 		public async Task<SearchResponse> SearchAsync(string query) {
-			if (string.IsNullOrWhiteSpace(query))
+			if (string.IsNullOrWhiteSpace(query)) {
 				throw new ArgumentNullException(nameof(query));
+			}
 
 			using var request = new HttpRequestMessage(HttpMethod.Get,
 				$"/loadtracks?identifier={WebUtility.UrlEncode(query)}");
@@ -377,13 +397,15 @@ namespace Victoria {
 
 		private Task OnUserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldState,
 			SocketVoiceState newState) {
-			if (_socketClient?.CurrentUser == null || user.Id != _socketClient.CurrentUser.Id)
+			if (_socketClient?.CurrentUser == null || user.Id != _socketClient.CurrentUser.Id) {
 				return Task.CompletedTask;
+			}
 
 			var guildId = newState.VoiceChannel?.Guild.Id;
 
-			if (!_playerCache.TryGetValue(guildId.GetValueOrDefault(), out var player))
+			if (!_playerCache.TryGetValue(guildId.GetValueOrDefault(), out var player)) {
 				return Task.CompletedTask;
+			}
 
 			player.VoiceState = newState;
 			player.VoiceChannel = newState.VoiceChannel;
@@ -392,8 +414,9 @@ namespace Victoria {
 		}
 
 		private async Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer) {
-			if (!_playerCache.TryGetValue(voiceServer.Guild.Id, out var player))
+			if (!_playerCache.TryGetValue(voiceServer.Guild.Id, out var player)) {
 				return;
+			}
 
 			player.VoiceServer = voiceServer;
 			var payload = new ServerUpdatePayload {
@@ -443,8 +466,9 @@ namespace Victoria {
 
 			switch (baseWsResponse) {
 				case PlayerUpdateResponse playerUpdateResponse: {
-					if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player))
+					if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player)) {
 						return;
+					}
 
 					player.Track?.WithPosition(playerUpdateResponse.State.Position);
 					player.LastUpdate = playerUpdateResponse.State.Time;
@@ -462,16 +486,18 @@ namespace Victoria {
 				case BaseEventResponse eventResponse: {
 					switch (eventResponse) {
 						case TrackStartEvent trackStartEvent: {
-							if (!_playerCache.TryGetValue(trackStartEvent.GuildId, out var player))
+							if (!_playerCache.TryGetValue(trackStartEvent.GuildId, out var player)) {
 								return;
+							}
 
 							OnTrackStarted?.Invoke(new TrackStartEventArgs(player, trackStartEvent));
 							return;
 						}
 
 						case TrackEndEvent trackEndEvent: {
-							if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out var player))
+							if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out var player)) {
 								return;
+							}
 
 							if (trackEndEvent.Reason != TrackEndReason.Replaced) {
 								player.Track = default;
@@ -484,16 +510,18 @@ namespace Victoria {
 						}
 
 						case TrackStuckEvent trackStuckEvent: {
-							if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out var player))
+							if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out var player)) {
 								return;
+							}
 
 							OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
 							return;
 						}
 
 						case TrackExceptionEvent trackExceptionEvent: {
-							if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out var player))
+							if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out var player)) {
 								return;
+							}
 
 							OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
 							return;
@@ -511,8 +539,9 @@ namespace Victoria {
 		}
 
 		private void Log(LogSeverity severity, string message, Exception exception = null) {
-			if (severity > _config.LogSeverity)
+			if (severity > _config.LogSeverity) {
 				return;
+			}
 
 			var logMessage = new LogMessage(severity, nameof(Victoria), message, exception);
 			OnLog?.Invoke(logMessage)
