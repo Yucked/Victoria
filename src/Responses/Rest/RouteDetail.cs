@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Victoria.Responses.Rest {
 	/// <summary>
@@ -88,6 +87,6 @@ namespace Victoria.Responses.Rest {
 		/// <summary>
 		///     Time when this address failed.
 		/// </summary>
-		public DateTimeOffset FailedOn { get; internal set; }
+		public string FailedOn { get; internal set; }
 	}
 }
