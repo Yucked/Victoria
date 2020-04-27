@@ -20,6 +20,7 @@
 			- Updated Discord.NET to 2.2.0
 			- Completed RoutePlanner API
 			- Added OnTrackStarted event
+			- Added ServiceContainer extension methods. AddLavaNode() / UseLavaNode()
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
