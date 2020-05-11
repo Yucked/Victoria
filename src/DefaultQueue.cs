@@ -1,36 +1,26 @@
-﻿using System;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using Victoria.Interfaces;
 
 namespace Victoria {
-    /// <summary>
-    ///     A queue based off of <see cref="LinkedList{T}" />.
-    /// </summary>
-    /// <typeparam name="T">
-    ///     <see cref="IQueueable" />
-    /// </typeparam>
-    public readonly struct DefaultQueue<T> where T : IQueueable {
+	/// <summary>
+	///     A queue based off of <see cref="LinkedList{T}" />.
+	/// </summary>
+	/// <typeparam name="T">
+	///     <see cref="IQueueable" />
+	/// </typeparam>
+	public readonly struct DefaultQueue<T> : IEnumerable<T> where T : IQueueable {
 		private readonly LinkedList<T> _list;
 		private readonly Random _random;
 
-        /// <summary>
-        ///     Returns the total count of items.
-        /// </summary>
-        public int Count {
+		/// <summary>
+		///     Returns the total count of items.
+		/// </summary>
+		public int Count {
 			get {
 				lock (_list) {
 					return _list.Count;
-				}
-			}
-		}
-
-		/// <inheritdoc cref="IEnumerable{T}" />
-		public IEnumerable<T> Items {
-			get {
-				lock (_list) {
-					for (var node = _list.First; node != null; node = node.Next) {
-						yield return node.Value;
-					}
 				}
 			}
 		}
@@ -41,79 +31,110 @@ namespace Victoria {
 			_random = new Random(randomSeed);
 		}
 
-        /// <summary>
-        ///     Adds an object.
-        /// </summary>
-        /// <param name="value">
-        ///     Any object that inherits <see cref="IQueueable" />.
-        /// </param>
-        public void Enqueue(T value) {
+		/// <inheritdoc />
+		public IEnumerator<T> GetEnumerator() {
+			lock (_list) {
+				for (var node = _list.First; node != null; node = node.Next) {
+					yield return node.Value;
+				}
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() {
+			return GetEnumerator();
+		}
+
+		/// <summary>
+		///     Adds an object.
+		/// </summary>
+		/// <param name="value">
+		///     Any object that inherits <see cref="IQueueable" />.
+		/// </param>
+		public void Enqueue(T value) {
+			if (value == null) {
+				throw new ArgumentNullException(nameof(value));
+			}
+
 			lock (_list) {
 				_list.AddLast(value);
 			}
 		}
 
-        /// <summary>
-        ///     Safe way to dequeue an item.
-        /// </summary>
-        /// <param name="value">First object of type <see cref="IQueueable" />.</param>
-        /// <returns>
-        ///     <see cref="bool" />
-        /// </returns>
-        public bool TryDequeue(out T value) {
+		/// <summary>
+		///     Safe way to dequeue an item.
+		/// </summary>
+		/// <param name="value">First object of type <see cref="IQueueable" />.</param>
+		/// <returns>
+		///     <see cref="bool" />
+		/// </returns>
+		public bool TryDequeue(out T value) {
 			lock (_list) {
 				if (_list.Count < 1) {
-					value = default;
+					value = default!;
 					return false;
+				}
+
+				if (_list.First == null) {
+					value = default!;
+					return true;
 				}
 
 				var result = _list.First.Value;
 				if (result == null) {
-					value = default;
+					value = default!;
 					return false;
 				}
 
 				_list.RemoveFirst();
 				value = result;
+
 				return true;
 			}
 		}
 
-        /// <summary>
-        ///     Sneaky peaky the first time in list.
-        /// </summary>
-        /// <returns>
-        ///     Returns first item of type <see cref="IQueueable" />.
-        /// </returns>
-        public T Peek() {
+		/// <summary>
+		///     Sneaky peaky the first time in list.
+		/// </summary>
+		/// <returns>
+		///     Returns first item of type <see cref="IQueueable" />.
+		/// </returns>
+		public T Peek() {
 			lock (_list) {
+				if (_list.First == null) {
+					throw new Exception("Returned value is null.");
+				}
+
 				return _list.First.Value;
 			}
 		}
 
-        /// <summary>
-        ///     Removes an item from queue.
-        /// </summary>
-        /// <param name="value">Item to remove.</param>
-        public void Remove(T value) {
+		/// <summary>
+		///     Removes an item from queue.
+		/// </summary>
+		/// <param name="value">Item to remove.</param>
+		public void Remove(T value) {
+			if (value == null) {
+				throw new ArgumentNullException(nameof(value));
+			}
+
 			lock (_list) {
 				_list.Remove(value);
 			}
 		}
 
-        /// <summary>
-        ///     Clears the queue.
-        /// </summary>
-        public void Clear() {
+		/// <summary>
+		///     Clears the queue.
+		/// </summary>
+		public void Clear() {
 			lock (_list) {
 				_list.Clear();
 			}
 		}
 
-        /// <summary>
-        ///     Shuffles all the items in the queue.
-        /// </summary>
-        public void Shuffle() {
+		/// <summary>
+		///     Shuffles all the items in the queue.
+		/// </summary>
+		public void Shuffle() {
 			lock (_list) {
 				if (_list.Count < 2) {
 					return;
@@ -138,14 +159,14 @@ namespace Victoria {
 			}
 		}
 
-        /// <summary>
-        ///     Removes an item based on the given index.
-        /// </summary>
-        /// <param name="index">Index of item.</param>
-        /// <returns>
-        ///     Returns the removed item.
-        /// </returns>
-        public T RemoveAt(int index) {
+		/// <summary>
+		///     Removes an item based on the given index.
+		/// </summary>
+		/// <param name="index">Index of item.</param>
+		/// <returns>
+		///     Returns the removed item.
+		/// </returns>
+		public T RemoveAt(int index) {
 			lock (_list) {
 				var currentNode = _list.First;
 
@@ -159,27 +180,52 @@ namespace Victoria {
 					break;
 				}
 
+				if (currentNode == null) {
+					throw new Exception("Node was null.");
+				}
+
 				return currentNode.Value;
 			}
 		}
 
-        /// <summary>
-        ///     Removes a item from given range.
-        /// </summary>
-        /// <param name="from">Start index.</param>
-        /// <param name="to">End index.</param>
-        public void RemoveRange(int from, int to) {
+		/// <summary>
+		///     Removes a item from given range.
+		/// </summary>
+		/// <param name="index">The start index.</param>
+		/// <param name="count">How many items to remove after the specified index.</param>
+		public ICollection<T> RemoveRange(int index, int count) {
+			if (index < 0) {
+				throw new ArgumentOutOfRangeException(nameof(index));
+			}
+
+			if (count < 0) {
+				throw new ArgumentOutOfRangeException(nameof(count));
+			}
+
+			if (Count - index < count) {
+				throw new ArgumentOutOfRangeException();
+			}
+
+			var tempIndex = 1;
+			var removed = new T[count];
 			lock (_list) {
 				var currentNode = _list.First;
-				for (var i = 0; i <= to && currentNode != null; i++) {
-					if (from <= i) {
-						_list.Remove(currentNode);
-						currentNode = currentNode.Next;
-						continue;
-					}
+				while (tempIndex != index && currentNode != null) {
+					tempIndex++;
+					currentNode = currentNode.Next;
+				}
+
+				var nextNode = currentNode?.Next;
+				for (var i = 0; i < count && currentNode != null; i++) {
+					var tempValue = currentNode.Value;
+					removed[i] = tempValue;
 
 					_list.Remove(currentNode);
+					currentNode = nextNode;
+					nextNode = nextNode?.Next;
 				}
+
+				return removed;
 			}
 		}
 	}
