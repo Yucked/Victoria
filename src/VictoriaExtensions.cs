@@ -84,7 +84,7 @@ namespace Victoria {
 				return true;
 			}
 			catch {
-				value = default;
+				value = default!;
 				return false;
 			}
 		}

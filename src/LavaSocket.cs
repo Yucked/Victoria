@@ -6,55 +6,44 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Victoria {
-    /// <summary>
-    /// </summary>
-    public sealed class LavaSocket : IAsyncDisposable {
+	/// <summary>
+	/// </summary>
+	public sealed class LavaSocket : IAsyncDisposable {
 		private readonly IDictionary<string, string> _headers;
 
 		private readonly LavaConfig _lavaConfig;
 		private int _connectionAttempts;
 		private TimeSpan _reconnectInterval;
 		private bool _refIsUsable;
-		private ClientWebSocket _socket;
-		private CancellationTokenSource _tokenSource;
+		private ClientWebSocket _socket = null!;
+		private CancellationTokenSource _tokenSource = null!;
+
+		/// <summary>
+		/// </summary>
+		public event Func<string, Task> OnRetry = null!;
+
+		/// <summary>
+		/// </summary>
+		public event Func<Task> OnConnected = null!;
+
+		/// <summary>
+		/// </summary>
+		public event Func<string, Task> OnDisconnected = null!;
+
+		/// <summary>
+		/// </summary>
+		public event Func<byte[], Task> OnReceive = null!;
 
 		internal LavaSocket(LavaConfig lavaConfig) {
 			_lavaConfig = lavaConfig;
 			_headers = new Dictionary<string, string>(3);
 		}
 
-		/// <inheritdoc />
-		public async ValueTask DisposeAsync() {
-			if (_socket.State == WebSocketState.Open) {
-				await _socket.CloseAsync(WebSocketCloseStatus.Empty, "", _tokenSource.Token)
-				   .ConfigureAwait(false);
-			}
-
-			_tokenSource.CancelAfter(TimeSpan.FromSeconds(5));
-			_socket.Dispose();
-		}
-
-        /// <summary>
-        /// </summary>
-        public event Func<string, Task> OnRetry;
-
-        /// <summary>
-        /// </summary>
-        public event Func<Task> OnConnected;
-
-        /// <summary>
-        /// </summary>
-        public event Func<string, Task> OnDisconnected;
-
-        /// <summary>
-        /// </summary>
-        public event Func<byte[], Task> OnReceive;
-
-        /// <summary>
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        public void SetHeader(string key, string value) {
+		/// <summary>
+		/// </summary>
+		/// <param name="key"></param>
+		/// <param name="value"></param>
+		public void SetHeader(string key, string value) {
 			if (_headers.ContainsKey(key)) {
 				return;
 			}
@@ -62,10 +51,10 @@ namespace Victoria {
 			_headers.Add(key, value);
 		}
 
-        /// <summary>
-        /// </summary>
-        /// <returns></returns>
-        public async Task ConnectAsync() {
+		/// <summary>
+		/// </summary>
+		/// <returns></returns>
+		public async Task ConnectAsync() {
 			_tokenSource = new CancellationTokenSource();
 
 			_socket = new ClientWebSocket();
@@ -87,13 +76,13 @@ namespace Victoria {
 			}
 		}
 
-        /// <summary>
-        /// </summary>
-        /// <param name="value"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        public async Task SendAsync<T>(T value) {
+		/// <summary>
+		/// </summary>
+		/// <param name="value"></param>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		/// <exception cref="InvalidOperationException"></exception>
+		public async Task SendAsync<T>(T value) {
 			if (_socket.State != WebSocketState.Open) {
 				throw new InvalidOperationException("WebSocket state is invalid.");
 			}
@@ -103,12 +92,23 @@ namespace Victoria {
 			   .ConfigureAwait(false);
 		}
 
-        /// <summary>
-        /// </summary>
-        /// <returns></returns>
-        public async Task DisconnectAsync() {
+		/// <summary>
+		/// </summary>
+		/// <returns></returns>
+		public async Task DisconnectAsync() {
 			await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Requested.", _tokenSource.Token)
 			   .ConfigureAwait(false);
+		}
+
+		/// <inheritdoc />
+		public async ValueTask DisposeAsync() {
+			if (_socket.State == WebSocketState.Open) {
+				await _socket.CloseAsync(WebSocketCloseStatus.Empty, "", _tokenSource.Token)
+				   .ConfigureAwait(false);
+			}
+
+			_tokenSource.CancelAfter(TimeSpan.FromSeconds(5));
+			_socket.Dispose();
 		}
 
 		private async Task VerifyConnectionAsync(Task task) {
