@@ -538,7 +538,7 @@ namespace Victoria {
 			}
 		}
 
-		private void Log(LogSeverity severity, string message, Exception exception = null) {
+		private void Log(LogSeverity severity, string message, Exception exception = null!) {
 			if (severity > _config.LogSeverity) {
 				return;
 			}
