@@ -10,6 +10,7 @@ ProjectSection(SolutionItems) = preProject
 	.gitignore = .gitignore
 	README.md = README.md
 	nuget.config = nuget.config
+	.github\workflows\dotnet-core.yml = .github\workflows\dotnet-core.yml
 EndProjectSection
 EndProject
 Global
