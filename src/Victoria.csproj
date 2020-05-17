@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<LangVersion>8.0</LangVersion>
-		<TargetFrameworks>netcoreapp3.0;netcoreapp3.1;netcoreapp5.0</TargetFrameworks>
+		<TargetFramework>netcoreapp3.0</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
