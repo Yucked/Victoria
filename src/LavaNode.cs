@@ -455,10 +455,10 @@ namespace Victoria {
 			return Task.CompletedTask;
 		}
 
-		private async Task OnReceiveAsync(byte[] data) {
+		private Task OnReceiveAsync(byte[] data) {
 			if (data.Length == 0) {
 				Log(LogSeverity.Warning, "Received empty payload from Lavalink.");
-				return;
+				return Task.CompletedTask;
 			}
 
 			Log(LogSeverity.Debug, Encoding.UTF8.GetString(data));
@@ -467,7 +467,7 @@ namespace Victoria {
 			switch (baseWsResponse) {
 				case PlayerUpdateResponse playerUpdateResponse: {
 					if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player)) {
-						return;
+						return Task.CompletedTask;
 					}
 
 					player.Track?.WithPosition(playerUpdateResponse.State.Position);
@@ -475,28 +475,29 @@ namespace Victoria {
 
 					var playerUpdateEventArgs = new PlayerUpdateEventArgs(player, playerUpdateResponse);
 					OnPlayerUpdated?.Invoke(playerUpdateEventArgs);
-					return;
+					break;
 				}
 
 				case StatsResponse statsResponse: {
 					OnStatsReceived?.Invoke(new StatsEventArgs(statsResponse));
-					return;
+					return Task.CompletedTask;
 				}
 
 				case BaseEventResponse eventResponse: {
 					switch (eventResponse) {
 						case TrackStartEvent trackStartEvent: {
 							if (!_playerCache.TryGetValue(trackStartEvent.GuildId, out var player)) {
-								return;
+								break;
 							}
 
+							player.PlayerState = PlayerState.Playing;
 							OnTrackStarted?.Invoke(new TrackStartEventArgs(player, trackStartEvent));
-							return;
+							break;
 						}
 
 						case TrackEndEvent trackEndEvent: {
 							if (!_playerCache.TryGetValue(trackEndEvent.GuildId, out var player)) {
-								return;
+								break;
 							}
 
 							if (trackEndEvent.Reason != TrackEndReason.Replaced) {
@@ -506,36 +507,40 @@ namespace Victoria {
 
 							var trackEndedEventArgs = new TrackEndedEventArgs(player, trackEndEvent);
 							OnTrackEnded?.Invoke(trackEndedEventArgs);
-							return;
+							break;
 						}
 
 						case TrackStuckEvent trackStuckEvent: {
 							if (!_playerCache.TryGetValue(trackStuckEvent.GuildId, out var player)) {
-								return;
+								break;
 							}
 
+							player.PlayerState = PlayerState.Stopped;
 							OnTrackStuck?.Invoke(new TrackStuckEventArgs(player, trackStuckEvent));
-							return;
+							break;
 						}
 
 						case TrackExceptionEvent trackExceptionEvent: {
 							if (!_playerCache.TryGetValue(trackExceptionEvent.GuildId, out var player)) {
-								return;
+								break;
 							}
 
+							player.PlayerState = PlayerState.Stopped;
 							OnTrackException?.Invoke(new TrackExceptionEventArgs(player, trackExceptionEvent));
-							return;
+							break;
 						}
 
 						case WebSocketClosedEvent socketClosedEvent: {
 							OnWebSocketClosed?.Invoke(new WebSocketClosedEventArgs(socketClosedEvent));
-							return;
+							break;
 						}
 					}
-
-					return;
+					
+					break;
 				}
 			}
+			
+			return Task.CompletedTask;
 		}
 
 		private void Log(LogSeverity severity, string message, Exception exception = null!) {
