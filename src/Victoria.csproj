@@ -21,6 +21,7 @@
 			- Fixed RemoveRange method in DefaultQueue
 			- Enabled Nullable support in project
 			- Throwing exceptions in DefaultQueue
+			- Fixed Player.PlayerState state?
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
