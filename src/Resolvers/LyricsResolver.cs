@@ -26,10 +26,12 @@ namespace Victoria.Resolvers {
 			}
 
 			var (author, title) = lavaTrack.GetAuthorAndTitle();
-			author = author.Replace(' ', '-');
-			title = title.Replace(' ', '-');
+			var authorTitle = $"{author}{title}"
+			   .TrimStart()
+			   .TrimEnd()
+			   .Replace(' ', '-');
 
-			var url = $"https://genius.com/{author}-{title}-lyrics";
+			var url = $"https://genius.com/{authorTitle}-lyrics";
 			var bytes = await GetBytesAsync(url)
 			   .ConfigureAwait(false);
 			return VictoriaExtensions.ParseGeniusHtml(bytes);
