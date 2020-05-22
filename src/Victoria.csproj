@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.1.4</Version>
+		<Version>5.1.5</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2020 Yucked. All rights reserved.</Copyright>
@@ -17,11 +17,10 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Added IEnumerable{T} to DefaultQueue
-			- Fixed RemoveRange method in DefaultQueue
-			- Enabled Nullable support in project
-			- Throwing exceptions in DefaultQueue
-			- Fixed Player.PlayerState state?
+			- Fixed TrackStartEvent not firing
+			- Fixed LyricsResolver
+			- Trimmed lyrics related string
+			- Fixed Equalizer bands indexing issue
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
