@@ -12,6 +12,9 @@ namespace Victoria {
 	/// <summary>
 	/// </summary>
 	public static class VictoriaExtensions {
+		private static readonly Regex TitleRegex
+			= new Regex(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
 		/// <summary>
 		/// Shortcut method to add Victoria to <see cref="IServiceCollection"/>.
 		/// </summary>
@@ -21,8 +24,8 @@ namespace Victoria {
 		public static IServiceCollection AddLavaNode(this IServiceCollection serviceCollection, Action<LavaConfig> action = default) {
 			var lavaConfig = new LavaConfig();
 			action?.Invoke(lavaConfig);
-			serviceCollection.AddSingleton<LavaNode>();
 			serviceCollection.AddSingleton(lavaConfig);
+			serviceCollection.AddSingleton<LavaNode>();
 			return serviceCollection;
 		}
 
@@ -108,12 +111,12 @@ namespace Victoria {
 
 			var author = split[0];
 			var title = split[1];
-			var regex = new Regex(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-			while (regex.IsMatch(title)) {
-				title = regex.Replace(title, string.Empty);
+			while (TitleRegex.IsMatch(title)) {
+				title = TitleRegex.Replace(title, string.Empty);
 			}
 
+			title = title.TrimStart().TrimEnd();
 			return author switch {
 				""                                             => (lavaTrack.Author, title),
 				_ when string.Equals(author, lavaTrack.Author) => (lavaTrack.Author, title),
@@ -134,7 +137,7 @@ namespace Victoria {
 			}
 
 			var htmlRegex = new Regex("<[^>]*?>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-			return htmlRegex.Replace(rawHtml, string.Empty);
+			return htmlRegex.Replace(rawHtml, string.Empty).TrimStart().TrimEnd();
 		}
 	}
 }
