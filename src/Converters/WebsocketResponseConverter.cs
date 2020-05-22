@@ -225,6 +225,7 @@ namespace Victoria.Converters {
 			switch (type) {
 				case "TrackStartEvent":
 					eventResponse = new TrackStartEvent {
+						GuildId = ulong.Parse(dictionary["guildId"]),
 						Hash = dictionary["track"]
 					};
 					break;
