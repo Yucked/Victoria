@@ -70,18 +70,18 @@ namespace Victoria {
 		public bool TryDequeue(out T value) {
 			lock (_list) {
 				if (_list.Count < 1) {
-					value = default!;
+					value = default;
 					return false;
 				}
 
 				if (_list.First == null) {
-					value = default!;
+					value = default;
 					return true;
 				}
 
 				var result = _list.First.Value;
 				if (result == null) {
-					value = default!;
+					value = default;
 					return false;
 				}
 

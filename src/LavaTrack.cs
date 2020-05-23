@@ -2,53 +2,53 @@ using System;
 using Victoria.Interfaces;
 
 namespace Victoria {
-    /// <summary>
-    /// </summary>
-    public class LavaTrack : IQueueable {
-        /// <summary>
-        ///     Track's author.
-        /// </summary>
-        public string Author { get; private set; }
+	/// <summary>
+	/// </summary>
+	public class LavaTrack : IQueueable {
+		/// <summary>
+		///     Track's author.
+		/// </summary>
+		public string Author { get; private set; }
 
-        /// <summary>
-        ///     Whether the track is seekable.
-        /// </summary>
-        public bool CanSeek { get; private set; }
+		/// <summary>
+		///     Whether the track is seekable.
+		/// </summary>
+		public bool CanSeek { get; private set; }
 
-        /// <summary>
-        ///     Track's length.
-        /// </summary>
-        public TimeSpan Duration { get; private set; }
+		/// <summary>
+		///     Track's length.
+		/// </summary>
+		public TimeSpan Duration { get; private set; }
 
-        /// <summary>
-        ///     Track's encoded hash.
-        /// </summary>
-        public string Hash { get; private set; }
+		/// <summary>
+		///     Track's encoded hash.
+		/// </summary>
+		public string Hash { get; private set; }
 
-        /// <summary>
-        ///     Audio / Video track Id.
-        /// </summary>
-        public string Id { get; private set; }
+		/// <summary>
+		///     Audio / Video track Id.
+		/// </summary>
+		public string Id { get; private set; }
 
-        /// <summary>
-        ///     Whether the track is a stream.
-        /// </summary>
-        public bool IsStream { get; private set; }
+		/// <summary>
+		///     Whether the track is a stream.
+		/// </summary>
+		public bool IsStream { get; private set; }
 
-        /// <summary>
-        ///     Track's current position.
-        /// </summary>
-        public TimeSpan Position { get; private set; }
+		/// <summary>
+		///     Track's current position.
+		/// </summary>
+		public TimeSpan Position { get; private set; }
 
-        /// <summary>
-        ///     Track's title.
-        /// </summary>
-        public string Title { get; private set; }
+		/// <summary>
+		///     Track's title.
+		/// </summary>
+		public string Title { get; private set; }
 
-        /// <summary>
-        ///     Track's url.
-        /// </summary>
-        public string Url { get; private set; }
+		/// <summary>
+		///     Track's url.
+		/// </summary>
+		public string Url { get; private set; }
 
 		internal LavaTrack WithHash(string hash) {
 			Hash = hash;
