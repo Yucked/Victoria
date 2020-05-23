@@ -62,6 +62,46 @@ namespace Victoria {
 
 		private bool _refConnected;
 
+		/// <summary>
+		///     Fires when a player update is received.
+		/// </summary>
+		public event Func<PlayerUpdateEventArgs, Task> OnPlayerUpdated;
+
+		/// <summary>
+		///     Fires when Lavalink server sends statistics.
+		/// </summary>
+		public event Func<StatsEventArgs, Task> OnStatsReceived;
+
+		/// <summary>
+		///     Fires when a track playback has started.
+		/// </summary>
+		public event Func<TrackStartEventArgs, Task> OnTrackStarted;
+
+		/// <summary>
+		///     Fires when a track playback has finished.
+		/// </summary>
+		public event Func<TrackEndedEventArgs, Task> OnTrackEnded;
+
+		/// <summary>
+		///     Fires when a track has thrown an exception.
+		/// </summary>
+		public event Func<TrackExceptionEventArgs, Task> OnTrackException;
+
+		/// <summary>
+		///     Fires when a track got stuck.
+		/// </summary>
+		public event Func<TrackStuckEventArgs, Task> OnTrackStuck;
+
+		/// <summary>
+		///     Fires when Discord closes the audio WebSocket connection.
+		/// </summary>
+		public event Func<WebSocketClosedEventArgs, Task> OnWebSocketClosed;
+
+		/// <summary>
+		///     Fires whenever a log message is sent.
+		/// </summary>
+		public event Func<LogMessage, Task> OnLog;
+
 		/// <inheritdoc />
 		public LavaNode(DiscordSocketClient socketClient, LavaConfig config)
 			: this(socketClient as BaseSocketClient, config) {
@@ -108,46 +148,6 @@ namespace Victoria {
 
 			_playerCache.Clear();
 		}
-
-		/// <summary>
-		///     Fires when a player update is received.
-		/// </summary>
-		public event Func<PlayerUpdateEventArgs, Task> OnPlayerUpdated;
-
-		/// <summary>
-		///     Fires when Lavalink server sends statistics.
-		/// </summary>
-		public event Func<StatsEventArgs, Task> OnStatsReceived;
-
-		/// <summary>
-		///     Fires when a track playback has started.
-		/// </summary>
-		public event Func<TrackStartEventArgs, Task> OnTrackStarted;
-
-		/// <summary>
-		///     Fires when a track playback has finished.
-		/// </summary>
-		public event Func<TrackEndedEventArgs, Task> OnTrackEnded;
-
-		/// <summary>
-		///     Fires when a track has thrown an exception.
-		/// </summary>
-		public event Func<TrackExceptionEventArgs, Task> OnTrackException;
-
-		/// <summary>
-		///     Fires when a track got stuck.
-		/// </summary>
-		public event Func<TrackStuckEventArgs, Task> OnTrackStuck;
-
-		/// <summary>
-		///     Fires when Discord closes the audio WebSocket connection.
-		/// </summary>
-		public event Func<WebSocketClosedEventArgs, Task> OnWebSocketClosed;
-
-		/// <summary>
-		///     Fires whenever a log message is sent.
-		/// </summary>
-		public event Func<LogMessage, Task> OnLog;
 
 		/// <summary>
 		///     Starts a WebSocket connection to the specified <see cref="LavaConfig.Hostname" />:<see cref="LavaConfig.Port" />
@@ -455,10 +455,10 @@ namespace Victoria {
 			return Task.CompletedTask;
 		}
 
-		private Task OnReceiveAsync(byte[] data) {
+		private async Task OnReceiveAsync(byte[] data) {
 			if (data.Length == 0) {
 				Log(LogSeverity.Warning, "Received empty payload from Lavalink.");
-				return Task.CompletedTask;
+				return;
 			}
 
 			Log(LogSeverity.Debug, Encoding.UTF8.GetString(data));
@@ -467,7 +467,7 @@ namespace Victoria {
 			switch (baseWsResponse) {
 				case PlayerUpdateResponse playerUpdateResponse: {
 					if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player)) {
-						return Task.CompletedTask;
+						return;
 					}
 
 					player.Track?.WithPosition(playerUpdateResponse.State.Position);
@@ -480,7 +480,7 @@ namespace Victoria {
 
 				case StatsResponse statsResponse: {
 					OnStatsReceived?.Invoke(new StatsEventArgs(statsResponse));
-					return Task.CompletedTask;
+					return;
 				}
 
 				case BaseEventResponse eventResponse: {
@@ -535,15 +535,13 @@ namespace Victoria {
 							break;
 						}
 					}
-					
+
 					break;
 				}
 			}
-			
-			return Task.CompletedTask;
 		}
 
-		private void Log(LogSeverity severity, string message, Exception exception = null!) {
+		private void Log(LogSeverity severity, string message, Exception exception = null) {
 			if (severity > _config.LogSeverity) {
 				return;
 			}
