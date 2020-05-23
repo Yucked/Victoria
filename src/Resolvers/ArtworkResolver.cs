@@ -4,17 +4,17 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace Victoria.Resolvers {
-    /// <summary>
-    ///     Resolver for fetching track artwork.
-    /// </summary>
-    public readonly struct ArtworkResolver {
-        /// <summary>
-        ///     Fetches artwork for Youtube, Twitch, SoundCloud and Vimeo.
-        /// </summary>
-        /// <param name="track"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static async ValueTask<string> FetchAsync(LavaTrack track) {
+	/// <summary>
+	///     Resolver for fetching track artwork.
+	/// </summary>
+	public readonly struct ArtworkResolver {
+		/// <summary>
+		///     Fetches artwork for Youtube, Twitch, SoundCloud and Vimeo.
+		/// </summary>
+		/// <param name="track"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		public static async ValueTask<string> FetchAsync(LavaTrack track) {
 			if (track == null) {
 				throw new ArgumentNullException(nameof(track));
 			}

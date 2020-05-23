@@ -16,11 +16,15 @@ namespace Victoria {
 			= new Regex(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		/// <summary>
-		/// Shortcut method to add Victoria to <see cref="IServiceCollection"/>.
+		///     Shortcut method to add Victoria to <see cref="IServiceCollection" />.
 		/// </summary>
-		/// <param name="serviceCollection"><see cref="IServiceProvider"/></param>
+		/// <param name="serviceCollection">
+		///     <see cref="IServiceProvider" />
+		/// </param>
 		/// <param name="action">LavaConfig action.</param>
-		/// <returns><see cref="IServiceCollection"/></returns>
+		/// <returns>
+		///     <see cref="IServiceCollection" />
+		/// </returns>
 		public static IServiceCollection AddLavaNode(this IServiceCollection serviceCollection, Action<LavaConfig> action = default) {
 			var lavaConfig = new LavaConfig();
 			action?.Invoke(lavaConfig);
@@ -30,10 +34,14 @@ namespace Victoria {
 		}
 
 		/// <summary>
-		/// Shortcut method to use <see cref="LavaNode"/> from <see cref="IServiceProvider"/>.
+		///     Shortcut method to use <see cref="LavaNode" /> from <see cref="IServiceProvider" />.
 		/// </summary>
-		/// <param name="serviceProvider"><see cref="IServiceProvider"/></param>
-		/// <exception cref="NullReferenceException">Throws if <see cref="LavaNode"/> is null in <see cref="IServiceProvider"/></exception>
+		/// <param name="serviceProvider">
+		///     <see cref="IServiceProvider" />
+		/// </param>
+		/// <exception cref="NullReferenceException">
+		///     Throws if <see cref="LavaNode" /> is null in <see cref="IServiceProvider" />
+		/// </exception>
 		public static Task UseLavaNodeAsync(this IServiceProvider serviceProvider) {
 			if (!(serviceProvider.GetService(typeof(LavaNode)) is LavaNode lavaNode)) {
 				throw new NullReferenceException(nameof(LavaNode));
@@ -87,7 +95,7 @@ namespace Victoria {
 				return true;
 			}
 			catch {
-				value = default!;
+				value = default;
 				return false;
 			}
 		}
