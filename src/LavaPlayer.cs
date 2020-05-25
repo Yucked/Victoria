@@ -142,23 +142,22 @@ namespace Victoria {
 				throw new InvalidOperationException($"{nameof(endTime)} must be greather than {nameof(startTime)}.");
 			}
 
+			Track = track;
+			PlayerState = PlayerState.Playing;
+			
 			var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, endTime, noReplace);
 			await _lavaSocket.SendAsync(payload)
 			   .ConfigureAwait(false);
-
-			Track = track;
-			PlayerState = PlayerState.Playing;
 		}
 
 		/// <summary>
 		///     Stops the current track if any is playing.
 		/// </summary>
 		public async Task StopAsync() {
+			PlayerState = PlayerState.Stopped;
 			var payload = new StopPayload(VoiceChannel.GuildId);
 			await _lavaSocket.SendAsync(payload)
 			   .ConfigureAwait(false);
-
-			PlayerState = PlayerState.Stopped;
 		}
 
 		/// <summary>
@@ -170,13 +169,13 @@ namespace Victoria {
 					"Player state doesn't match any of the following states: Connected, Playing, Paused.");
 			}
 
-			var payload = new PausePayload(VoiceChannel.GuildId, true);
-			await _lavaSocket.SendAsync(payload)
-			   .ConfigureAwait(false);
-
 			PlayerState = Track is null
 				? PlayerState.Stopped
 				: PlayerState.Paused;
+			
+			var payload = new PausePayload(VoiceChannel.GuildId, true);
+			await _lavaSocket.SendAsync(payload)
+			   .ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -188,13 +187,13 @@ namespace Victoria {
 					"Player state doesn't match any of the following states: Connected, Playing, Paused.");
 			}
 
-			var payload = new PausePayload(VoiceChannel.GuildId, false);
-			await _lavaSocket.SendAsync(payload)
-			   .ConfigureAwait(false);
-
 			PlayerState = Track is null
 				? PlayerState.Stopped
 				: PlayerState.Playing;
+			
+			var payload = new PausePayload(VoiceChannel.GuildId, false);
+			await _lavaSocket.SendAsync(payload)
+			   .ConfigureAwait(false);
 		}
 
 		/// <summary>
