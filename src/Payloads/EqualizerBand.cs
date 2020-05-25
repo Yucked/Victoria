@@ -6,12 +6,12 @@ namespace Victoria.Payloads {
 	/// <summary>
 	///     Equalizer band
 	/// </summary>
-	public struct EqualizerBand : IEquatable<EqualizerBand> {
+	public readonly struct EqualizerBand : IEquatable<EqualizerBand> {
 		/// <summary>
 		///     15 bands (0-14) that can be changed.
 		/// </summary>
 		[JsonPropertyName("band")]
-		public ushort Band { get; }
+		public int Band { get; }
 
 		/// <summary>
 		///     Gain is the multiplier for the given band. The default value is 0. Valid values range from -0.25 to 1.0,
@@ -24,7 +24,7 @@ namespace Victoria.Payloads {
 		/// </summary>
 		/// <param name="band"></param>
 		/// <param name="gain"></param>
-		public EqualizerBand(ushort band, double gain) {
+		public EqualizerBand(int band, double gain) {
 			if (!Enumerable.Range(0, 14).Contains(band)) {
 				throw new ArgumentOutOfRangeException(nameof(band), "Valid bands are from 0 - 14.");
 			}
