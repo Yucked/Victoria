@@ -77,7 +77,7 @@ namespace Victoria {
 			_lavaSocket = lavaSocket;
 			VoiceChannel = voiceChannel;
 			TextChannel = textChannel;
-			Queue = new DefaultQueue<IQueueable>(69);
+			Queue = new DefaultQueue<IQueueable>();
 			_equalizer = new Dictionary<int, EqualizerBand>(15);
 		}
 
@@ -126,11 +126,7 @@ namespace Victoria {
 		/// <exception cref="ArgumentOutOfRangeException">Throws when start or end time are out of range.</exception>
 		/// <exception cref="InvalidOperationException">Throws when star time is bigger than end time.</exception>
 		public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan endTime, bool noReplace = false) {
-			if (track == null) {
-				throw new ArgumentNullException(nameof(track));
-			}
-
-			if (startTime.TotalMilliseconds < 0) {
+            if (startTime.TotalMilliseconds < 0) {
 				throw new ArgumentOutOfRangeException(nameof(startTime), "Value must be greater than 0.");
 			}
 
@@ -142,7 +138,7 @@ namespace Victoria {
 				throw new InvalidOperationException($"{nameof(endTime)} must be greather than {nameof(startTime)}.");
 			}
 
-			Track = track;
+			Track = track ?? throw new ArgumentNullException(nameof(track));
 			PlayerState = PlayerState.Playing;
 			
 			var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, endTime, noReplace);
