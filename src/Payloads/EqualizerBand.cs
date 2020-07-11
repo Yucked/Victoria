@@ -25,7 +25,7 @@ namespace Victoria.Payloads {
 		/// <param name="band"></param>
 		/// <param name="gain"></param>
 		public EqualizerBand(int band, double gain) {
-			if (!Enumerable.Range(0, 14).Contains(band)) {
+			if (!Enumerable.Range(0, 15).Contains(band)) {
 				throw new ArgumentOutOfRangeException(nameof(band), "Valid bands are from 0 - 14.");
 			}
 
