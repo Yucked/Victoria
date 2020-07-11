@@ -10,7 +10,7 @@ namespace Victoria {
 	/// <typeparam name="T">
 	///     <see cref="IQueueable" />
 	/// </typeparam>
-	public readonly struct DefaultQueue<T> : IEnumerable<T> where T : IQueueable {
+	public sealed class DefaultQueue<T> : IEnumerable<T> where T : IQueueable {
 		private readonly LinkedList<T> _list;
 		private readonly Random _random;
 
@@ -26,9 +26,9 @@ namespace Victoria {
 		}
 
 		/// <inheritdoc cref="DefaultQueue{T}" />
-		public DefaultQueue(int randomSeed) {
+		public DefaultQueue() {
 			_list = new LinkedList<T>();
-			_random = new Random(randomSeed);
+			_random = new Random();
 		}
 
 		/// <inheritdoc />
