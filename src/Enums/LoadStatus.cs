@@ -1,5 +1,6 @@
 namespace Victoria.Enums {
 	/// <summary>
+	/// Search status when searching for songs via Lavalink.
 	/// </summary>
 	public enum LoadStatus : byte {
 		/// <summary>
