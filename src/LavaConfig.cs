@@ -3,6 +3,7 @@ using Discord;
 
 namespace Victoria {
 	/// <summary>
+	/// Configuration for <see cref="LavaNode{TPlayer}"/>
 	/// </summary>
 	public sealed class LavaConfig {
 		/// <summary>

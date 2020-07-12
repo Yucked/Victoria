@@ -9,6 +9,7 @@ using Victoria.Payloads;
 
 namespace Victoria {
 	/// <summary>
+	/// Represents a <see cref="IVoiceChannel"/> connection.
 	/// </summary>
 	public class LavaPlayer : IAsyncDisposable {
 		/// <summary>
