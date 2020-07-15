@@ -330,3 +330,12 @@ ASALocalRun/
 .mfractor/
 
 *.json
+###############
+#    folder   #
+###############
+/**/DROP/
+/**/TEMP/
+/**/packages/
+/**/bin/
+/**/obj/
+_site
