@@ -329,9 +329,8 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 
-*.json
 ###############
-#    folder   #
+#    DocsFX   #
 ###############
 /**/DROP/
 /**/TEMP/
