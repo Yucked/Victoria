@@ -1,3 +1,7 @@
+---
+title: Home
+---
+
 <p align="center">
 	<img src="https://imgur.com/l62SfF9.png" />
 	</br>
