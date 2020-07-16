@@ -46,6 +46,3 @@ There errors emerge from Lavalink and aren't related to Victoria. Please take th
     - Check whether [SearchResponse#LoadStatus] is `null`, `LoadFailed`, or `NoMatches`.
     - Check whether [SearchResponse#Tracks] is empty or `null`.
     - Check whether `FirstOrDefault` on [SearchResponse#Tracks] returns a `null`/`default` [LavaTrack].
----
-
-## 🧛‍♀️ Victoria
