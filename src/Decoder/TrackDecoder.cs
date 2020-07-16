@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Victoria.Decoder {
 	/// <summary>
+	/// Helper class for decoding Lavalink's <see cref="LavaTrack"/> hash.
 	/// </summary>
 	public readonly struct TrackDecoder {
 		/// <summary>
