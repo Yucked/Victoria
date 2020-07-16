@@ -37,11 +37,15 @@ pre {
   background-color: var(--header-bg-color);
 }
 
-.toc .nav > li > a:hover, .toc .nav > li > a:focus {
+.toc .nav > li > a:hover, .toc .nav > li > a:focus,
+.tabGroup a[role="tab"]:hover, .tabGroup a[role="tab"]:focus, .tabGroup a[role="tab"][aria-selected="true"] {
   color: var(--highlight-light);
 }
 
-td, .footer {
+td, 
+.footer,
+.tabGroup a[role="tab"][aria-selected="true"],
+.tabGroup a[role="tab"] {
   border-top: none;
   background-color: var(--body-bg);
   color: var(--font-color);
