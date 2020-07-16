@@ -126,13 +126,13 @@ namespace Victoria.Converters {
 						}
 
 						if (reader.ValueTextEquals("free") && reader.Read()) {
-							memory.Free = reader.GetInt32();
+							memory.Free = reader.GetInt64();
 						}
 						else if (reader.ValueTextEquals("used") && reader.Read()) {
-							memory.Used = reader.GetInt32();
+							memory.Used = reader.GetInt64();
 						}
 						else if (reader.ValueTextEquals("allocated") && reader.Read()) {
-							memory.Allocated = reader.GetInt32();
+							memory.Allocated = reader.GetInt64();
 						}
 						else if (reader.ValueTextEquals("reservable") && reader.Read()) {
 							memory.Reservable = reader.GetInt64();
