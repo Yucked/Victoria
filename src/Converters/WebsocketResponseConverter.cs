@@ -135,7 +135,7 @@ namespace Victoria.Converters {
 							memory.Allocated = reader.GetInt32();
 						}
 						else if (reader.ValueTextEquals("reservable") && reader.Read()) {
-							memory.Reservable = reader.GetInt32();
+							memory.Reservable = reader.GetInt64();
 						}
 					}
 
