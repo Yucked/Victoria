@@ -16,3 +16,5 @@
       topicUid: Guides.Samples.ExceptionHandling
     - name: Auto Disconnect
       topicUid: Guides.Samples.AutoDisconnect
+    - name: Fetching Lyrics
+      topicUid: Guides.Samples.FetchingLyrics
