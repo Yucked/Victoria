@@ -4,14 +4,26 @@ title: ⚗️ Quick Start
 ---
 
 # ⚗️ Quick Start
-Getting started with Victoria is fairly simple and quick:
-- Add Victoria package from Nuget.
+With your bot structure laid out, you can now start working with Victoria.
 - Add `LavaNode` and `LavaConfig` to `ServiceCollection`.
 ```cs
+	// For version 5.1.2 and before.
+
 	var services = new ServiceCollection()
 		// Other services DiscordSocketClient, CommandService, etc
 		.AddSingleton<LavaNode>()
 		.AddSingleton<LavaConfig>();
+		
+	var provider = services.BuildServiceProvider();
+```
+
+```cs
+	// For versions 5.1.3 and above.
+	var services = new ServiceCollection()
+		// Other services DiscordSocketClient, CommandService, etc
+		.AddLavaNode(x => {
+			x.SelfDeaf = false;
+		});
 		
 	var provider = services.BuildServiceProvider();
 ```
