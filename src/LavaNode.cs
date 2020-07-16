@@ -18,7 +18,9 @@ using Victoria.Responses.WebSocket;
 using PlayerState = Victoria.Enums.PlayerState;
 
 namespace Victoria {
-	/// <inheritdoc />
+	/// <summary>
+	/// Represents a single connection to a Lavalink server.
+	/// </summary>
 	public class LavaNode : LavaNode<LavaPlayer> {
 		/// <inheritdoc />
 		public LavaNode(DiscordSocketClient socketClient, LavaConfig config) : base(socketClient, config) {
@@ -30,11 +32,10 @@ namespace Victoria {
 	}
 
 	/// <summary>
-	///     Represents a single connection to a Lavalink server.
+	///     Represents a single connection to a Lavalink server with custom <typeparamref name="TPlayer"/>.
 	/// </summary>
-	/// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer" /></typeparam>
-	/// .
-	public class LavaNode<TPlayer> : IAsyncDisposable
+	/// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer" /></typeparam>.
+    public class LavaNode<TPlayer> : IAsyncDisposable
 		where TPlayer : LavaPlayer {
 		/// <summary>
 		///     Checks if the client has an active WebSocket connection.

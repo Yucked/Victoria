@@ -3,6 +3,7 @@ using Victoria.Interfaces;
 
 namespace Victoria {
 	/// <summary>
+	/// Track information.
 	/// </summary>
 	public class LavaTrack : IQueueable {
 		/// <summary>
