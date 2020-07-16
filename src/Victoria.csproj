@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.1.7-fix</Version>
+		<Version>5.1.7</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2020 Yucked. All rights reserved.</Copyright>
@@ -17,7 +17,9 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Fix for RemoveRange and stats int64 fix
+			- Fix for RemoveRange 
+			- Fixed GetInt32 to GetInt64 when mapping json to StatsEventArgs
+			- Added missing XML docs
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
