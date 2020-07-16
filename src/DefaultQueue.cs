@@ -210,7 +210,7 @@ namespace Victoria {
 			var removed = new T[count];
 			lock (_list) {
 				var currentNode = _list.First;
-				while (tempIndex != index && currentNode != null) {
+			while (tempIndex != index && currentNode != null) {
 					tempIndex++;
 					currentNode = currentNode.Next;
 				}
