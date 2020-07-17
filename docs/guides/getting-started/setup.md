@@ -21,8 +21,7 @@ https://github.com/Frederikam/Lavalink/blob/master/LavalinkServer/application.ym
 
 ***
 
-To start Lavalink, open a new shell window where Lavalink is located at and type in: `java -jar Lavalink.jar`. \
-If you happen to have multiple JAVA versions installed, please make sure the PATH is pointing to the latest version of JAVA.
+To start Lavalink, open a new shell window where Lavalink is located at and type in: `java -jar Lavalink.jar`.
 
 > [!WARNING]
 >  It is recommended to put Lavalink and application.yml in the same directory.  You'd be better off creating a new folder called Lavalink server and place everything in it.  
@@ -30,11 +29,25 @@ If you happen to have multiple JAVA versions installed, please make sure the PAT
 > [!CAUTION]
 > The new version of Lavalink requires you have to JAVA 10+. Download the latest JAVA version that is 10+ at least.
 
+---
+
 ## Victoria Setup
 Once you've Lavalink up and running, you can then install Victoria from following sources:
 # [Nuget](#tab/tabid-ngt)
+Major/Minor releases are pushed to Nuget once enough changes are available. Versioning is as follow:
+`Major`: Code redesign
+`Minor`: Addition/Removal of a method or changing interface structure, etc.
+`Patch`: Patch releases are usually quick bug fixes
 
-# [MyGet Feed Csproj](#tab/tabid-mfcsp)
+### Installing VIA Dotnet CLI.
+1. Open up a terminal/cmd in the root of your project.
+2. Type in `dotnet add package Victoria`
+3. `dotnet restore` to restore all packages.
+
+# [MyGet Feed](#tab/tabid-mfr)
+Small bug fixes and early preview versions are pushed to MyGet before landing on Nuget.
+
+### nuget.config Alternative
 In later .NET Core versions you can specify an `RestoreAdditionalProjectSources>` tag in your project file `(.csproj)`.
 ```xml
 	<PropertyGroup>
@@ -42,14 +55,16 @@ In later .NET Core versions you can specify an `RestoreAdditionalProjectSources>
 	</PropertyGroup>
 ```
 
-By no means this shows other packages in nuget package browser but it is used for restoring packages.
-
-# [MyGet Feed VS](#tab/tabid-mfvs)
-
-# [MyGet Feed Rider](#tab/tabid-mfr)
-You can add MyGet feed as a source to browse and restore packages.
+### Adding To Rider Sources
+1. Open up your project in JetBrains Rider
+2. At the bottom, click on Nuget
+3. In Nuget tab window, click on Sources
 ![Add Source](../../images/add-source.png)
+
+4. In Feeds tab, click on the `+` to add source.
 ![Feed Dialoag](../../images/feed-dialog.png)
 
+5. Click OK and access early previews and bug fixes.
+
 # [GitHub](#tab/tabid-gthb)
-Tab content-2-1.
+Recently GitHub introduced the `Packages` feature. In `v6` packages will be pushed to GitHub as well. For now, you can either Fork/Clone to add Victoria as a reference in your project.
