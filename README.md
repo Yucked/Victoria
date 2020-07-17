@@ -97,4 +97,4 @@ public sealed class MusicModule : SocketCommandContext {
 	}
 }
 ```
-> #### 👉 If you'd like a complete example, head over to Wiki!
+> #### 👉 If you'd like a complete example, head over to https://victoria.yucked.wtf/
