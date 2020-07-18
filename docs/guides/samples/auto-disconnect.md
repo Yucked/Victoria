@@ -22,4 +22,4 @@ Time to implement our disconnect logic.
 
 ### Disconnect is a GO
 In our [OnTrackEnded](xref:Victoria.LavaNode`1.OnTrackEnded) event, we want to start auto-disconnect task once our queue is empty.
-[!code-csharp[AudioService](../snippets/AudioService.cs?range=61-81&highlight=69)]
+[!code-csharp[AudioService](../snippets/AudioService.cs?range=61-81)]

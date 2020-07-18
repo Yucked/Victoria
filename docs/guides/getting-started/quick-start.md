@@ -49,4 +49,5 @@ With your bot structure laid out, you can now start working with Victoria.
 > Avoid calling ConnectAsync multiple times if LavaNode is already connected otherwise an `InvalidOperationException` is thrown.
 
 - Create a Music/Audio command module and start writing Victoria related commands!
+
 [!code-csharp[AudioModule](../snippets/AudioModule.cs?range=5-16,18-45)]
