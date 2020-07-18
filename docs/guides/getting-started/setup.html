@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>&#129520; Setup | Victoria's Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="&#129520; Setup | Victoria's Documentation ">
+    <meta name="generator" content="docfx 2.56.1.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Guides.GettingStarted.Setup">
+<h1 id="-setup">🧰 Setup</h1>
+
+<h2 id="lavalink-setup">Lavalink Setup</h2>
+<p>Before we get to programming, we need to download the latest version of Lavalink and Application.yml.</p>
+<div class="tabGroup" id="tabgroup_yWc6yCz4Co">
+<ul role="tablist">
+<li role="presentation">
+<a href="#tabpanel_yWc6yCz4Co_tabid-lavagit" role="tab" aria-controls="tabpanel_yWc6yCz4Co_tabid-lavagit" data-tab="tabid-lavagit" tabindex="0" aria-selected="true">GitHub</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_yWc6yCz4Co_tabid-lavaci" role="tab" aria-controls="tabpanel_yWc6yCz4Co_tabid-lavaci" data-tab="tabid-lavaci" tabindex="-1">CI Server</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_yWc6yCz4Co_tabid-lavaapp" role="tab" aria-controls="tabpanel_yWc6yCz4Co_tabid-lavaapp" data-tab="tabid-lavaapp" tabindex="-1">Application.yml</a>
+</li>
+</ul>
+<section id="tabpanel_yWc6yCz4Co_tabid-lavagit" role="tabpanel" data-tab="tabid-lavagit">
+<p>You can get an official release of Lavalink from their GitHub release section.
+<a href="https://github.com/Frederikam/Lavalink/releases">https://github.com/Frederikam/Lavalink/releases</a></p>
+</section>
+<section id="tabpanel_yWc6yCz4Co_tabid-lavaci" role="tabpanel" data-tab="tabid-lavaci" aria-hidden="true" hidden="hidden">
+<p>If you believe Lavalink is misbehaving: tracks not playing, etc then you can check CI releases. Chances are there is a fix out already.
+<a href="https://ci.fredboat.com/viewLog.html?buildId=lastSuccessful&amp;buildTypeId=Lavalink_Build&amp;tab=artifacts&amp;guest=1">https://ci.fredboat.com/viewLog.html?buildId=lastSuccessful&buildTypeId=Lavalink_Build&tab=artifacts&guest=1</a></p>
+</section>
+<section id="tabpanel_yWc6yCz4Co_tabid-lavaapp" role="tabpanel" data-tab="tabid-lavaapp" aria-hidden="true" hidden="hidden">
+<p>Once you&#39;ve Lavalink downloaded it&#39;s time to create a new file <code>application.yml</code>. This file holds Lavalink configuration.
+<a href="https://github.com/Frederikam/Lavalink/blob/master/LavalinkServer/application.yml.example">https://github.com/Frederikam/Lavalink/blob/master/LavalinkServer/application.yml.example</a></p>
+</section>
+</div>
+<p>To start Lavalink, open a new shell window where Lavalink is located at and type in: <code>java -jar Lavalink.jar</code>.</p>
+<div class="WARNING"><h5>Warning</h5><p> It is recommended to put Lavalink and application.yml in the same directory.  You&#39;d be better off creating a new folder called Lavalink server and place everything in it.  </p>
+</div>
+<div class="CAUTION"><h5>Caution</h5><p>The new version of Lavalink requires you have to JAVA 10+. Download the latest JAVA version that is 10+ at least.</p>
+</div>
+<hr>
+<h2 id="victoria-setup">Victoria Setup</h2>
+<p>Once you&#39;ve Lavalink up and running, you can then install Victoria from following sources:</p>
+<div class="tabGroup" id="tabgroup_yWc6yCz4Co-1">
+<ul role="tablist">
+<li role="presentation">
+<a href="#tabpanel_yWc6yCz4Co-1_tabid-ngt" role="tab" aria-controls="tabpanel_yWc6yCz4Co-1_tabid-ngt" data-tab="tabid-ngt" tabindex="0" aria-selected="true">Nuget</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_yWc6yCz4Co-1_tabid-mfr" role="tab" aria-controls="tabpanel_yWc6yCz4Co-1_tabid-mfr" data-tab="tabid-mfr" tabindex="-1">MyGet Feed</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_yWc6yCz4Co-1_tabid-gthb" role="tab" aria-controls="tabpanel_yWc6yCz4Co-1_tabid-gthb" data-tab="tabid-gthb" tabindex="-1">GitHub</a>
+</li>
+</ul>
+<section id="tabpanel_yWc6yCz4Co-1_tabid-ngt" role="tabpanel" data-tab="tabid-ngt">
+<p>Major/Minor releases are pushed to Nuget once enough changes are available. Versioning is as follow:
+<code>Major</code>: Code redesign
+<code>Minor</code>: Addition/Removal of a method or changing interface structure, etc.
+<code>Patch</code>: Patch releases are usually quick bug fixes</p>
+<h3 id="installing-via-dotnet-cli">Installing VIA Dotnet CLI.</h3>
+<ol>
+<li>Open up a terminal/cmd in the root of your project.</li>
+<li>Type in <code>dotnet add package Victoria</code></li>
+<li><code>dotnet restore</code> to restore all packages.</li>
+</ol>
+</section>
+<section id="tabpanel_yWc6yCz4Co-1_tabid-mfr" role="tabpanel" data-tab="tabid-mfr" aria-hidden="true" hidden="hidden">
+<p>Small bug fixes and early preview versions are pushed to MyGet before landing on Nuget.</p>
+<h3 id="nugetconfig-alternative">nuget.config Alternative</h3>
+<p>In later .NET Core versions you can specify an <code>RestoreAdditionalProjectSources&gt;</code> tag in your project file <code>(.csproj)</code>.</p>
+<pre><code class="lang-xml">    &lt;PropertyGroup&gt;
+        &lt;RestoreAdditionalProjectSources&gt;https://www.myget.org/F/yucked/api/v3/index.json&lt;/RestoreAdditionalProjectSources&gt;
+    &lt;/PropertyGroup&gt;
+</code></pre><h3 id="adding-to-rider-sources">Adding To Rider Sources</h3>
+<ol>
+<li>Open up your project in JetBrains Rider</li>
+<li>At the bottom, click on Nuget</li>
+<li><p>In Nuget tab window, click on Sources
+<img src="../../images/add-source.png" alt="Add Source"></p>
+</li>
+<li><p>In Feeds tab, click on the <code>+</code> to add source.
+<img src="../../images/feed-dialog.png" alt="Feed Dialoag"></p>
+</li>
+<li><p>Click OK and access early previews and bug fixes.</p>
+</li>
+</ol>
+</section>
+<section id="tabpanel_yWc6yCz4Co-1_tabid-gthb" role="tabpanel" data-tab="tabid-gthb" aria-hidden="true" hidden="hidden">
+<p>Recently GitHub introduced the <code>Packages</code> feature. In <code>v6</code> packages will be pushed to GitHub as well. For now, you can either Fork/Clone to add Victoria as a reference in your project.</p>
+</section>
+</div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/Yucked/Victoria/blob/v5/docfx/guides/getting-started/setup.md/#L1" class="contribution-link">Improve this Doc</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            © 2018 - 2020, Yucked. All rights reserved.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

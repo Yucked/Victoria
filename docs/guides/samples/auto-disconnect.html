@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Auto Disconnect | Victoria's Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Auto Disconnect | Victoria's Documentation ">
+    <meta name="generator" content="docfx 2.56.1.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Guides.Samples.AutoDisconnect">
+<h1 id="auto-disconenct-on-empty-queue">Auto Disconenct on Empty Queue</h1>
+
+<p>With the addition of <a class="xref" href="../../api/Victoria.LavaNode-1.html#Victoria_LavaNode_1_OnTrackStarted">OnTrackStarted</a>, you can easily manage auto-disconnect once your queue is finished. This example will utilize <code>CancellationTokenSource</code> and <code>Tasks</code> to hande our disconnect logic.</p>
+<p>By no means this example is fail-proof or <em>ideal</em>. You&#39;re welcome to write your own disconnect logic.</p>
+<h3 id="laying-the-foundation">Laying the foundation</h3>
+<p>In your AudioService, declare a new <code>ConcurrentDictionary</code> field with <code>ulong</code> as key and <code>CancellationTokenSource</code> as value. The key will be the voice channel ID.</p>
+<pre><code class="lang-csharp" name="AudioService">private readonly ConcurrentDictionary&lt;ulong, CancellationTokenSource&gt; _disconnectTokens;
+
+public AudioService(LavaNode lavaNode, ILoggerFactory loggerFactory) {
+    _disconnectTokens = new ConcurrentDictionary&lt;ulong, CancellationTokenSource&gt;();
+}
+</code></pre><h3 id="building-upon-our-foundation">Building upon our foundation.</h3>
+<p>We will then hook into <a class="xref" href="../../api/Victoria.LavaNode-1.html#Victoria_LavaNode_1_OnTrackStarted">OnTrackStarted</a> event to handle auto-disconnect cancellation. We want to be able to cancel any disconnect tasks if a new track is added/started.</p>
+<pre><code class="lang-csharp" name="AudioService">private async Task OnTrackStarted(TrackStartEventArgs arg) {
+    if (!_disconnectTokens.TryGetValue(arg.Player.VoiceChannel.Id, out var value)) {
+        return;
+    }
+
+    if (value.IsCancellationRequested) {
+        return;
+    }
+
+    value.Cancel(true);
+    await arg.Player.TextChannel.SendMessageAsync(&quot;Auto disconnect has been cancelled!&quot;);
+}
+
+</code></pre><h3 id="implementing-the-heart">Implementing the heart</h3>
+<p>Time to implement our disconnect logic.</p>
+<pre><code class="lang-csharp" name="AudioService">private async Task InitiateDisconnectAsync(LavaPlayer player, TimeSpan timeSpan) {
+    if (!_disconnectTokens.TryGetValue(player.VoiceChannel.Id, out var value)) {
+        value = new CancellationTokenSource();
+        _disconnectTokens.TryAdd(player.VoiceChannel.Id, value);
+    }
+    else if (value.IsCancellationRequested) {
+        _disconnectTokens.TryUpdate(player.VoiceChannel.Id, new CancellationTokenSource(), value);
+        value = _disconnectTokens[player.VoiceChannel.Id];
+    }
+
+    await player.TextChannel.SendMessageAsync($&quot;Auto disconnect initiated! Disconnecting in {timeSpan}...&quot;);
+    var isCancelled = SpinWait.SpinUntil(() =&gt; value.IsCancellationRequested, timeSpan);
+    if (isCancelled) {
+        return;
+    }
+
+    await _lavaNode.LeaveAsync(player.VoiceChannel);
+    await player.TextChannel.SendMessageAsync(&quot;Invite me again sometime, sugar.&quot;);
+}
+
+</code></pre><h3 id="disconnect-is-a-go">Disconnect is a GO</h3>
+<p>In our <a class="xref" href="../../api/Victoria.LavaNode-1.html#Victoria_LavaNode_1_OnTrackEnded">OnTrackEnded</a> event, we want to start auto-disconnect task once our queue is empty.</p>
+<pre><code class="lang-csharp" name="AudioService">private async Task OnTrackEnded(TrackEndedEventArgs args) {
+    if (!args.Reason.ShouldPlayNext()) {
+        return;
+    }
+
+    var player = args.Player;
+    if (!player.Queue.TryDequeue(out var queueable)) {
+        await player.TextChannel.SendMessageAsync(&quot;Queue completed! Please add more tracks to rock n&#39; roll!&quot;);
+        _ = InitiateDisconnectAsync(args.Player, TimeSpan.FromSeconds(10));
+        return;
+    }
+
+    if (!(queueable is LavaTrack track)) {
+        await player.TextChannel.SendMessageAsync(&quot;Next item in queue is not a track.&quot;);
+        return;
+    }
+
+    await args.Player.PlayAsync(track);
+    await args.Player.TextChannel.SendMessageAsync(
+        $&quot;{args.Reason}: {args.Track.Title}\nNow playing: {track.Title}&quot;);
+}
+</code></pre></article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/Yucked/Victoria/blob/v5/docfx/guides/samples/auto-disconnect.md/#L1" class="contribution-link">Improve this Doc</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            © 2018 - 2020, Yucked. All rights reserved.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
