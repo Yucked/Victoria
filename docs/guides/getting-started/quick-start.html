@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>&#9879;&#65039; Quick Start | Victoria's Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="&#9879;&#65039; Quick Start | Victoria's Documentation ">
+    <meta name="generator" content="docfx 2.56.1.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Guides.GettingStarted.QuickStart">
+<h1 id="-quick-start">⚗️ Quick Start</h1>
+
+<p>With your bot structure laid out, you can now start working with Victoria.</p>
+<ul>
+<li><p>Add <code>LavaNode</code> and <code>LavaConfig</code> to <code>ServiceCollection</code>.</p>
+<pre><code class="lang-cs">  // For version 5.1.2 and before.
+
+  var services = new ServiceCollection()
+      // Other services DiscordSocketClient, CommandService, etc
+      .AddSingleton&lt;LavaNode&gt;()
+      .AddSingleton&lt;LavaConfig&gt;();
+
+  var provider = services.BuildServiceProvider();
+</code></pre></li>
+</ul>
+<pre><code class="lang-cs">    // For versions 5.1.3 and above.
+    var services = new ServiceCollection()
+        // Other services DiscordSocketClient, CommandService, etc
+        .AddLavaNode(x =&gt; {
+            x.SelfDeaf = false;
+        });
+
+    var provider = services.BuildServiceProvider();
+</code></pre><div class="WARNING"><h5>Warning</h5><p>Make sure there is <strong><strong>ONLY ONE</strong></strong> instance of LavaNode and LavaConfig in your program unless you have several Lavalink instances running and would like to create node pool (which majority of the users don&#39;t).</p>
+</div>
+<ul>
+<li><p>In your <code>DiscordSocketClient</code> or <code>DiscordShardedClient</code> <code>Ready</code> event call <code>_instanceOfLavaNode.ConnectAsync();</code></p>
+<pre><code class="lang-cs">  discordSocketClient.Ready += OnReadyAsync;
+  ....
+
+  private async Task OnReadyAsync() {
+      if (!_instanceOfLavaNode.IsConnected) {
+          _instanceOfLavaNode.ConnectAsync();
+      }
+
+      // Other ready related stuff
+  }
+</code></pre></li>
+</ul>
+<div class="WARNING"><h5>Warning</h5><p>Avoid calling ConnectAsync multiple times if LavaNode is already connected otherwise an <code>InvalidOperationException</code> is thrown.</p>
+</div>
+<ul>
+<li>Create a Music/Audio command module and start writing Victoria related commands!</li>
+</ul>
+<pre><code class="lang-csharp" name="AudioModule">using System.Threading.Tasks;
+using Bot.Services;
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using Victoria;
+using Victoria.Enums;
+
+namespace Bot.Modules {
+    public sealed class AudioModule : ModuleBase&lt;SocketCommandContext&gt; {
+        private readonly LavaNode _lavaNode;
+        private readonly AudioService _audioService;
+
+        public AudioModule(LavaNode lavaNode, AudioService audioService) {
+            _lavaNode = lavaNode;
+            _audioService = audioService;
+        }
+
+        [Command(&quot;Join&quot;)]
+        public async Task JoinAsync() {
+            if (_lavaNode.HasPlayer(Context.Guild)) {
+                await ReplyAsync(&quot;I&#39;m already connected to a voice channel!&quot;);
+                return;
+            }
+
+            var voiceState = Context.User as IVoiceState;
+            if (voiceState?.VoiceChannel == null) {
+                await ReplyAsync(&quot;You must be connected to a voice channel!&quot;);
+                return;
+            }
+
+            try {
+                await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
+                await ReplyAsync($&quot;Joined {voiceState.VoiceChannel.Name}!&quot;);
+            }
+            catch (Exception exception) {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+</code></pre></article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/Yucked/Victoria/blob/v5/docfx/guides/getting-started/quick-start.md/#L1" class="contribution-link">Improve this Doc</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            © 2018 - 2020, Yucked. All rights reserved.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
