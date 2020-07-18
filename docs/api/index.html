@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Changelog | Victoria's Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Changelog | Victoria's Documentation ">
+    <meta name="generator" content="docfx 2.56.1.0">
+    
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="stylesheet" href="../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../styles/docfx.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="changelog">Changelog</h1>
+
+<h2 id="v6x"><code>v6.x</code></h2>
+<hr>
+<h2 id="v5x"><code>v5.x</code></h2>
+<p>Version 5.x is a mix of v4 and v3. v4 was mostly flawed mainly because it separated Lavalink&#39;s WebSocket and Rest into 2 different classes known as <code>LavaSocketClient</code>/<code>LavaShardClient</code> and <code>LavaRestClient</code>. Overall this update focuses on performance and easier code readability.</p>
+<h3 id="additions"><code>Additions</code></h3>
+<ul>
+<li>Added <code>LavaNode</code> which represents a single Lavalink connection. From v4 -&gt; v5: <code>LavaNode</code> is <code>LavaBaseClient</code> + <code>LavaRestClient</code>.</li>
+<li>Added exceptions. Instead of keeping everything silent like v4. v5 throws exception is something isn&#39;t set to make it easier to debug and etc.</li>
+<li>Added <code>PlayerState</code> in <code>LavaPlayer</code> which represents player current state e.g, <code>Playing</code>, <code>Paused</code>, <code>Stopped</code>, etc.</li>
+<li>Added event args for events. You will get a proper event object when an event is triggered instead of <code>Func&lt;int, string, Task&gt;</code>.</li>
+<li>Added <code>LavaNode#HasPlayer</code>.</li>
+<li>Added JsonConverter for <code>SearchResponse</code> and WebSocket events.</li>
+</ul>
+<h3 id="removals"><code>Removals</code></h3>
+<ul>
+<li>Removed <code>LavaBaseClient</code>, <code>LavaSocketClient</code>, <code>LavaShardClient</code> and <code>LavaRestClient</code>.</li>
+<li>Removed Newtonsoft.Json.</li>
+<li>Removed <code>SocketHelper</code>.</li>
+<li>Removed <code>HttpHelper</code>.</li>
+<li>Removed <code>LyricsHelper</code>.</li>
+<li>Removed extensions related to fetching lyrics and thumbnails.</li>
+</ul>
+<h3 id="modifications"><code>Modifications</code></h3>
+<hr>
+<h2 id="v4x"><code>v4.x</code></h2>
+<h3 id="additions-1"><code>Additions</code></h3>
+<ul>
+<li>Added <code>LavaBaseClient</code> that acts as a base class for <code>LavaSocketClient</code> and <code>LavaShardClient</code>. <code>LavaBaseClient</code> implements all the methods and features that are needed for socket and shard client.</li>
+<li>Added <code>LavaSocketClient</code> which supports <code>DiscordSocketClient</code>.</li>
+<li>Added <code>LavaShardClient</code> which supports <code>DiscordShardedClient</code>.</li>
+<li>Added <code>VictoriaExtensions</code>, exposes extension methods for <code>LavaTrack</code>.</li>
+<li>Added <code>netstandard2.0</code> as a TargetFramework along with <code>netcoreapp3.0</code></li>
+<li>Added <code>IQueueObject</code> for <code>LavaQueue</code>. You can now use <code>Queue</code> in <code>LavaPlayer</code> for more than tracks.</li>
+<li>Added <code>event</code>keyword with <code>Func&lt;T&gt;</code>.</li>
+<li>Added <code>LavaRestClient</code> that handles all Lavalink REST features.</li>
+<li>VictoriaExtensions now contains a method for figuring out if next track should be played</li>
+<li>Added <code>LavaBaseClient#GetPlayer</code> method.</li>
+<li>Created an extensions method of <code>Func&lt;LogMessage, Task&gt;</code> and replaced all logging statements with the extension method.</li>
+<li>Added locks for <code>LavaQueue</code> methods.</li>
+<li>Re-added <code>LavaBaseClient#DisconnectAsync</code>.
+<del>- Added existing argument for ConnectAsync which tries to restart websocket connection if closed and updates player.</del>
+<del>- Added <code>ShouldPreservePlayers</code> incase Lavalink dies.</del></li>
+<li>Added <code>PlayerState</code> struct to make JSON deserialization faster.</li>
+<li>Added documentation for Configuration properties.</li>
+<li>Added <code>LavaBaseClient#MoveChannelsAsync(IVoiceChannel)</code> to move voice channels.</li>
+<li>Added <code>UpdateTextChannel(ulong, ITextChannel)</code> that changes player&#39;s text channel.</li>
+<li>Added more configuration options such as: <code>AutoDisconnect</code>, <code>PreservePlayers</code>, <code>InactivityTimeout</code>.</li>
+<li>Added <code>Provider</code> property for <code>LavaTrack</code> object.</li>
+</ul>
+<h3 id="removals-1"><code>Removals</code></h3>
+<ul>
+<li>Removed <code>LavaNode</code>, <code>LavaBaseClient</code> now acts as a <code>LavaNode</code>.</li>
+<li>Removed <code>Lavalink</code>, there is no purpose of <code>Lavalink</code>.</li>
+<li>Removed <code>LavaState</code>, no purpose.</li>
+<li>Removed <code>TrackInfo</code>.</li>
+<li>Removed redundant cast for <code>BufferSize</code>.</li>
+<li>Removed bloat from <code>StartAsync</code>.</li>
+<li>Removed <code>ShouldPreservePlayers</code> property from Configuration.</li>
+<li>Removed residue of <code>ShouldPresevePlayers</code> and all logic related to it.</li>
+</ul>
+<h3 id="modifications-1"><code>Modifications</code></h3>
+<ul>
+<li>Fixed <code>HTTPHelper#WithCustomHeaders</code> existing header exception.</li>
+<li>Skip method now replaces tracks and returns the old track.</li>
+<li><code>LavaPlayer#Dispose</code> properly disposes and destroys player.</li>
+<li><code>LavaQueue#TryDequeue</code> first checks if there are any elements.</li>
+<li>Modified <code>LavaBaseClient#GetTracksAsync</code> method so it properly builds <code>SearchResult</code>.</li>
+<li>Changed namespace for Entities.XXX to Entities.</li>
+<li>Fixed AccessViolation/StackOverFlowExceptions.</li>
+<li>Fixed track sting being null.</li>
+<li>Fixed <code>guildId</code> being <code>ulong</code>.</li>
+<li>Changed CTOR of <code>LavaRestClient</code>. All args are now required.</li>
+<li>Fixed configuration related bug</li>
+<li>Set <code>CurrentVolume</code> to 100 in <code>LavaPlayer</code> CTOR.</li>
+<li>Moved <code>SocketVoiceState</code> from <code>LavaBaseClient</code> to <code>LavaPlayer</code>.</li>
+<li>FinishedEvent now sets <code>IsPlaying</code> to false.</li>
+<li>Fixed reconnect attempts bug in <code>SocketHelper</code>.</li>
+<li>Moved classes to Responses folder.</li>
+<li>Specified default values for Configuration properties.</li>
+<li>Changed <code>LavaRestClient#TracksRequestAsync</code> to <code>LavaRestClient#SearchTracksAsync</code>.</li>
+<li>Changed setter modifier of VoiceChannel and TextChannel to internal.</li>
+<li><code>LavaShardClient</code> and <code>LavaSocketClient</code> now check <code>PreservePlayers</code> before clearing up players in disconnect event.</li>
+<li>Made configuration field protected.</li>
+<li><code>OnUserVoiceStateUpdated</code> now handles auto disconnecting if there are no users in voice channel.</li>
+<li>Made it sweeter (using <code>??=</code> to fix configuration issue, see #35).</li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/Yucked/Victoria/blob/v5/docfx/api/index.md/#L1" class="contribution-link">Improve this Doc</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            © 2018 - 2020, Yucked. All rights reserved.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  </body>
+</html>
