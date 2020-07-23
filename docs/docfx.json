@@ -47,7 +47,7 @@
         "branch": "v5"
       }
     },
-    "dest": "../docs",
+    "dest": "_site",
     "template": [
       "default",
       "templates/material"
