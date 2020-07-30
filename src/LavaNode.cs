@@ -135,6 +135,10 @@ namespace Victoria {
 				BaseAddress = new Uri($"http://{config.Hostname}:{config.Port}")
 			};
 			_httpClient.DefaultRequestHeaders.Add("Authorization", _config.Authorization);
+			if (!string.IsNullOrEmpty(config.UserAgent))
+			{
+				_httpClient.DefaultRequestHeaders.Add("User-Agent", _config.UserAgent);
+			}
 
 			RoutePlanner = new RoutePlanner(_httpClient);
 		}
@@ -178,6 +182,10 @@ namespace Victoria {
 
 			if (_config.EnableResume) {
 				_lavaSocket.SetHeader("Resume-Key", _config.ResumeKey);
+			}
+			if (!string.IsNullOrEmpty(_config.UserAgent))
+			{
+				_lavaSocket.SetHeader("User-Agent", _config.UserAgent);
 			}
 
 			await _lavaSocket.ConnectAsync()
