@@ -132,7 +132,7 @@ namespace Victoria {
 
 			_playerCache = new ConcurrentDictionary<ulong, TPlayer>();
 			_httpClient = new HttpClient {
-				BaseAddress = new Uri($"{(_config.SSL ? "https" : "http")}://{config.Hostname}:{config.Port}")
+				BaseAddress = new Uri($"{(_config.IsSSL ? "https" : "http")}://{config.Hostname}:{config.Port}")
 			};
 			_httpClient.DefaultRequestHeaders.Add("Authorization", _config.Authorization);
 			if (!string.IsNullOrEmpty(config.UserAgent))

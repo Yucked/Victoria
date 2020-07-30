@@ -38,7 +38,7 @@ namespace Victoria {
         /// <summary>
         ///     Use Secure Socket Layer (SSL) security protocol when connecting to Lavalink.
         /// </summary>
-        public bool SSL { get; set; } = false;
+        public bool IsSSL { get; set; } = false;
 
         /// <summary>
         ///     Applies User-Agent header to all requests.
