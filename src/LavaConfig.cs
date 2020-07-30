@@ -36,6 +36,11 @@ namespace Victoria {
         public ushort Port { get; set; } = 2333;
 
         /// <summary>
+        ///     Applies User-Agent header to all requests.
+        /// </summary>
+        public string UserAgent { get; set; } = null;
+
+        /// <summary>
         ///     How many reconnect attempts are allowed.
         /// </summary>
         public int ReconnectAttempts { get; set; } = 10;
