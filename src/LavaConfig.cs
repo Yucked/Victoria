@@ -36,6 +36,11 @@ namespace Victoria {
         public ushort Port { get; set; } = 2333;
 
         /// <summary>
+        ///     Use Secure Socket Layer (SSL) security protocol when connecting to Lavalink.
+        /// </summary>
+        public bool SSL { get; set; } = false;
+
+        /// <summary>
         ///     Applies User-Agent header to all requests.
         /// </summary>
         public string UserAgent { get; set; } = null;
