@@ -131,10 +131,15 @@ namespace Victoria {
 			_jsonOptions.Converters.Add(new WebsocketResponseConverter());
 
 			_playerCache = new ConcurrentDictionary<ulong, TPlayer>();
+
 			_httpClient = new HttpClient {
-				BaseAddress = new Uri($"http://{config.Hostname}:{config.Port}")
+				BaseAddress = new Uri($"{(_config.IsSSL ? "https" : "http")}://{config.Hostname}:{config.Port}")
 			};
 			_httpClient.DefaultRequestHeaders.Add("Authorization", _config.Authorization);
+			if (!string.IsNullOrWhiteSpace(config.UserAgent))
+			{
+				_httpClient.DefaultRequestHeaders.Add("User-Agent", _config.UserAgent);
+			}
 
 			RoutePlanner = new RoutePlanner(_httpClient);
 		}
@@ -178,6 +183,10 @@ namespace Victoria {
 
 			if (_config.EnableResume) {
 				_lavaSocket.SetHeader("Resume-Key", _config.ResumeKey);
+			}
+			if (!string.IsNullOrWhiteSpace(_config.UserAgent))
+			{
+				_lavaSocket.SetHeader("User-Agent", _config.UserAgent);
 			}
 
 			await _lavaSocket.ConnectAsync()
