@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.1.7</Version>
+		<Version>5.1.8</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2020 Yucked. All rights reserved.</Copyright>
@@ -17,9 +17,8 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Fix for RemoveRange 
-			- Fixed GetInt32 to GetInt64 when mapping json to StatsEventArgs
-			- Added missing XML docs
+			- Fixed an issue with SSL protected Lavalink server
+			- Added an option to configure User-Agent header for outgoing requests
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
