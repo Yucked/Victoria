@@ -23,6 +23,19 @@ body {
 }
 
 /* Custom Styles */
+.toc-filter > input {
+  color: var(--font-color);
+  background-color: var(--header-bg-color);
+}
+
+.toc-filter {
+  color: var(--font-color);
+  background-color: var(--body-bg);
+}
+
+.sidenav, .fixed_header, .toc {
+  background-color: var(--body-bg);
+}
 
 img {
   padding: 5px;
