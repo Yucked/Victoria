@@ -79,7 +79,7 @@ namespace Victoria {
                 _socket.Options.SetRequestHeader(key, value);
             }
 
-            var url = new Uri($"ws://{_lavaConfig.Hostname}:{_lavaConfig.Port}");
+            var url = new Uri($"{(_lavaConfig.IsSSL ? "wss" : "ws")}://{_lavaConfig.Hostname}:{_lavaConfig.Port}");
             if (_connectionAttempts == _lavaConfig.ReconnectAttempts) {
                 return;
             }
