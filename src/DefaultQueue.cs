@@ -1,16 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Victoria.Interfaces;
 
 namespace Victoria {
     /// <summary>
     ///     A queue based off of <see cref="LinkedList{T}" />.
     /// </summary>
     /// <typeparam name="T">
-    ///     <see cref="IQueueable" />
+    ///     <see cref="LavaTrack" />
     /// </typeparam>
-    public sealed class DefaultQueue<T> : IEnumerable<T> where T : IQueueable {
+    public sealed class DefaultQueue<T> : IEnumerable<T> where T : LavaTrack {
         private readonly LinkedList<T> _list;
         private readonly Random _random;
 
