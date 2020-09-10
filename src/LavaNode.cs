@@ -479,8 +479,8 @@ namespace Victoria {
 					if (!_playerCache.TryGetValue(playerUpdateResponse.GuildId, out var player)) {
 						return;
 					}
-
-					player.Track?.WithPosition(playerUpdateResponse.State.Position);
+                    
+                    player.Track.Position = playerUpdateResponse.State.Position;
 					player.LastUpdate = playerUpdateResponse.State.Time;
 
 					var playerUpdateEventArgs = new PlayerUpdateEventArgs(player, playerUpdateResponse);

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Victoria.Enums;
-using Victoria.Interfaces;
 using Victoria.Payloads;
 
 namespace Victoria {
@@ -30,7 +29,7 @@ namespace Victoria {
         /// <summary>
         ///     Default queue.
         /// </summary>
-        public DefaultQueue<IQueueable> Queue { get; private set; }
+        public DefaultQueue<LavaTrack> Queue { get; private set; }
 
         /// <summary>
         ///     Channel bound to this player.
@@ -78,7 +77,7 @@ namespace Victoria {
             _lavaSocket = lavaSocket;
             VoiceChannel = voiceChannel;
             TextChannel = textChannel;
-            Queue = new DefaultQueue<IQueueable>();
+            Queue = new DefaultQueue<LavaTrack>();
             _equalizer = new Dictionary<int, EqualizerBand>(15);
         }
 
