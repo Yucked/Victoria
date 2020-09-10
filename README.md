@@ -2,22 +2,21 @@
 	<img src="https://i.imgur.com/OibdkEz.png" />
 	</br>
 	<a href="https://discord.gg/ZJaVXK8">
-		<img src="https://img.shields.io/badge/Discord-Support-%237289DA.svg?logo=discord&style=for-the-badge&logoWidth=20&labelColor=0d0d0d" />
+		<img src="https://img.shields.io/badge/Discord-Support-%237289DA.svg?logo=discord&style=for-the-badge&logoWidth=30&labelColor=0d0d0d" />
 	</a>
 	<a href="https://github.com/Yucked/Victoria/actions">
-		<img src="https://img.shields.io/github/workflow/status/Yucked/Victoria/.NET%20Core%20Workflow?label=BUILD%20STATUS&logo=github&style=for-the-badge&logoWidth=20&color=181717" />
+		<img src="https://img.shields.io/github/workflow/status/Yucked/Victoria/.NET%20Core%20Workflow?label=BUILD%20STATUS&logo=github&style=for-the-badge&logoWidth=30&color=181717" />
 	</a>
 	<a href="https://www.nuget.org/packages/Victoria/">
-		<img src="https://img.shields.io/nuget/dt/Victoria.svg?label=Downloads&logo=nuget&style=for-the-badge&logoWidth=20&labelColor=0d0d0d" />
+		<img src="https://img.shields.io/nuget/dt/Victoria.svg?label=Downloads&logo=nuget&style=for-the-badge&logoWidth=30&labelColor=0d0d0d" />
 	</a>
-  	<a href="http://buymeacoff.ee/Yucked">
-		<img src="https://img.shields.io/badge/Buy%20Me%20A-Coffee-%23FF813F.svg?logo=buy-me-a-coffee&style=for-the-badge&logoWidth=20&labelColor=0d0d0d" />
-	</a>  
+	<a href="https://keybase.io/VYSN">
+	    <img src="https://img.shields.io/keybase/xlm/VYSN?color=ff6c3b&label=XLM&logo=Keybase&style=for-the-badge&logoWidth=30" />
+	</a>
 	<p align="center">
 	     🌋 - Lavalink wrapper for Discord.NET which provides more options and performs better than all .NET Lavalink libraries combined.
   </p>
 </p>
-
 ---
 
 ## `⚔️ Features:`
