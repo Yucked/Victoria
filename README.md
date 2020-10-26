@@ -39,14 +39,27 @@ Getting started with Victoria is fairly simple and quick:
 - Add Victoria package from Nuget.
 - Add `LavaNode` and `LavaConfig` to `ServiceCollection`.
 ```cs
-
 // Make sure there is ONLY ONE instance of LavaNode and LavaConfig in your program unless you have several
 // Lavalink instances running and would like to create node pool (which majority of the users don't).
+// For version 5.1.2 and before.
 
 	var services = new ServiceCollection()
 		// Other services DiscordSocketClient, CommandService, etc
 		.AddSingleton<LavaNode>()
 		.AddSingleton<LavaConfig>();
+		
+	var provider = services.BuildServiceProvider();
+```
+```cs
+// Make sure there is ONLY ONE instance of LavaNode and LavaConfig in your program unless you have several
+// Lavalink instances running and would like to create node pool (which majority of the users don't).
+// For versions 5.1.3 and above.
+
+	var services = new ServiceCollection()
+		// Other services DiscordSocketClient, CommandService, etc
+		.AddLavaNode(x => {
+            x.SelfDeaf = false;
+        });
 		
 	var provider = services.BuildServiceProvider();
 ```
