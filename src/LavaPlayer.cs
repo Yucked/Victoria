@@ -134,7 +134,7 @@ namespace Victoria {
                 throw new ArgumentOutOfRangeException(nameof(endTime), "Value must be greater than 0.");
             }
 
-            if (startTime <= endTime) {
+            if (endTime <= startTime) {
                 throw new InvalidOperationException($"{nameof(endTime)} must be greather than {nameof(startTime)}.");
             }
 
