@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.1.9</Version>
+		<Version>5.1.10</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2020 Yucked. All rights reserved.</Copyright>
@@ -17,8 +17,7 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Opened up LavaTrack constructor for extending tracks
-			- Removed IQueueable
+			- Fix bug in PlayAsync where logic checking for startTime and endTime was switched
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
