@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.1.10</Version>
+		<Version>5.1.11</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2020 Yucked. All rights reserved.</Copyright>
@@ -17,17 +17,17 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Fix bug in PlayAsync where logic checking for startTime and endTime was switched
+			- Fixed bug in PlayPayload where specifying EndTime and StartTime was wrong.
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Discord.Net.WebSocket" Version="2.2.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.3" />
+		<PackageReference Include="Discord.Net.WebSocket" Version="2.2.0"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.3"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="Logo.png" Pack="true" Visible="false" PackagePath="" />
+		<None Include="Logo.png" Pack="true" Visible="false" PackagePath=""/>
 	</ItemGroup>
 
 </Project>
