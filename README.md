@@ -10,8 +10,8 @@
 	<a href="https://www.nuget.org/packages/Victoria/">
 		<img src="https://img.shields.io/nuget/dt/Victoria.svg?label=Downloads&logo=nuget&style=for-the-badge&logoWidth=30&labelColor=0d0d0d" />
 	</a>
-	<a href="https://keybase.io/VYSN">
-	    <img src="https://img.shields.io/keybase/xlm/VYSN?color=ff6c3b&label=XLM&logo=Keybase&style=for-the-badge&logoWidth=30" />
+	<a href="">
+	    <img src="https://img.shields.io/badge/Yucked*stellarport.io-9003fc?logoColor=white&logo=stellar&style=for-the-badge&&logoWidth=30" />
 	</a>
 	<p align="center">
 	     🌋 - Lavalink wrapper for Discord.NET which provides more options and performs better than all .NET Lavalink libraries combined.
