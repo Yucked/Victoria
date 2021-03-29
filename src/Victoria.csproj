@@ -17,8 +17,9 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Now targets netcoreapp3.0 and net5.0
-			- Using System.Text.Json for netcoreapp3.0
+			- All my homies love net5.0
+			- Organized the project
+			- Removed dumb converters
 			- Rewritten WebSocket
 		</PackageReleaseNotes>
 	</PropertyGroup>
