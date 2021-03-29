@@ -29,7 +29,7 @@ namespace Victoria {
         /// <summary>
         ///     Default queue.
         /// </summary>
-        public DefaultQueue<LavaTrack> Queue { get; private set; }
+        public Vueue<LavaTrack> Queue { get; private set; }
 
         /// <summary>
         ///     Channel bound to this player.
@@ -77,7 +77,7 @@ namespace Victoria {
             _lavaSocket = lavaSocket;
             VoiceChannel = voiceChannel;
             TextChannel = textChannel;
-            Queue = new DefaultQueue<LavaTrack>();
+            Queue = new Vueue<LavaTrack>();
             _equalizer = new Dictionary<int, EqualizerBand>(15);
         }
 
