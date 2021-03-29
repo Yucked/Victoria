@@ -49,7 +49,7 @@ namespace Victoria {
         ///     Adds an object.
         /// </summary>
         /// <param name="value">
-        ///     Any object that inherits <see cref="IQueueable" />.
+        ///     Any object that inherits <see cref="LavaTrack" />.
         /// </param>
         public void Enqueue(T value) {
             if (value == null) {
@@ -64,7 +64,7 @@ namespace Victoria {
         /// <summary>
         ///     Safe way to dequeue an item.
         /// </summary>
-        /// <param name="value">First object of type <see cref="IQueueable" />.</param>
+        /// <param name="value">First object of type <see cref="LavaTrack" />.</param>
         /// <returns>
         ///     <see cref="bool" />
         /// </returns>
@@ -97,7 +97,7 @@ namespace Victoria {
         ///     Sneaky peaky the first time in list.
         /// </summary>
         /// <returns>
-        ///     Returns first item of type <see cref="IQueueable" />.
+        ///     Returns first item of type <see cref="LavaTrack" />.
         /// </returns>
         public T Peek() {
             lock (_list) {
