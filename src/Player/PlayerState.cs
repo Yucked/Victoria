@@ -1,4 +1,4 @@
-namespace Victoria.Enums {
+namespace Victoria.Player {
     /// <summary>
     /// Describes status of <see cref="LavaPlayer"/>.
     /// </summary>

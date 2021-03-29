@@ -33,8 +33,4 @@
 		<None Include="Logo.png" Pack="true" Visible="false" PackagePath="" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="WebSocket\" />
-	</ItemGroup>
-
 </Project>

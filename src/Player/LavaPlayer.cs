@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Victoria.Enums;
-using Victoria.Payloads;
+using Victoria.Payloads.Player;
 
-namespace Victoria {
+namespace Victoria.Player {
     /// <summary>
     /// Represents a <see cref="IVoiceChannel"/> connection.
     /// </summary>
@@ -79,24 +78,6 @@ namespace Victoria {
             TextChannel = textChannel;
             Queue = new Vueue<LavaTrack>();
             _equalizer = new Dictionary<int, EqualizerBand>(15);
-        }
-
-        /// <inheritdoc />
-        public async ValueTask DisposeAsync() {
-            await StopAsync()
-                .ConfigureAwait(false);
-
-            var payload = new DestroyPayload(VoiceChannel.GuildId);
-            await _lavaSocket.SendAsync(payload)
-                .ConfigureAwait(false);
-
-            GC.SuppressFinalize(this);
-
-            Queue.Clear();
-            Queue = default;
-            Track = null;
-            VoiceChannel = null;
-            PlayerState = PlayerState.Disconnected;
         }
 
         /// <summary>
@@ -274,6 +255,24 @@ namespace Victoria {
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync() {
+            await StopAsync()
+                .ConfigureAwait(false);
+
+            var payload = new DestroyPayload(VoiceChannel.GuildId);
+            await _lavaSocket.SendAsync(payload)
+                .ConfigureAwait(false);
+
+            GC.SuppressFinalize(this);
+
+            Queue.Clear();
+            Queue = default;
+            Track = null;
+            VoiceChannel = null;
+            PlayerState = PlayerState.Disconnected;
         }
     }
 }
