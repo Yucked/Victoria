@@ -48,7 +48,7 @@ namespace Victoria.Converters {
         }
 
         private static void BuildPlaylistInfo(ref SearchResponse response, ref Utf8JsonReader reader) {
-            var playlist = new PlaylistInfo();
+            var playlist = new SearchPlaylist();
 
             while (reader.Read()) {
                 if (reader.TokenType == JsonTokenType.EndObject) {
