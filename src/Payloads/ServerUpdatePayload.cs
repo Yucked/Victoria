@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
 namespace Victoria.Payloads {
-	internal sealed class ServerUpdatePayload : BaseLavaPayload {
+	internal sealed class ServerUpdatePayload : AbstractPayload {
 		[JsonPropertyName("guildId")]
 		public string GuildId { get; set; }
 

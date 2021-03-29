@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace Victoria.Payloads {
+namespace Victoria.Payloads.Player {
 	/// <summary>
 	///     Equalizer band
 	/// </summary>
