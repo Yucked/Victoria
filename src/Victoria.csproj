@@ -2,13 +2,13 @@
 
 	<PropertyGroup>
 		<LangVersion>8.0</LangVersion>
-		<TargetFramework>netcoreapp3.0</TargetFramework>
+		<TargetFramework>net5.0</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.1.11</Version>
+		<Version>5.2</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2020 Yucked. All rights reserved.</Copyright>
@@ -17,17 +17,23 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Fixed bug in PlayPayload where specifying EndTime and StartTime was wrong.
+			- Now targets netcoreapp3.0 and net5.0
+			- Using System.Text.Json for netcoreapp3.0
+			- Rewritten WebSocket
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Discord.Net.WebSocket" Version="2.2.0"/>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.3"/>
+		<PackageReference Include="Discord.Net.WebSocket" Version="2.3.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="Logo.png" Pack="true" Visible="false" PackagePath=""/>
+		<None Include="Logo.png" Pack="true" Visible="false" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="WebSocket\" />
 	</ItemGroup>
 
 </Project>
