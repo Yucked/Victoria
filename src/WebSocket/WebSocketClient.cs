@@ -30,7 +30,7 @@ namespace Victoria.WebSocket {
         /// <summary>
         /// 
         /// </summary>
-        public event Func<DataEventArgs, Task> OnMessageAsync;
+        public event Func<DataEventArgs, Task> OnDataAsync;
 
         /// <summary>
         /// 
@@ -175,7 +175,7 @@ namespace Victoria.WebSocket {
 
                     switch (receiveResult.MessageType) {
                         case WebSocketMessageType.Text:
-                            await OnMessageAsync.Invoke(new DataEventArgs(finalBuffer));
+                            await OnDataAsync.Invoke(new DataEventArgs(finalBuffer));
                             break;
 
                         case WebSocketMessageType.Close:

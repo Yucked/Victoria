@@ -5,11 +5,8 @@ namespace Victoria {
     /// <summary>
     /// Configuration for <see cref="LavaNode{TPlayer}"/>
     /// </summary>
-    public sealed class LavaConfig {
-        /// <summary>
-        ///     Server's password/authentication.
-        /// </summary>
-        public string Authorization { get; set; } = "youshallnotpass";
+    public sealed class NodeConfiguration {
+
 
         /// <summary>
         ///     Max buffer size for receiving websocket message.
@@ -26,19 +23,25 @@ namespace Victoria {
         public string Hostname { get; set; } = "127.0.0.1";
 
         /// <summary>
-        ///     Log serverity for logging everything.
-        /// </summary>
-        public LogSeverity LogSeverity { get; set; } = LogSeverity.Debug;
-
-        /// <summary>
         ///     Port to connect to.
         /// </summary>
         public ushort Port { get; set; } = 2333;
 
         /// <summary>
+        ///     Server's password/authentication.
+        /// </summary>
+        public string Authorization { get; set; } = "youshallnotpass";
+
+        /// <summary>
         ///     Use Secure Socket Layer (SSL) security protocol when connecting to Lavalink.
         /// </summary>
-        public bool IsSSL { get; set; } = false;
+        public bool IsSecure { get; init; } = false;
+
+        /// <summary>
+        ///     Log serverity for logging everything.
+        /// </summary>
+        public LogSeverity LogSeverity { get; set; } = LogSeverity.Debug;
+
 
         /// <summary>
         ///     Applies User-Agent header to all requests.
@@ -67,5 +70,14 @@ namespace Victoria {
         ///     Whether to enable self deaf for bot.
         /// </summary>
         public bool SelfDeaf { get; set; } = true;
+
+        internal string SocketEndpoint
+            => (IsSecure ? "wss" : "ws") + Endpoint;
+
+        internal string HttpEndpoint
+            => (IsSecure ? "https" : "http") + Endpoint;
+
+        internal string Endpoint
+            => $"://{Hostname}:{Port}/";
     }
 }

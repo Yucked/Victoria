@@ -14,7 +14,7 @@ namespace Victoria {
     /// </summary>
     public static class VictoriaExtensions {
         private static readonly Regex TitleRegex
-            = new Regex(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            = new(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
         ///     Shortcut method to add Victoria to <see cref="IServiceCollection" />.
@@ -27,8 +27,8 @@ namespace Victoria {
         ///     <see cref="IServiceCollection" />
         /// </returns>
         public static IServiceCollection AddLavaNode(this IServiceCollection serviceCollection,
-                                                     Action<LavaConfig> action = default) {
-            var lavaConfig = new LavaConfig();
+                                                     Action<NodeConfiguration> action = default) {
+            var lavaConfig = new NodeConfiguration();
             action?.Invoke(lavaConfig);
             serviceCollection.AddSingleton(lavaConfig);
             serviceCollection.AddSingleton<LavaNode>();
@@ -48,7 +48,7 @@ namespace Victoria {
         /// Throws if <seealso cref="LavaNode{TPlayer}.IsConnected"/> is set to true.
         /// </exception>
         public static Task UseLavaNodeAsync(this IServiceProvider serviceProvider) {
-            if (!(serviceProvider.GetService(typeof(LavaNode)) is LavaNode lavaNode)) {
+            if (serviceProvider.GetService(typeof(LavaNode)) is not LavaNode lavaNode) {
                 throw new NullReferenceException(nameof(LavaNode));
             }
 
@@ -110,12 +110,6 @@ namespace Victoria {
             }
         }
 
-        internal static bool EnsureState(this PlayerState state) {
-            return state == PlayerState.Connected
-                   || state == PlayerState.Playing
-                   || state == PlayerState.Paused;
-        }
-
         internal static string Encode(this string str) {
             return WebUtility.UrlEncode(str);
         }
@@ -136,9 +130,9 @@ namespace Victoria {
 
             title = title.TrimStart().TrimEnd();
             return author switch {
-                ""                                             => (lavaTrack.Author, title),
+                "" => (lavaTrack.Author, title),
                 _ when string.Equals(author, lavaTrack.Author) => (lavaTrack.Author, title),
-                _                                              => (author, title)
+                _ => (author, title)
             };
         }
 
@@ -146,7 +140,7 @@ namespace Victoria {
             var start = Encoding.UTF8.GetBytes("<!--sse-->");
             var end = Encoding.UTF8.GetBytes("<!--/sse-->");
 
-            bytes = bytes.Slice(bytes.LastIndexOf(start));
+            bytes = bytes[bytes.LastIndexOf(start)..];
             bytes = bytes.Slice(0, bytes.LastIndexOf(end));
 
             var rawHtml = Encoding.UTF8.GetString(bytes);
