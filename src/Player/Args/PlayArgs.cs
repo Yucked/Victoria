@@ -4,11 +4,11 @@ namespace Victoria.Player.Args {
     /// <summary>
     /// 
     /// </summary>
-    public struct PlayArgs<T> {
+    public struct PlayArgs {
         /// <summary>
         /// 
         /// </summary>
-        public T Track { get; set; }
+        public LavaTrack Track { get; set; }
 
         /// <summary>
         /// 
@@ -28,11 +28,11 @@ namespace Victoria.Player.Args {
         /// <summary>
         ///
         /// </summary>
-        public TimeSpan StartTime { get; set; }
+        public TimeSpan? StartTime { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public TimeSpan EndTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
     }
 }
