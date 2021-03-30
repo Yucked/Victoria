@@ -1,5 +1,3 @@
-using Victoria.Responses.WebSocket;
-
 namespace Victoria.EventArgs {
 	/// <summary>
 	///     Discord's voice websocket event.

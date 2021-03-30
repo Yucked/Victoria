@@ -1,6 +1,5 @@
 ﻿using Victoria.Decoder;
 using Victoria.Enums;
-using Victoria.Responses.WebSocket;
 
 namespace Victoria.EventArgs {
 	/// <summary>

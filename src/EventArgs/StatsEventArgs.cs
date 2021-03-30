@@ -1,5 +1,4 @@
 using System;
-using Victoria.Responses.WebSocket;
 
 namespace Victoria.EventArgs {
 	/// <summary>

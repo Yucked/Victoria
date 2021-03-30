@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Victoria.Enums;
 using Victoria.EventArgs;
-using Victoria.Responses.WebSocket;
 using PlayerState = Victoria.Responses.WebSocket.PlayerState;
 
 namespace Victoria.Converters {

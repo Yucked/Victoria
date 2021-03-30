@@ -13,8 +13,6 @@ using Victoria.Converters;
 using Victoria.Enums;
 using Victoria.EventArgs;
 using Victoria.Payloads;
-using Victoria.Responses.Rest;
-using Victoria.Responses.WebSocket;
 using PlayerState = Victoria.Enums.PlayerState;
 
 namespace Victoria {
