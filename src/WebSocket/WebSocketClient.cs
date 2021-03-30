@@ -7,6 +7,7 @@ using Victoria.WebSocket.EventArgs;
 
 namespace Victoria.WebSocket {
     using System.Net.WebSockets;
+
     /// <summary>
     /// 
     /// </summary>
@@ -14,22 +15,22 @@ namespace Victoria.WebSocket {
         /// <summary>
         /// 
         /// </summary>
-        public event Func<ValueTask> OnOpenAsync;
+        public event Func<Task> OnOpenAsync;
 
         /// <summary>
         /// 
         /// </summary>
-        public event Func<CloseEventArgs, ValueTask> OnCloseAsync;
+        public event Func<CloseEventArgs, Task> OnCloseAsync;
 
         /// <summary>
         /// 
         /// </summary>
-        public event Func<ErrorEventArgs, ValueTask> OnErrorAsync;
+        public event Func<ErrorEventArgs, Task> OnErrorAsync;
 
         /// <summary>
         /// 
         /// </summary>
-        public event Func<DataEventArgs, ValueTask> OnMessageAsync;
+        public event Func<DataEventArgs, Task> OnMessageAsync;
 
         /// <summary>
         /// 
@@ -79,7 +80,7 @@ namespace Victoria.WebSocket {
         /// 
         /// </summary>
         /// <returns></returns>
-        public async ValueTask ConnectAsync() {
+        public async Task ConnectAsync() {
             if (_webSocket.State == WebSocketState.Open) {
                 throw new InvalidOperationException(
                     $"WebSocket is not in open state. Current state: {_webSocket.State}");
@@ -91,7 +92,7 @@ namespace Victoria.WebSocket {
                     IsConnected = true;
 
                     _connectionTokenSource = new CancellationTokenSource();
-                    await Task.WhenAll(OnOpenAsync.Invoke().AsTask(), ReceiveAsync(), SendAsync());
+                    await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync(), SendAsync());
                 });
         }
 
@@ -101,8 +102,8 @@ namespace Victoria.WebSocket {
         /// <param name="closeStatus"></param>
         /// <param name="closeReason"></param>
         /// <returns></returns>
-        public async ValueTask DisconnectAsync(WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure,
-                                               string closeReason = "Normal closure.") {
+        public async Task DisconnectAsync(WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure,
+                                          string closeReason = "Normal closure.") {
             if (_webSocket.State != WebSocketState.Open) {
                 throw new InvalidOperationException(
                     $"WebSocket is not in open state. Current state: {_webSocket.State}");
@@ -131,8 +132,8 @@ namespace Victoria.WebSocket {
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public async ValueTask SendAsync<T>(T data, bool bypassQueue = false,
-                                            JsonSerializerOptions serializerOptions = default) {
+        public async Task SendAsync<T>(T data, bool bypassQueue = false,
+                                       JsonSerializerOptions serializerOptions = default) {
             if (data == null) {
                 throw new ArgumentNullException(nameof(data), "Provided data was null.");
             }
