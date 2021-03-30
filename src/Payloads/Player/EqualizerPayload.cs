@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Victoria.Player;
 
 namespace Victoria.Payloads.Player {
     internal sealed class EqualizerPayload : AbstractPlayerPayload {
