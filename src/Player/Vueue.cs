@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Victoria {
+namespace Victoria.Player {
     /// <summary>
     ///     A queue based off of <see cref="LinkedList{T}" />.
     /// </summary>
