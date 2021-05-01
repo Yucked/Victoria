@@ -143,7 +143,7 @@ namespace Victoria.Player {
 
                 var shadow = new T[_list.Count];
                 var i = 0;
-                for (var node = _list.First; !(node is null); node = node.Next) {
+                for (var node = _list.First; node is not null; node = node.Next) {
                     var j = _random.Next(i + 1);
                     if (i != j) {
                         shadow[i] = shadow[j];
@@ -204,7 +204,7 @@ namespace Victoria.Player {
             }
 
             if (Count - index < count) {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
 
             var tempIndex = 0;
