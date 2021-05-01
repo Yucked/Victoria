@@ -7,10 +7,10 @@ namespace Victoria.Converters {
     /// <summary>
     /// 
     /// </summary>
-    public class LavaTracksPropertyConverter : JsonConverter<IReadOnlyCollection<LavaTrack>> {
+    internal sealed class LavaTracksPropertyConverter : JsonConverter<IReadOnlyCollection<LavaTrack>> {
         /// <inheritdoc />
         public override IReadOnlyCollection<LavaTrack> Read(ref Utf8JsonReader reader, Type typeToConvert,
-                                                             JsonSerializerOptions options) {
+                                                            JsonSerializerOptions options) {
             var lavaTracks = new HashSet<LavaTrack>();
             while (reader.Read()) {
                 if (reader.TokenType == JsonTokenType.EndArray) {
@@ -86,9 +86,7 @@ namespace Victoria.Converters {
                     author,
                     url,
                     default,
-                    duration < TimeSpan.MaxValue.Ticks
-                        ? TimeSpan.FromMilliseconds(duration)
-                        : TimeSpan.MaxValue,
+                    duration,
                     isSeekable,
                     isLiveStream
                 );
