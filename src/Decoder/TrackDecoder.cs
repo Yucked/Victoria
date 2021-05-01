@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Buffers.Text;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Victoria.Decoder {
     /// <summary>
@@ -18,13 +20,13 @@ namespace Victoria.Decoder {
             Span<byte> hashBuffer = stackalloc byte[hash.Length];
             Encoding.ASCII.GetBytes(hash, hashBuffer);
             Base64.DecodeFromUtf8InPlace(hashBuffer, out var bytesWritten);
-            var javaReader = new JavaBinaryReader(hashBuffer.Slice(0, bytesWritten));
+            var javaReader = new JavaBinaryReader(hashBuffer[..bytesWritten]);
 
             // Reading header
             var header = javaReader.Read<int>();
             var flags = (int) ((header & 0xC0000000L) >> 30);
             var hasVersion = (flags & 1) != 0;
-            var version = hasVersion
+            var _ = hasVersion
                 ? javaReader.Read<sbyte>()
                 : 1;
 
@@ -42,6 +44,10 @@ namespace Victoria.Decoder {
                 canSeek: true);
 
             return track;
+        }
+
+        public static Task<LavaTrack> DecodeAsync(string hash) {
+            return Extensions.ReadAsJsonAsync<LavaTrack>(new HttpRequestMessage { });
         }
     }
 }
