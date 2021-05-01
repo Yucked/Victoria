@@ -1,25 +1,11 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace Victoria {
     /// <summary>
     /// Track information.
     /// </summary>
     public class LavaTrack {
-        /// <summary>
-        ///     Track's author.
-        /// </summary>
-        public string Author { get; }
-
-        /// <summary>
-        ///     Whether the track is seekable.
-        /// </summary>
-        public bool CanSeek { get; }
-
-        /// <summary>
-        ///     Track's length.
-        /// </summary>
-        public TimeSpan Duration { get; }
-
         /// <summary>
         ///     Track's encoded hash.
         /// </summary>
@@ -28,22 +14,42 @@ namespace Victoria {
         /// <summary>
         ///     Audio / Video track Id.
         /// </summary>
-        public string Id { get; }
+        [JsonPropertyName("identifier")]
+        public string Id { get; init; }
+
+        /// <summary>
+        ///     Track's author.
+        /// </summary>
+        [JsonPropertyName("author")]
+        public string Author { get; init; }
+
+        /// <summary>
+        ///     Track's title.
+        /// </summary>
+        [JsonPropertyName("title")]
+        public string Title { get; init; }
+
+        /// <summary>
+        ///     Whether the track is seekable.
+        /// </summary>
+        [JsonPropertyName("isSeekable")]
+        public bool CanSeek { get; init; }
+
+        /// <summary>
+        ///     Track's length.
+        /// </summary>
+        public TimeSpan Duration { get; }
 
         /// <summary>
         ///     Whether the track is a stream.
         /// </summary>
+        [JsonPropertyName("identifier")]
         public bool IsStream { get; }
 
         /// <summary>
         ///     Track's current position.
         /// </summary>
         public TimeSpan Position { get; internal set; }
-
-        /// <summary>
-        ///     Track's title.
-        /// </summary>
-        public string Title { get; }
 
         /// <summary>
         ///     Track's url.
