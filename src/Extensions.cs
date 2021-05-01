@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -12,9 +13,50 @@ namespace Victoria {
     /// <summary>
     /// Additional extension methods to make workflow easier.
     /// </summary>
-    public static class VictoriaExtensions {
+    public static class Extensions {
         private static readonly Regex TitleRegex
             = new(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Lazy<HttpClient> LazyHttpClient = new();
+        internal static readonly HttpClient HttpClient = LazyHttpClient.Value;
+
+        internal static void ClearHeaders(this HttpClient httpClient) {
+            httpClient.DefaultRequestHeaders.Clear();
+        }
+
+        internal static void SetHeader(this HttpClient httpClient, string key, string value) {
+            httpClient.DefaultRequestHeaders.Add(key, value);
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestMessage"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="HttpRequestException"></exception>
+        public static async Task<T> ReadAsJsonAsync<T>(HttpRequestMessage requestMessage) {
+            if (requestMessage == null) {
+                throw new ArgumentNullException(nameof(requestMessage));
+            }
+
+            if (requestMessage.RequestUri == null) {
+                throw new NullReferenceException(nameof(requestMessage.RequestUri));
+            }
+
+            using var responseMessage = await HttpClient.SendAsync(requestMessage);
+            if (!responseMessage.IsSuccessStatusCode) {
+                throw new HttpRequestException(responseMessage.ReasonPhrase);
+            }
+
+            using var content = responseMessage.Content;
+            await using var stream = await content.ReadAsStreamAsync();
+
+            var deserialized = await JsonSerializer.DeserializeAsync<T>(stream);
+            return deserialized;
+        }
 
         /// <summary>
         ///     Shortcut method to add Victoria to <see cref="IServiceCollection" />.
@@ -64,7 +106,7 @@ namespace Victoria {
         /// </summary>
         /// <param name="trackEndReason">Track end reason given by Lavalink.</param>
         public static bool ShouldPlayNext(this TrackEndReason trackEndReason) {
-            return trackEndReason == TrackEndReason.Finished || trackEndReason == TrackEndReason.LoadFailed;
+            return trackEndReason is TrackEndReason.Finished or TrackEndReason.LoadFailed;
         }
 
         /// <summary>
@@ -90,7 +132,7 @@ namespace Victoria {
         /// </summary>
         /// <param name="track"></param>
         /// <returns><see cref="string"/></returns>
-        public static ValueTask<string> FetchLyricsFromOVHAsync(this LavaTrack track) {
+        public static ValueTask<string> FetchLyricsFromOvhAsync(this LavaTrack track) {
             return LyricsResolver.SearchOVHAsync(track);
         }
 
@@ -130,9 +172,9 @@ namespace Victoria {
 
             title = title.TrimStart().TrimEnd();
             return author switch {
-                "" => (lavaTrack.Author, title),
+                ""                                             => (lavaTrack.Author, title),
                 _ when string.Equals(author, lavaTrack.Author) => (lavaTrack.Author, title),
-                _ => (author, title)
+                _                                              => (author, title)
             };
         }
 
@@ -141,7 +183,7 @@ namespace Victoria {
             var end = Encoding.UTF8.GetBytes("<!--/sse-->");
 
             bytes = bytes[bytes.LastIndexOf(start)..];
-            bytes = bytes.Slice(0, bytes.LastIndexOf(end));
+            bytes = bytes[..bytes.LastIndexOf(end)];
 
             var rawHtml = Encoding.UTF8.GetString(bytes);
             if (rawHtml.Contains("Genius.ads")) {
