@@ -34,7 +34,7 @@ namespace Victoria.Resolvers {
 			var url = $"https://genius.com/{authorTitle}-lyrics";
 			var bytes = await GetBytesAsync(url)
 			   .ConfigureAwait(false);
-			return VictoriaExtensions.ParseGeniusHtml(bytes);
+			return Extensions.ParseGeniusHtml(bytes);
 		}
 
 		/// <summary>

@@ -79,6 +79,24 @@ namespace Victoria.WebSocket {
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void AddHeader(string key, string value) {
+            if (string.IsNullOrWhiteSpace(key)) {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (string.IsNullOrWhiteSpace(value)) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            (_webSocket as ClientWebSocket).Options.SetRequestHeader(key, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         public async Task ConnectAsync() {
             if (_webSocket.State == WebSocketState.Open) {
