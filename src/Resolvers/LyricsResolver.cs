@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using Victoria.Player;
 
 namespace Victoria.Resolvers {
 	/// <summary>

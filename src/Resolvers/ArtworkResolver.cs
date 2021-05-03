@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Victoria.Player;
 
 namespace Victoria.Resolvers {
     /// <summary>

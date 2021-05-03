@@ -1,3 +1,5 @@
+using Victoria.Player;
+
 namespace Victoria.Enums {
 	/// <summary>
 	///     Specifies the reason for why the track ended.
