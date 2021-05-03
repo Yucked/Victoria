@@ -3,10 +3,12 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Victoria.Enums;
+using Victoria.Player;
 using Victoria.Resolvers;
 
 namespace Victoria {
@@ -20,24 +22,18 @@ namespace Victoria {
         private static readonly Lazy<HttpClient> LazyHttpClient = new();
         internal static readonly HttpClient HttpClient = LazyHttpClient.Value;
 
-        internal static void ClearHeaders(this HttpClient httpClient) {
-            httpClient.DefaultRequestHeaders.Clear();
-        }
-
-        internal static void SetHeader(this HttpClient httpClient, string key, string value) {
-            httpClient.DefaultRequestHeaders.Add(key, value);
-        }
-        
         /// <summary>
         /// 
         /// </summary>
         /// <param name="requestMessage"></param>
+        /// <param name="jsonConverter"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="NullReferenceException"></exception>
         /// <exception cref="HttpRequestException"></exception>
-        public static async Task<T> ReadAsJsonAsync<T>(HttpRequestMessage requestMessage) {
+        public static async Task<T> ReadAsJsonAsync<T>(HttpRequestMessage requestMessage,
+                                                       JsonConverter jsonConverter = default) {
             if (requestMessage == null) {
                 throw new ArgumentNullException(nameof(requestMessage));
             }
@@ -54,7 +50,12 @@ namespace Victoria {
             using var content = responseMessage.Content;
             await using var stream = await content.ReadAsStreamAsync();
 
-            var deserialized = await JsonSerializer.DeserializeAsync<T>(stream);
+            var deserialized = await JsonSerializer.DeserializeAsync<T>(stream,
+                jsonConverter == default
+                    ? default
+                    : new JsonSerializerOptions {
+                        Converters = {jsonConverter}
+                    });
             return deserialized;
         }
 
@@ -134,22 +135,6 @@ namespace Victoria {
         /// <returns><see cref="string"/></returns>
         public static ValueTask<string> FetchLyricsFromOvhAsync(this LavaTrack track) {
             return LyricsResolver.SearchOVHAsync(track);
-        }
-
-        internal static bool TryRead(this ref Utf8JsonReader reader, string content) {
-            return reader.TokenType == JsonTokenType.PropertyName && reader.ValueTextEquals(content) && reader.Read();
-        }
-
-        internal static bool TryDeserialize<T>(this byte[] data, out T value,
-                                               JsonSerializerOptions serializerOptions = default) {
-            try {
-                value = JsonSerializer.Deserialize<T>(data, serializerOptions);
-                return true;
-            }
-            catch {
-                value = default;
-                return false;
-            }
         }
 
         internal static string Encode(this string str) {
