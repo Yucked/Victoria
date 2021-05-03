@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Victoria {
+namespace Victoria.Player {
     /// <summary>
     /// Track information.
     /// </summary>
