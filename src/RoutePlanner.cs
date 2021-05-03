@@ -9,31 +9,22 @@ namespace Victoria {
     /// <summary>
     ///     Interacting with Lavalink's RoutePlanner API.
     /// </summary>
-    public readonly struct RoutePlanner {
-        private readonly HttpClient _httpClient;
-
-        internal RoutePlanner(HttpClient httpClient) {
-            _httpClient = httpClient;
-        }
-
+    public sealed class RoutePlanner {
         /// <summary>
         ///     Returns the current status of route planner.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<RouteStatus> GetStatusAsync() {
-            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, "/routeplanner/status");
-            using var responseMessage = await _httpClient.SendAsync(requestMessage)
-                .ConfigureAwait(false);
+        public async Task<RouteStatus> GetStatusAsync(NodeConfiguration nodeConfiguration) {
+            var requestMessage =
+                new HttpRequestMessage(HttpMethod.Get, $"{nodeConfiguration.HttpEndpoint}/routeplanner/status") {
+                    Headers = {
+                        {"Authorization", nodeConfiguration.Authorization}
+                    }
+                };
 
-            var responseContent = await responseMessage.Content.ReadAsByteArrayAsync()
-                .ConfigureAwait(false);
-
-            if (responseContent.TryDeserialize<RouteStatus>(out var routeStatus)) {
-                return routeStatus;
-            }
-
-            var routeResponse = JsonSerializer.Deserialize<RouteResponse>(responseContent);
+            var routeStatus = await Extensions.ReadAsJsonAsync<RouteStatus>(requestMessage);
+            var routeResponse = await Extensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
             throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
         }
 
