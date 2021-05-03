@@ -198,69 +198,6 @@ namespace Victoria {
         }
 
         /// <summary>
-        ///     Moves either a voice channel or text channel.
-        /// </summary>
-        /// <param name="channel">An instance of <see cref="IChannel" />.</param>
-        /// <typeparam name="T"></typeparam>
-        /// <exception cref="InvalidOperationException">Throws if client isn't connected or if player doesn't exist in cache.</exception>
-        /// <exception cref="ArgumentNullException">Throws if channel is null.</exception>
-        /// <exception cref="ArgumentException">
-        ///     Throws if channel isn't an <see cref="IVoiceChannel" /> or
-        ///     <see cref="ITextChannel" />.
-        /// </exception>
-        public async Task MoveChannelAsync<T>(T channel) where T : IChannel {
-            switch (channel) {
-                case IVoiceChannel voiceChannel: {
-                    if (!Volatile.Read(ref _refConnected)) {
-                        throw new InvalidOperationException(
-                            "Can't execute this operation when client isn't connected.");
-                    }
-
-                    if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player)) {
-                        throw new InvalidOperationException($"No player was found for {voiceChannel.Guild.Name}.");
-                    }
-
-                    if (player.VoiceChannel.Id == voiceChannel.Id) {
-                        throw new InvalidOperationException("Connected and new voice channel ids are the same.");
-                    }
-
-                    if (player.PlayerState == PlayerState.Playing) {
-                        await player.PauseAsync()
-                            .ConfigureAwait(false);
-                    }
-
-                    player.VoiceChannel = voiceChannel;
-                    await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
-                        .ConfigureAwait(false);
-
-                    if (player.PlayerState == PlayerState.Paused) {
-                        await player.ResumeAsync();
-                    }
-
-                    Log(LogSeverity.Info, $"Moved {voiceChannel.GuildId} player to {voiceChannel.Name}.");
-                    break;
-                }
-
-                case ITextChannel textChannel: {
-                    if (!_playerCache.TryGetValue(textChannel.Guild.Id, out var player)) {
-                        throw new InvalidOperationException("Player doesn't exist in cache.");
-                    }
-
-                    player.TextChannel = textChannel;
-                    break;
-                }
-
-                case null: {
-                    throw new ArgumentNullException(nameof(channel), "Channel cannot be null.");
-                }
-
-                default: {
-                    throw new ArgumentException("Channel must be an IVoiceChannel, ITextChannel.", nameof(channel));
-                }
-            }
-        }
-
-        /// <summary>
         /// 
         /// </summary>
         /// <param name="searchType"></param>
