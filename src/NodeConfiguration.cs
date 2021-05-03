@@ -6,8 +6,6 @@ namespace Victoria {
     /// Configuration for <see cref="LavaNode{TPlayer}"/>
     /// </summary>
     public sealed class NodeConfiguration {
-
-
         /// <summary>
         ///     Max buffer size for receiving websocket message.
         /// </summary>

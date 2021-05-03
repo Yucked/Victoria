@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Victoria.Converters;
+using Victoria.Player;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 namespace Victoria.Responses.Search {
