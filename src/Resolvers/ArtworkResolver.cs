@@ -19,18 +19,18 @@ namespace Victoria.Resolvers {
                 throw new ArgumentNullException(nameof(track));
             }
 
-            (var shouldSearch, var requestUrl) = track.Url.ToLower() switch {
+            var (shouldSearch, requestUrl) = track.Url.ToLower() switch {
                 var yt when yt.Contains("youtube")
-                => (false, $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg"),
+                    => (false, $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg"),
 
                 var twitch when twitch.Contains("twitch")
-                => (true, $"https://api.twitch.tv/v4/oembed?url={track.Url}"),
+                    => (true, $"https://api.twitch.tv/v4/oembed?url={track.Url}"),
 
                 var sc when sc.Contains("soundcloud")
-                => (true, $"https://soundcloud.com/oembed?url={track.Url}&format=json"),
+                    => (true, $"https://soundcloud.com/oembed?url={track.Url}&format=json"),
 
                 var vim when vim.Contains("vimeo")
-                => (false, $"https://i.vimeocdn.com/video/{track.Id}.png"),
+                    => (false, $"https://i.vimeocdn.com/video/{track.Id}.png"),
 
                 _ => (false, "https://raw.githubusercontent.com/Yucked/Victoria/v5/src/Logo.png")
             };
@@ -39,9 +39,14 @@ namespace Victoria.Resolvers {
                 return requestUrl;
             }
 
-            var responseMessage = await HttpResolver.Instance.GetAsync(requestUrl);
+            var responseMessage = await Extensions.HttpClient.GetAsync(requestUrl);
+            if (!responseMessage.IsSuccessStatusCode) {
+                throw new Exception("");
+            }
+
             using var content = responseMessage.Content;
             await using var stream = await content.ReadAsStreamAsync();
+            
             var document = await JsonDocument.ParseAsync(stream);
             return document.RootElement.TryGetProperty("thumbnail_url", out var url)
                 ? $"{url}"
