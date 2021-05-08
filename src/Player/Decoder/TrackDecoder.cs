@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
-using Victoria.Converters;
 
 namespace Victoria.Player.Decoder {
     /// <summary>
@@ -100,7 +99,7 @@ namespace Victoria.Player.Decoder {
                     Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(trackHashes))
                 };
 
-            return Extensions.ReadAsJsonAsync<IEnumerable<LavaTrack>>(requestMessage, new LavaTracksPropertyConverter());
+            return Extensions.ReadAsJsonAsync<IEnumerable<LavaTrack>>(requestMessage, Extensions.LavaTrackConverter);
         }
     }
 }
