@@ -1,6 +1,6 @@
-using Victoria.Player;
+using Victoria.Player.Args;
 
-namespace Victoria.Enums {
+namespace Victoria.Player {
 	/// <summary>
 	///     Specifies the reason for why the track ended.
 	/// </summary>
@@ -18,7 +18,7 @@ namespace Victoria.Enums {
 
 		/// <summary>
 		///     The track was stopped due to the player being stopped by either calling
-		///     <see cref="LavaPlayer.StopAsync" /> or <see cref="LavaPlayer.PlayAsync(LavaTrack)" />.
+		///     <see cref="LavaPlayer.StopAsync" /> or <see cref="LavaPlayer.PlayAsync(PlayArgs)" />.
 		/// </summary>
 		Stopped = (byte) 'S',
 
