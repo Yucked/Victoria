@@ -82,8 +82,10 @@ namespace Victoria {
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync() {
-            await DisconnectAsync()
-                .ConfigureAwait(false);
+            if (IsConnected) {
+                await DisconnectAsync()
+                    .ConfigureAwait(false);
+            }
 
             await _webSocketClient.DisposeAsync()
                 .ConfigureAwait(false);
