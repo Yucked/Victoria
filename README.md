@@ -17,6 +17,7 @@
 	     🌋 - Lavalink wrapper for Discord.NET which provides more options and performs better than all .NET Lavalink libraries combined.
   </p>
 </p>
+
 ---
 
 ## `⚔️ Features:`
