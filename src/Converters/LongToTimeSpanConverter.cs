@@ -12,7 +12,7 @@ namespace Victoria.Converters {
         }
 
         public override void Write(Utf8JsonWriter writer, TimeSpan value, JsonSerializerOptions options) {
-            writer.WriteNumber("uptime", value.TotalMilliseconds);
+            writer.WriteNumberValue(value.TotalMilliseconds);
         }
     }
 }
