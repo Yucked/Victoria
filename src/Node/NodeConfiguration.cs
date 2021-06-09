@@ -1,7 +1,7 @@
 using System;
 using Discord;
 
-namespace Victoria {
+namespace Victoria.Node {
     /// <summary>
     /// Configuration for <see cref="LavaNode{TPlayer}"/>
     /// </summary>
