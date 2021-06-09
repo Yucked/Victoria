@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +20,7 @@ using Victoria.WebSocket.EventArgs;
 
 // ReSharper disable SuggestBaseTypeForParameter
 
-namespace Victoria {
+namespace Victoria.Node {
     /// <summary>
     /// Represents a single connection to a Lavalink server.
     /// </summary>
@@ -61,6 +60,11 @@ namespace Victoria {
         /// 
         /// </summary>
         public event Func<StatsEventArg, Task> OnStatsReceived;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<UpdateEventArgs<TPlayer>, Task> OnUpdateReceived;
 
         private readonly ILogger<LavaNode<TPlayer>> _logger;
         private readonly NodeConfiguration _nodeConfiguration;
@@ -310,16 +314,33 @@ namespace Victoria {
 
         private async Task OnDataAsync(DataEventArgs arg) {
             if (arg.IsEmpty) {
+                _logger.LogWarning("Didn't receive any data from websocket");
                 return;
             }
 
-            var raw = Encoding.UTF8.GetString(arg.Data);
-            _logger.LogInformation(raw);
-
-            var op = Extensions.GetOp(arg.Data);
-            switch (op) {
+            _logger.LogDebug(arg.Data);
+            switch (Extensions.GetOp(arg.Data)) {
                 case WebSocketOP.STATS:
                     OnStatsReceived?.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
+                    break;
+
+                case WebSocketOP.PLAYER_UPDATE:
+                    var (guildId, time, position) = Extensions.GetPlayerUpdate(arg.Data);
+                    if (!_playerCache.TryGetValue(guildId, out var player)) {
+                        return;
+                    }
+
+                    player.Track.UpdatePosition(position);
+                    player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(time);
+                    OnUpdateReceived?.Invoke(new UpdateEventArgs<TPlayer>(player, player.Track, player.Track.Position));
+                    break;
+
+                case WebSocketOP.EVENT:
+                    break;
+                
+                default:
+                case WebSocketOP.UNKNOWN:
+                    _logger.LogWarning("Unknown OP received");
                     break;
             }
         }
