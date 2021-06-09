@@ -1,11 +1,14 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Victoria.Converters;
+using Victoria.Node;
 using Victoria.Payloads.WebSocket;
 using Victoria.Player;
 using Victoria.Resolvers;
@@ -141,19 +144,45 @@ namespace Victoria {
         }
 
         internal static WebSocketOP GetOp(ReadOnlyMemory<byte> data) {
-            var document = JsonDocument.Parse(data);
+            using var document = JsonDocument.Parse(data);
             if (!document.RootElement.TryGetProperty("op", out var element)) {
-                return default;
+                return WebSocketOP.UNKNOWN;
             }
 
             return $"{element}" switch {
-                "stats" => WebSocketOP.STATS
+                "stats"        => WebSocketOP.STATS,
+                "event"        => WebSocketOP.EVENT,
+                "playerUpdate" => WebSocketOP.PLAYER_UPDATE,
+                _              => WebSocketOP.UNKNOWN
             };
         }
 
         internal static byte[] RemoveTrailingNulls(this byte[] array) {
             Array.Resize(ref array, Array.FindLastIndex(array, b => b != 0) + 1);
             return array;
+        }
+
+        internal static void LogDebug(this ILogger logger, byte[] utf8Data) {
+            logger.LogDebug(Encoding.UTF8.GetString(utf8Data));
+        }
+
+        internal static (ulong GuildId, long Time, long Position) GetPlayerUpdate(ReadOnlyMemory<byte> data) {
+            using var document = JsonDocument.Parse(data);
+            ulong guildId = 0;
+            long time = 0, position = 0;
+            if (document.RootElement.TryGetProperty("guildId", out var guildElement)) {
+                guildId = guildElement.GetUInt64();
+            }
+
+            if (document.RootElement.TryGetProperty("time", out var timeElement)) {
+                time = timeElement.GetInt64();
+            }
+
+            if (document.RootElement.TryGetProperty("position", out var positionElement)) {
+                position = positionElement.GetInt64();
+            }
+
+            return (guildId, time, position);
         }
     }
 }
