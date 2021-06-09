@@ -8,25 +8,19 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.2</Version>
+		<Version>6.0</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
-		<Copyright>2018 - 2020 Yucked. All rights reserved.</Copyright>
+		<Copyright>2018 - 2021 Yucked. All rights reserved.</Copyright>
 		<PackageIcon>Logo.png</PackageIcon>
 		<PackageTags>Lavalink, Wrapper, Discord, Discord.NET, Music, Yucked, Lavalink NET, Sharplink</PackageTags>
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
-		<PackageReleaseNotes>
-			- All my homies love net5.0
-			- Organized the project
-			- Removed dumb converters
-			- Rewritten WebSocket
-		</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Discord.Net.WebSocket" Version="2.4.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0-preview.4.21253.7" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0-preview.4.21253.7" />
 	</ItemGroup>
 

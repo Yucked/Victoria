@@ -171,7 +171,7 @@ namespace Victoria {
             ulong guildId = 0;
             long time = 0, position = 0;
             if (document.RootElement.TryGetProperty("guildId", out var guildElement)) {
-                guildId = guildElement.GetUInt64();
+                guildId = ulong.Parse(guildElement.GetString()!);
             }
 
             if (document.RootElement.TryGetProperty("time", out var timeElement)) {
