@@ -337,10 +337,13 @@ namespace Victoria.Node {
 
                 case WebSocketOP.EVENT:
                     break;
-                
-                default:
+
                 case WebSocketOP.UNKNOWN:
-                    _logger.LogWarning("Unknown OP received");
+                    _logger.LogWarning("Unknown OP code received, check Lavalink implementation");
+                    break;
+
+                default:
+                    _logger.LogError("Failed to parse OP code");
                     break;
             }
         }
