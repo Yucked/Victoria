@@ -1,5 +1,4 @@
 using System;
-using Discord;
 
 namespace Victoria.Node {
     /// <summary>
@@ -34,12 +33,6 @@ namespace Victoria.Node {
         ///     Use Secure Socket Layer (SSL) security protocol when connecting to Lavalink.
         /// </summary>
         public bool IsSecure { get; init; } = false;
-
-        /// <summary>
-        ///     Log serverity for logging everything.
-        /// </summary>
-        public LogSeverity LogSeverity { get; set; } = LogSeverity.Debug;
-
 
         /// <summary>
         ///     Applies User-Agent header to all requests.
