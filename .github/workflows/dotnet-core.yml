@@ -1,0 +1,37 @@
+name: .NET Core Workflow
+
+on:
+  push:  
+    branches: v6
+
+  pull_request:
+    branches: v6
+
+jobs:
+   build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.300
+
+    - name: Build Project
+      run: dotnet build --configuration Release -o Output
+
+    - name: NutGet Upload
+      if: success() && contains(github.event.head_commit.message, 'publish')
+      working-directory: Output
+      run: dotnet nuget push *.nupkg -k ${{ secrets.MAGIC }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+    
+    - name: Discord WebHook
+      if: always()
+      shell: pwsh
+      env: 
+        GITHUB: ${{ toJson(github) }} 
+      run: |
+        wget https://raw.githubusercontent.com/Yucked/Scripy/master/Powershell/ActionSend.ps1
+        pwsh .\ActionSend.ps1 ${{ secrets.WEBHOOK }} ${{ job.status }}
