@@ -202,6 +202,10 @@ namespace Victoria.WebSocket {
                     switch (receiveResult.MessageType) {
                         case WebSocketMessageType.Text:
                             await OnDataAsync.Invoke(new DataEventArgs((finalBuffer ?? buffer).RemoveTrailingNulls()));
+
+                            finalBuffer = default;
+                            buffer = new byte[_bufferSize];
+                            offset = 0;
                             break;
 
                         case WebSocketMessageType.Close:
