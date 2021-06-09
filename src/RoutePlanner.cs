@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Victoria.Node;
 using Victoria.Responses.Route;
 
 namespace Victoria {
