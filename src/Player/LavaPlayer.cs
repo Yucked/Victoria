@@ -102,6 +102,24 @@ namespace Victoria.Player {
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="lavaTrack"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public Task PlayAsync(LavaTrack lavaTrack) {
+            if (lavaTrack == null) {
+                throw new ArgumentNullException(nameof(lavaTrack));
+            }
+
+            return _socketClient.SendAsync(new PlayPayload(VoiceChannelId, new PlayArgs {
+                Track = lavaTrack,
+                Volume = 100,
+                ShouldPause = false
+            }));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <exception cref="InvalidOperationException">Throws when <see cref="PlayerState"/> is invalid.</exception>
         public Task StopAsync() {
             PlayerState = PlayerState.Stopped;
