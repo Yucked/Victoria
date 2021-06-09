@@ -40,7 +40,7 @@ namespace Victoria.Player {
         ///     Track's length.
         /// </summary>
         [JsonPropertyName("length"), JsonConverter(typeof(LongToTimeSpanConverter)), JsonInclude]
-        public TimeSpan Duration { get; }
+        public TimeSpan Duration { get; private set; }
 
         /// <summary>
         ///     Whether the track is a stream.
@@ -114,5 +114,9 @@ namespace Victoria.Player {
         /// </summary>
         [Obsolete("Only used for desserialization.")]
         public LavaTrack() { }
+
+        internal void UpdatePosition(long position) {
+            Position = TimeSpan.FromMilliseconds(position);
+        }
     }
 }
