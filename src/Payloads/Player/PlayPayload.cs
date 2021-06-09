@@ -3,23 +3,23 @@ using Victoria.Player.Args;
 
 namespace Victoria.Payloads.Player {
     internal sealed class PlayPayload : AbstractPlayerPayload {
-        [JsonPropertyName("track"), JsonInclude]
-        private string Hash { get; }
+        [JsonPropertyName("track")]
+        public string Hash { get; }
 
-        [JsonPropertyName("noReplace"), JsonInclude]
-        private bool NoReplace { get; }
+        [JsonPropertyName("noReplace")]
+        public bool NoReplace { get; }
 
-        [JsonPropertyName("startTime"), JsonInclude]
-        private int StartTime { get; }
+        [JsonPropertyName("startTime")]
+        public int StartTime { get; }
 
-        [JsonPropertyName("endTime"), JsonInclude]
-        private int EndTime { get; }
+        [JsonPropertyName("endTime")]
+        public int EndTime { get; }
 
-        [JsonPropertyName("volume"), JsonInclude]
-        private int Volume { get; }
+        [JsonPropertyName("volume")]
+        public int Volume { get; }
 
-        [JsonPropertyName("pause"), JsonInclude]
-        private bool Pause { get; }
+        [JsonPropertyName("pause")]
+        public bool Pause { get; }
 
         public PlayPayload(ulong guildId, PlayArgs playArgs) : base(guildId, "play") {
             Hash = playArgs.Track.Hash;
