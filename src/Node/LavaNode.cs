@@ -13,6 +13,7 @@ using Victoria.Node.EventArgs;
 using Victoria.Payloads;
 using Victoria.Payloads.Player;
 using Victoria.Player;
+using Victoria.Player.Decoder;
 using Victoria.Responses.Search;
 using Victoria.WebSocket;
 using Victoria.WebSocket.EventArgs;
@@ -63,7 +64,12 @@ namespace Victoria.Node {
         /// <summary>
         /// 
         /// </summary>
-        public event Func<UpdateEventArgs<TPlayer>, Task> OnUpdateReceived;
+        public event Func<UpdateEventArg<TPlayer>, Task> OnUpdateReceived;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<TrackStartEventArg<TPlayer>, Task> OnTrackStart;
 
         private readonly ILogger<LavaNode<TPlayer>> _logger;
         private readonly NodeConfiguration _nodeConfiguration;
@@ -320,7 +326,11 @@ namespace Victoria.Node {
             _logger.LogDebug(arg.Data);
             switch (Extensions.GetOp(arg.Data)) {
                 case "stats":
-                    OnStatsReceived?.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
+                    if (OnStatsReceived == null) {
+                        return;
+                    }
+
+                    await OnStatsReceived.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
                     break;
 
                 case "playerUpdate":
@@ -331,12 +341,35 @@ namespace Victoria.Node {
 
                     player.Track.UpdatePosition(position);
                     player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(time);
-                    OnUpdateReceived?.Invoke(new UpdateEventArgs<TPlayer>(player, player.Track, player.Track.Position));
+
+                    if (OnUpdateReceived == null) {
+                        return;
+                    }
+
+                    await OnUpdateReceived.Invoke(new UpdateEventArg<TPlayer>(player, player.Track,
+                        player.Track.Position));
                     break;
 
-                case "event":
-                    switch (Extensions.GetEventType(arg.Data)) {
+                case "event": {
+                    using var doucment = JsonDocument.Parse(arg.Data);
+                    guildId = ulong.Parse($"{doucment.RootElement.GetProperty("guildId")}");
+
+                    if (!_playerCache.TryGetValue(guildId, out player)) {
+                        return;
+                    }
+
+                    LavaTrack lavaTrack = default;
+                    if (doucment.RootElement.TryGetProperty("track", out var trackElement)) {
+                        lavaTrack = TrackDecoder.Decode($"{trackElement}");
+                    }
+
+                    switch ($"{doucment.RootElement.GetProperty("type")}") {
                         case "TrackStartEvent":
+                            if (OnTrackStart == null) {
+                                break;
+                            }
+
+                            await OnTrackStart.Invoke(new TrackStartEventArg<TPlayer>(player, lavaTrack));
                             break;
 
                         case "TrackEndEvent":
@@ -355,7 +388,7 @@ namespace Victoria.Node {
                             _logger.LogWarning($"Unknown event type received: {Extensions.GetEventType(arg.Data)}");
                             break;
                     }
-
+                }
                     break;
 
                 default:
