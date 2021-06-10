@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Victoria.Converters;
 using Victoria.Node;
-using Victoria.Payloads.WebSocket;
 using Victoria.Player;
 using Victoria.Resolvers;
 
@@ -143,20 +142,6 @@ namespace Victoria {
             return WebUtility.UrlEncode(str);
         }
 
-        internal static WebSocketOP GetOp(ReadOnlyMemory<byte> data) {
-            using var document = JsonDocument.Parse(data);
-            if (!document.RootElement.TryGetProperty("op", out var element)) {
-                return WebSocketOP.UNKNOWN;
-            }
-
-            return $"{element}" switch {
-                "stats"        => WebSocketOP.STATS,
-                "event"        => WebSocketOP.EVENT,
-                "playerUpdate" => WebSocketOP.PLAYER_UPDATE,
-                _              => WebSocketOP.UNKNOWN
-            };
-        }
-
         internal static byte[] RemoveTrailingNulls(this byte[] array) {
             Array.Resize(ref array, Array.FindLastIndex(array, b => b != 0) + 1);
             return array;
@@ -164,6 +149,11 @@ namespace Victoria {
 
         internal static void LogDebug(this ILogger logger, byte[] utf8Data) {
             logger.LogDebug(Encoding.UTF8.GetString(utf8Data));
+        }
+
+        internal static string GetOp(ReadOnlyMemory<byte> data) {
+            using var document = JsonDocument.Parse(data);
+            return !document.RootElement.TryGetProperty("op", out var element) ? default : $"{element}";
         }
 
         internal static (ulong GuildId, long Time, long Position) GetPlayerUpdate(ReadOnlyMemory<byte> data) {
@@ -183,6 +173,13 @@ namespace Victoria {
             }
 
             return (guildId, time, position);
+        }
+
+        internal static string GetEventType(ReadOnlyMemory<byte> data) {
+            using var document = JsonDocument.Parse(data);
+            return !document.RootElement.TryGetProperty("type", out var typeElement)
+                ? string.Empty
+                : typeElement.GetString();
         }
     }
 }
