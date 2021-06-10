@@ -1,11 +1,10 @@
-﻿using System;
 using Victoria.Player;
 
 namespace Victoria.Node.EventArgs {
     /// <summary>
     /// 
     /// </summary>
-    public readonly struct UpdateEventArgs<TPlayer> where TPlayer : LavaPlayer {
+    public readonly struct TrackStartEventArg<TPlayer> where TPlayer : LavaPlayer {
         /// <summary>
         /// 
         /// </summary>
@@ -16,15 +15,9 @@ namespace Victoria.Node.EventArgs {
         /// </summary>
         public LavaTrack Track { get; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public TimeSpan Position { get; }
-
-        internal UpdateEventArgs(TPlayer player, LavaTrack track, TimeSpan position) {
+        internal TrackStartEventArg(TPlayer player, LavaTrack track) {
             Player = player;
             Track = track;
-            Position = position;
         }
     }
 }
