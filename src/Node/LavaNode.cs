@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using Victoria.Node.EventArgs;
 using Victoria.Payloads;
 using Victoria.Payloads.Player;
-using Victoria.Payloads.WebSocket;
 using Victoria.Player;
 using Victoria.Responses.Search;
 using Victoria.WebSocket;
@@ -320,11 +319,11 @@ namespace Victoria.Node {
 
             _logger.LogDebug(arg.Data);
             switch (Extensions.GetOp(arg.Data)) {
-                case WebSocketOP.STATS:
+                case "stats":
                     OnStatsReceived?.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
                     break;
 
-                case WebSocketOP.PLAYER_UPDATE:
+                case "playerUpdate":
                     var (guildId, time, position) = Extensions.GetPlayerUpdate(arg.Data);
                     if (!_playerCache.TryGetValue(guildId, out var player)) {
                         return;
@@ -335,15 +334,32 @@ namespace Victoria.Node {
                     OnUpdateReceived?.Invoke(new UpdateEventArgs<TPlayer>(player, player.Track, player.Track.Position));
                     break;
 
-                case WebSocketOP.EVENT:
-                    break;
+                case "event":
+                    switch (Extensions.GetEventType(arg.Data)) {
+                        case "TrackStartEvent":
+                            break;
 
-                case WebSocketOP.UNKNOWN:
-                    _logger.LogWarning("Unknown OP code received, check Lavalink implementation");
+                        case "TrackEndEvent":
+                            break;
+
+                        case "TrackExceptionEvent":
+                            break;
+
+                        case "TrackStuckEvent":
+                            break;
+
+                        case "WebSocketClosedEvent":
+                            break;
+
+                        default:
+                            _logger.LogWarning($"Unknown event type received: {Extensions.GetEventType(arg.Data)}");
+                            break;
+                    }
+
                     break;
 
                 default:
-                    _logger.LogError("Failed to parse OP code");
+                    _logger.LogWarning("Unknown OP code received, check Lavalink implementation");
                     break;
             }
         }
