@@ -168,11 +168,12 @@ namespace Victoria {
                 guildId = ulong.Parse(guildElement.GetString()!);
             }
 
-            if (document.RootElement.TryGetProperty("time", out var timeElement)) {
+            var stateElement = document.RootElement.GetProperty("state");
+            if (stateElement.TryGetProperty("time", out var timeElement)) {
                 time = timeElement.GetInt64();
             }
 
-            if (document.RootElement.TryGetProperty("position", out var positionElement)) {
+            if (stateElement.TryGetProperty("position", out var positionElement)) {
                 position = positionElement.GetInt64();
             }
 

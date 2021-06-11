@@ -194,7 +194,8 @@ namespace Victoria.Player {
             }
 
             if (seekPosition.TotalMilliseconds > Track.Duration.TotalMilliseconds) {
-                throw new ArgumentOutOfRangeException(nameof(seekPosition), "");
+                throw new ArgumentOutOfRangeException(nameof(seekPosition),
+                    "Specified position is greater than track's total duration.");
             }
 
             return _socketClient.SendAsync(new SeekPayload(_guildId, seekPosition));

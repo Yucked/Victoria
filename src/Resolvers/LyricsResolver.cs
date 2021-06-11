@@ -36,7 +36,7 @@ namespace Victoria.Resolvers {
 
             var responseMessage = await Extensions.HttpClient.GetAsync($"https://genius.com/{authorTitle}-lyrics");
             if (!responseMessage.IsSuccessStatusCode) {
-                throw new Exception("");
+                throw new Exception(responseMessage.ReasonPhrase);
             }
 
             using var content = responseMessage.Content;
@@ -82,7 +82,7 @@ namespace Victoria.Resolvers {
                 await Extensions.HttpClient.GetAsync($"https://api.lyrics.ovh/v1/{author.Encode()}/{title.Encode()}");
 
             if (!responseMessage.IsSuccessStatusCode) {
-                throw new Exception("");
+                throw new Exception(responseMessage.ReasonPhrase);
             }
 
             using var content = responseMessage.Content;

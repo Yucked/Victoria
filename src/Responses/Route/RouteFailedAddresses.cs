@@ -23,7 +23,7 @@ namespace Victoria.Responses.Route {
         /// <summary>
         ///     Time when this address failed.
         /// </summary>
-        [JsonPropertyName(""), JsonInclude]
+        [JsonPropertyName("failedOn"), JsonInclude]
         public string FailedOn { get; internal set; }
     }
 }
