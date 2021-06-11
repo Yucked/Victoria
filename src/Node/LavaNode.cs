@@ -277,10 +277,11 @@ namespace Victoria.Node {
             }
 
             var urlPath = searchType switch {
-                SearchType.SoundCloud => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
-                SearchType.YouTube    => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
-                SearchType.Direct     => $"/loadtracks?identifier={query}",
-                _                     => $"/loadtracks?identifier={query}"
+                SearchType.SoundCloud   => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
+                SearchType.YouTubeMusic => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytmsearch:{query}")}",
+                SearchType.YouTube      => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
+                SearchType.Direct       => $"/loadtracks?identifier={query}",
+                _                       => $"/loadtracks?identifier={query}"
             };
 
             using var requestMessage =
@@ -475,7 +476,7 @@ namespace Victoria.Node {
                 ChannelId = (currentState.VoiceChannel ?? pastState.VoiceChannel).Id
             };
 
-            _voiceStates.TryUpdate(voiceState.GuildId, voiceState, default);
+            _voiceStates.AddOrUpdate(voiceState.GuildId, voiceState, (k, v) => voiceState);
             return Task.CompletedTask;
         }
 
