@@ -23,6 +23,10 @@ namespace Victoria {
         private static readonly Lazy<LavaTracksPropertyConverter> LazyLavaTrackConverter = new();
         internal static readonly LavaTracksPropertyConverter LavaTrackConverter = LazyLavaTrackConverter.Value;
 
+        internal static readonly JsonSerializerOptions JsonOptions = new() {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault | JsonIgnoreCondition.WhenWritingNull
+        };
+
         /// <summary>
         /// 
         /// </summary>

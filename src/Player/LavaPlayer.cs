@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
-using Discord.WebSocket;
 using Victoria.Payloads.Player;
 using Victoria.Player.Args;
 using Victoria.WebSocket;
@@ -52,16 +51,6 @@ namespace Victoria.Player {
         /// </summary>
         public ulong VoiceChannelId { get; }
 
-        /// <summary>
-        ///     Voice server this player is connected to.
-        /// </summary>
-        public SocketVoiceServer VoiceServer { get; internal set; }
-
-        /// <summary>
-        ///     Player's current voice state.
-        /// </summary>
-        public IVoiceState VoiceState { get; internal set; }
-
         private readonly IDictionary<int, double> _bands;
         private readonly WebSocketClient _socketClient;
 
@@ -95,7 +84,7 @@ namespace Victoria.Player {
                     "Volume must be greater than or equal to 0."),
                 > 1000 => throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
                     "Volume must be less than or equal to 1000."),
-                _ => _socketClient.SendAsync(new PlayPayload(VoiceChannelId, playArgs))
+                _ => _socketClient.SendAsync(new PlayPayload(VoiceChannelId, playArgs), false, Extensions.JsonOptions)
             };
         }
 
@@ -114,7 +103,7 @@ namespace Victoria.Player {
                 Track = lavaTrack,
                 Volume = 100,
                 ShouldPause = false
-            }));
+            }), false, Extensions.JsonOptions);
         }
 
         /// <summary>
