@@ -81,6 +81,16 @@ namespace Victoria.Node {
         /// </summary>
         public event Func<TrackExceptionEventArg<TPlayer>, Task> OnTrackException;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<TrackStuckEventArg<TPlayer>, Task> OnTrackStuck;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<WebSocketClosedEventArg, Task> OnWebSocketClosed;
+
         private readonly ILogger<LavaNode<TPlayer>> _logger;
         private readonly NodeConfiguration _nodeConfiguration;
         private readonly WebSocketClient _webSocketClient;
@@ -269,7 +279,8 @@ namespace Victoria.Node {
             var urlPath = searchType switch {
                 SearchType.SoundCloud => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
                 SearchType.YouTube    => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
-                SearchType.Direct     => $"/loadtracks?identifier={query}"
+                SearchType.Direct     => $"/loadtracks?identifier={query}",
+                _                     => $"/loadtracks?identifier={query}"
             };
 
             using var requestMessage =
@@ -365,18 +376,19 @@ namespace Victoria.Node {
 
                 case "event": {
                     using var document = JsonDocument.Parse(arg.Data);
-                    guildId = ulong.Parse($"{document.RootElement.GetProperty("guildId")}");
+                    var root = document.RootElement;
+                    guildId = ulong.Parse($"{root.GetProperty("guildId")}");
 
                     if (!_playerCache.TryGetValue(guildId, out player)) {
                         return;
                     }
 
                     LavaTrack lavaTrack = default;
-                    if (document.RootElement.TryGetProperty("track", out var trackElement)) {
+                    if (root.TryGetProperty("track", out var trackElement)) {
                         lavaTrack = TrackDecoder.Decode($"{trackElement}");
                     }
 
-                    switch ($"{document.RootElement.GetProperty("type")}") {
+                    switch ($"{root.GetProperty("type")}") {
                         case "TrackStartEvent":
                             if (OnTrackStart == null) {
                                 break;
@@ -396,7 +408,7 @@ namespace Victoria.Node {
                             await OnTrackEnd.Invoke(new TrackEndEventArg<TPlayer> {
                                 Player = player,
                                 Track = lavaTrack,
-                                Reason = (TrackEndReason) (byte) $"{document.RootElement.GetProperty("reason")}"[0]
+                                Reason = (TrackEndReason) (byte) $"{root.GetProperty("reason")}"[0]
                             });
                             break;
 
@@ -408,14 +420,33 @@ namespace Victoria.Node {
                             await OnTrackException.Invoke(new TrackExceptionEventArg<TPlayer> {
                                 Player = player,
                                 Track = lavaTrack,
-                                Exception = document.RootElement.GetProperty("error").GetString()
+                                Exception = root.GetProperty("error").GetString()
                             });
                             break;
 
                         case "TrackStuckEvent":
+                            if (OnTrackStuck == null) {
+                                break;
+                            }
+
+                            await OnTrackStuck.Invoke(new TrackStuckEventArg<TPlayer> {
+                                Player = player,
+                                Track = lavaTrack,
+                                Threshold = long.Parse($"{root.GetProperty("thresholdMs")}")
+                            });
                             break;
 
                         case "WebSocketClosedEvent":
+                            if (OnWebSocketClosed == null) {
+                                break;
+                            }
+
+                            await OnWebSocketClosed.Invoke(new WebSocketClosedEventArg {
+                                Guild = _baseSocketClient.GetGuild(guildId),
+                                Code = int.Parse($"{root.GetProperty("code")}"),
+                                Reason = $"{root.GetProperty("reason")}",
+                                ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
+                            });
                             break;
 
                         default:
