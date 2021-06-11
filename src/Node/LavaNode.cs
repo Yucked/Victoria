@@ -235,8 +235,9 @@ namespace Victoria.Node {
             await voiceChannel.ConnectAsync(_nodeConfiguration.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _webSocketClient, voiceChannel.Id,
-                textChannel);
+            player = (TPlayer) Activator
+                .CreateInstance(typeof(TPlayer), _webSocketClient, voiceChannel, textChannel);
+            
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -391,6 +392,9 @@ namespace Victoria.Node {
 
                     switch ($"{root.GetProperty("type")}") {
                         case "TrackStartEvent":
+                            player.Track = lavaTrack;
+                            player.PlayerState = PlayerState.Playing;
+
                             if (OnTrackStart == null) {
                                 break;
                             }
@@ -402,6 +406,9 @@ namespace Victoria.Node {
                             break;
 
                         case "TrackEndEvent":
+                            player.Track = default;
+                            player.PlayerState = PlayerState.Stopped;
+
                             if (OnTrackEnd == null) {
                                 break;
                             }
@@ -414,6 +421,9 @@ namespace Victoria.Node {
                             break;
 
                         case "TrackExceptionEvent":
+                            player.Track = default;
+                            player.PlayerState = PlayerState.Stopped;
+
                             if (OnTrackException == null) {
                                 break;
                             }
@@ -426,6 +436,9 @@ namespace Victoria.Node {
                             break;
 
                         case "TrackStuckEvent":
+                            player.Track = default;
+                            player.PlayerState = PlayerState.Stopped;
+
                             if (OnTrackStuck == null) {
                                 break;
                             }
