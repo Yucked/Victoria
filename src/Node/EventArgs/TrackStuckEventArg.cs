@@ -4,21 +4,21 @@ namespace Victoria.Node.EventArgs {
     /// <summary>
     /// 
     /// </summary>
-    public readonly struct TrackEndEventArg<TPlayer>
+    public readonly struct TrackStuckEventArg<TPlayer>
         where TPlayer : LavaPlayer {
         /// <summary>
         /// 
         /// </summary>
         public TPlayer Player { get; internal init; }
-
+        
         /// <summary>
         /// 
         /// </summary>
         public LavaTrack Track { get; internal init; }
-
+        
         /// <summary>
         /// 
         /// </summary>
-        public TrackEndReason Reason { get; internal init; }
+        public long Threshold { get; internal init; }
     }
 }
