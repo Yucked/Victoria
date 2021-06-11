@@ -49,34 +49,39 @@ namespace Victoria.Player {
         /// <summary>
         /// 
         /// </summary>
-        public ulong VoiceChannelId { get; }
+        public IVoiceChannel VoiceChannel { get; }
 
         private readonly IDictionary<int, double> _bands;
         private readonly WebSocketClient _socketClient;
+        private readonly ulong _guildId;
 
         /// <summary>
         /// Represents a VoiceChannel connection.
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="voiceChannelId"></param>
+        /// <param name="voiceChannel"></param>
         /// <param name="textChannel"></param>
-        public LavaPlayer(WebSocketClient socketClient, ulong voiceChannelId, ITextChannel textChannel) {
+        public LavaPlayer(WebSocketClient socketClient, IVoiceChannel voiceChannel, ITextChannel textChannel) {
             _socketClient = socketClient;
-            VoiceChannelId = voiceChannelId;
+            VoiceChannel = voiceChannel;
             TextChannel = textChannel;
             Vueue = new Vueue<LavaTrack>();
             _bands = new Dictionary<int, double>(15);
+            _guildId = voiceChannel.GuildId;
         }
 
         /// <summary>
         /// Plays the specified track with provided arguments.
         /// </summary>
-        /// <param name="playArgs"><see cref="PlayArgs"/></param>
+        /// <param name="playArgsAction"></param>
         /// <returns></returns>
-        /// <exception cref="ArgumentNullException">Throws when <paramref name="playArgs"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Throws when <paramref name="playArgsAction"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Throws when the volume is out of range.</exception>
-        public Task PlayAsync(PlayArgs playArgs) {
-            Track = playArgs.Track ?? throw new ArgumentNullException(nameof(playArgs));
+        public Task PlayAsync(Action<PlayArgs> playArgsAction) {
+            var playArgs = new PlayArgs();
+            playArgsAction.Invoke(playArgs);
+
+            Track = playArgs.Track ?? throw new NullReferenceException(nameof(playArgs));
             PlayerState = playArgs.ShouldPause ? PlayerState.Paused : PlayerState.Playing;
 
             return (Volume = playArgs.Volume) switch {
@@ -84,7 +89,7 @@ namespace Victoria.Player {
                     "Volume must be greater than or equal to 0."),
                 > 1000 => throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
                     "Volume must be less than or equal to 1000."),
-                _ => _socketClient.SendAsync(new PlayPayload(VoiceChannelId, playArgs), false, Extensions.JsonOptions)
+                _ => _socketClient.SendAsync(new PlayPayload(_guildId, playArgs), false, Extensions.JsonOptions)
             };
         }
 
@@ -99,7 +104,8 @@ namespace Victoria.Player {
                 throw new ArgumentNullException(nameof(lavaTrack));
             }
 
-            return _socketClient.SendAsync(new PlayPayload(VoiceChannelId, new PlayArgs {
+            PlayerState = PlayerState.Playing;
+            return _socketClient.SendAsync(new PlayPayload(_guildId, new PlayArgs {
                 Track = lavaTrack,
                 Volume = 100,
                 ShouldPause = false
@@ -112,7 +118,7 @@ namespace Victoria.Player {
         /// <exception cref="InvalidOperationException">Throws when <see cref="PlayerState"/> is invalid.</exception>
         public Task StopAsync() {
             PlayerState = PlayerState.Stopped;
-            return _socketClient.SendAsync(new StopPayload(VoiceChannelId));
+            return _socketClient.SendAsync(new StopPayload(_guildId));
         }
 
         /// <summary>
@@ -129,7 +135,7 @@ namespace Victoria.Player {
                 ? PlayerState.Stopped
                 : PlayerState.Paused;
 
-            return _socketClient.SendAsync(new PausePayload(VoiceChannelId, true));
+            return _socketClient.SendAsync(new PausePayload(_guildId, true));
         }
 
         /// <summary>
@@ -146,7 +152,7 @@ namespace Victoria.Player {
                 ? PlayerState.Stopped
                 : PlayerState.Playing;
 
-            return _socketClient.SendAsync(new PausePayload(VoiceChannelId, false));
+            return _socketClient.SendAsync(new PausePayload(_guildId, false));
         }
 
         /// <summary>
@@ -167,9 +173,9 @@ namespace Victoria.Player {
 
             var skippedTrack = Track;
             await await Task.Delay(skipAfter ?? TimeSpan.Zero)
-                .ContinueWith(_ => PlayAsync(new PlayArgs {
-                    Track = lavaTrack,
-                    NoReplace = false
+                .ContinueWith(_ => PlayAsync(x => {
+                    x.Track = lavaTrack;
+                    x.NoReplace = false;
                 }));
 
             return (skippedTrack, lavaTrack);
@@ -191,7 +197,7 @@ namespace Victoria.Player {
                 throw new ArgumentOutOfRangeException(nameof(seekPosition), "");
             }
 
-            return _socketClient.SendAsync(new SeekPayload(VoiceChannelId, seekPosition));
+            return _socketClient.SendAsync(new SeekPayload(_guildId, seekPosition));
         }
 
         /// <summary>
@@ -206,7 +212,7 @@ namespace Victoria.Player {
                     "Volume must be greater than or equal to 0."),
                 > 1000 => throw new ArgumentOutOfRangeException(nameof(volume),
                     "Volume must be less than or equal to 1000."),
-                _ => _socketClient.SendAsync(new VolumePayload(VoiceChannelId, Volume = volume))
+                _ => _socketClient.SendAsync(new VolumePayload(_guildId, Volume = volume))
             };
         }
 
@@ -219,7 +225,7 @@ namespace Victoria.Player {
                 _bands[band.Band] = band.Gain;
             }
 
-            return _socketClient.SendAsync(new EqualizerPayload(VoiceChannelId, equalizerBands));
+            return _socketClient.SendAsync(new EqualizerPayload(_guildId, equalizerBands));
         }
 
         /// <summary>
@@ -235,11 +241,12 @@ namespace Victoria.Player {
         public async ValueTask DisposeAsync() {
             await StopAsync()
                 .ConfigureAwait(false);
-            await _socketClient.SendAsync(new DestroyPayload(VoiceChannelId));
+            await _socketClient.SendAsync(new DestroyPayload(_guildId));
 
             Vueue.Clear();
             Track = null;
             PlayerState = PlayerState.None;
+            GC.SuppressFinalize(this);
         }
     }
 }
