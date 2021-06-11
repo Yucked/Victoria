@@ -5,26 +5,21 @@ namespace Victoria.Node.EventArgs {
     /// <summary>
     /// 
     /// </summary>
-    public readonly struct UpdateEventArg<TPlayer> where TPlayer : LavaPlayer {
+    public readonly struct UpdateEventArg<TPlayer>
+        where TPlayer : LavaPlayer {
         /// <summary>
         /// 
         /// </summary>
-        public TPlayer Player { get; }
+        public TPlayer Player { get; internal init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public LavaTrack Track { get; }
+        public LavaTrack Track { get; internal init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public TimeSpan Position { get; }
-
-        internal UpdateEventArg(TPlayer player, LavaTrack track, TimeSpan position) {
-            Player = player;
-            Track = track;
-            Position = position;
-        }
+        public TimeSpan Position { get; internal init; }
     }
 }
