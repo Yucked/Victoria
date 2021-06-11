@@ -41,7 +41,7 @@ namespace Victoria.Resolvers {
 
             var responseMessage = await Extensions.HttpClient.GetAsync(requestUrl);
             if (!responseMessage.IsSuccessStatusCode) {
-                throw new Exception("");
+                throw new Exception(responseMessage.ReasonPhrase);
             }
 
             using var content = responseMessage.Content;
