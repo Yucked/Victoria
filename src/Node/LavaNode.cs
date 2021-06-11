@@ -71,6 +71,16 @@ namespace Victoria.Node {
         /// </summary>
         public event Func<TrackStartEventArg<TPlayer>, Task> OnTrackStart;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<TrackEndEventArg<TPlayer>, Task> OnTrackEnd;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<TrackExceptionEventArg<TPlayer>, Task> OnTrackException;
+
         private readonly ILogger<LavaNode<TPlayer>> _logger;
         private readonly NodeConfiguration _nodeConfiguration;
         private readonly WebSocketClient _webSocketClient;
@@ -346,36 +356,60 @@ namespace Victoria.Node {
                         return;
                     }
 
-                    await OnUpdateReceived.Invoke(new UpdateEventArg<TPlayer>(player, player.Track,
-                        player.Track.Position));
+                    await OnUpdateReceived.Invoke(new UpdateEventArg<TPlayer> {
+                        Player = player,
+                        Track = player.Track,
+                        Position = player.Track.Position
+                    });
                     break;
 
                 case "event": {
-                    using var doucment = JsonDocument.Parse(arg.Data);
-                    guildId = ulong.Parse($"{doucment.RootElement.GetProperty("guildId")}");
+                    using var document = JsonDocument.Parse(arg.Data);
+                    guildId = ulong.Parse($"{document.RootElement.GetProperty("guildId")}");
 
                     if (!_playerCache.TryGetValue(guildId, out player)) {
                         return;
                     }
 
                     LavaTrack lavaTrack = default;
-                    if (doucment.RootElement.TryGetProperty("track", out var trackElement)) {
+                    if (document.RootElement.TryGetProperty("track", out var trackElement)) {
                         lavaTrack = TrackDecoder.Decode($"{trackElement}");
                     }
 
-                    switch ($"{doucment.RootElement.GetProperty("type")}") {
+                    switch ($"{document.RootElement.GetProperty("type")}") {
                         case "TrackStartEvent":
                             if (OnTrackStart == null) {
                                 break;
                             }
 
-                            await OnTrackStart.Invoke(new TrackStartEventArg<TPlayer>(player, lavaTrack));
+                            await OnTrackStart.Invoke(new TrackStartEventArg<TPlayer> {
+                                Player = player,
+                                Track = lavaTrack
+                            });
                             break;
 
                         case "TrackEndEvent":
+                            if (OnTrackEnd == null) {
+                                break;
+                            }
+
+                            await OnTrackEnd.Invoke(new TrackEndEventArg<TPlayer> {
+                                Player = player,
+                                Track = lavaTrack,
+                                Reason = (TrackEndReason) (byte) $"{document.RootElement.GetProperty("reason")}"[0]
+                            });
                             break;
 
                         case "TrackExceptionEvent":
+                            if (OnTrackException == null) {
+                                break;
+                            }
+
+                            await OnTrackException.Invoke(new TrackExceptionEventArg<TPlayer> {
+                                Player = player,
+                                Track = lavaTrack,
+                                Exception = document.RootElement.GetProperty("error").GetString()
+                            });
                             break;
 
                         case "TrackStuckEvent":
