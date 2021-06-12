@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,21 +25,27 @@ namespace Victoria {
         internal static readonly LavaTracksPropertyConverter LavaTrackConverter = LazyLavaTrackConverter.Value;
 
         internal static readonly JsonSerializerOptions JsonOptions = new() {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault | JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
         };
+
+        internal static CancellationToken DefaultTimeout =
+            new CancellationTokenSource(TimeSpan.FromSeconds(30))
+                .Token;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="requestMessage"></param>
         /// <param name="jsonConverter"></param>
+        /// <param name="cancellationToken"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="NullReferenceException"></exception>
         /// <exception cref="HttpRequestException"></exception>
         public static async Task<T> ReadAsJsonAsync<T>(HttpRequestMessage requestMessage,
-                                                       JsonConverter jsonConverter = default) {
+                                                       JsonConverter jsonConverter = default,
+                                                       CancellationToken cancellationToken = default) {
             if (requestMessage == null) {
                 throw new ArgumentNullException(nameof(requestMessage));
             }
@@ -68,11 +75,13 @@ namespace Victoria {
         /// 
         /// </summary>
         /// <param name="requestMessage"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="NullReferenceException"></exception>
         /// <exception cref="HttpRequestException"></exception>
-        public static async Task<JsonElement> GetJsonRootAsync(HttpRequestMessage requestMessage) {
+        public static async Task<JsonElement> GetJsonRootAsync(HttpRequestMessage requestMessage,
+                                                               CancellationToken cancellationToken = default) {
             if (requestMessage == null) {
                 throw new ArgumentNullException(nameof(requestMessage));
             }
@@ -81,7 +90,7 @@ namespace Victoria {
                 throw new NullReferenceException(nameof(requestMessage.RequestUri));
             }
 
-            using var responseMessage = await HttpClient.SendAsync(requestMessage);
+            using var responseMessage = await HttpClient.SendAsync(requestMessage, cancellationToken);
             if (!responseMessage.IsSuccessStatusCode) {
                 throw new HttpRequestException(responseMessage.ReasonPhrase);
             }
@@ -159,7 +168,8 @@ namespace Victoria {
         /// <param name="track"></param>
         /// <returns><see cref="string"/></returns>
         public static ValueTask<string> FetchLyricsFromGeniusAsync(this LavaTrack track) {
-            return LyricsResolver.SearchGeniusAsync(track);
+            //return LyricsResolver.SearchGeniusAsync(track);
+            return default;
         }
 
         /// <summary>
