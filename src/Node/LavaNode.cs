@@ -489,7 +489,7 @@ namespace Victoria.Node {
                 ChannelId = (currentState.VoiceChannel ?? pastState.VoiceChannel).Id
             };
 
-            _voiceStates.AddOrUpdate(voiceState.GuildId, voiceState, (k, v) => voiceState);
+            _voiceStates.AddOrUpdate(voiceState.GuildId, voiceState, (_, _) => voiceState);
             return Task.CompletedTask;
         }
 
