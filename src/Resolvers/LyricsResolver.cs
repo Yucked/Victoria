@@ -36,6 +36,9 @@ namespace Victoria.Resolvers {
                 throw new ArgumentNullException(nameof(title));
             }
 
+            artist = artist.Replace(' ', '-');
+            title = title.Replace(' ', '-');
+
             using var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, string.Format(EP_GEN, artist, title));
             var responseMessage = await Extensions.HttpClient.SendAsync(requestMessage);
