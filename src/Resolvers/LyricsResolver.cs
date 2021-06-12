@@ -1,6 +1,6 @@
 using System;
+using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Victoria.Player;
@@ -12,6 +12,12 @@ namespace Victoria.Resolvers {
     public readonly struct LyricsResolver {
         private static readonly Regex TitleRegex
             = new(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex NewLineRegex
+            = new(@"[\r\n]{2,}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private const string EP_OVH = "https://api.lyrics.ovh/v1/{0}/{1}";
+        private const string EP_GEN = "https://genius.com/{0}-{1}-lyrics";
 
         /// <summary>
         ///     Searches Genius for lyrics and returns them as string.
@@ -78,22 +84,13 @@ namespace Victoria.Resolvers {
             }
 
             var (author, title) = GetAuthorAndTitle(lavaTrack);
-            var responseMessage =
-                await Extensions.HttpClient.GetAsync($"https://api.lyrics.ovh/v1/{author.Encode()}/{title.Encode()}");
+            using var requestMessage =
+                new HttpRequestMessage(HttpMethod.Get, string.Format(EP_OVH, author, title));
 
-            if (!responseMessage.IsSuccessStatusCode) {
-                throw new Exception(responseMessage.ReasonPhrase);
-            }
-
-            using var content = responseMessage.Content;
-            var responseStream = await content.ReadAsStreamAsync();
-            using var document = await JsonDocument.ParseAsync(responseStream);
-            if (!document.RootElement.TryGetProperty("lyrics", out var jsonElement)) {
-                return document.RootElement.GetProperty("error").GetString();
-            }
-
-            var regex = new Regex(@"[\r\n]{2,}");
-            return regex.Replace($"{jsonElement}", "\n");
+            var jsonRoot = await Extensions.GetJsonRootAsync(requestMessage);
+            return !jsonRoot.TryGetProperty("lyrics", out var lyricsElement)
+                ? $"{jsonRoot.GetProperty("error")}"
+                : NewLineRegex.Replace($"{lyricsElement}", "\n");
         }
 
         internal static (string Author, string Title) GetAuthorAndTitle(LavaTrack lavaTrack) {
