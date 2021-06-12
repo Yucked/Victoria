@@ -65,6 +65,35 @@ namespace Victoria {
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestMessage"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="HttpRequestException"></exception>
+        public static async Task<JsonElement> GetJsonRootAsync(HttpRequestMessage requestMessage) {
+            if (requestMessage == null) {
+                throw new ArgumentNullException(nameof(requestMessage));
+            }
+
+            if (requestMessage.RequestUri == null) {
+                throw new NullReferenceException(nameof(requestMessage.RequestUri));
+            }
+
+            using var responseMessage = await HttpClient.SendAsync(requestMessage);
+            if (!responseMessage.IsSuccessStatusCode) {
+                throw new HttpRequestException(responseMessage.ReasonPhrase);
+            }
+
+            using var content = requestMessage.Content;
+            await using var stream = await content.ReadAsStreamAsync();
+            using var document = await JsonDocument.ParseAsync(stream);
+
+            return document.RootElement;
+        }
+
+        /// <summary>
         ///     Shortcut method to add Victoria to <see cref="IServiceCollection" />.
         /// </summary>
         /// <param name="serviceCollection">
