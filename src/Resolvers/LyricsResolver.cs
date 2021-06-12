@@ -69,23 +69,38 @@ namespace Victoria.Resolvers {
         }
 
         /// <summary>
-        ///     Searches OVH for lyrics and returns them as string.
+        /// 
         /// </summary>
-        /// <param name="lavaTrack">
-        ///     <see cref="LavaTrack" />
-        /// </param>
-        /// <returns>
-        ///     <see cref="string" />
-        /// </returns>
-        /// <exception cref="ArgumentNullException">Throws if LavaTrack is null.</exception>
-        public static async ValueTask<string> SearchOvhAsync(LavaTrack lavaTrack) {
+        /// <param name="lavaTrack"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static ValueTask<string> SearchOvhAsync(LavaTrack lavaTrack) {
             if (lavaTrack == null) {
                 throw new ArgumentNullException(nameof(lavaTrack));
             }
 
-            var (author, title) = GetAuthorAndTitle(lavaTrack);
+            var (artist, title) = GetAuthorAndTitle(lavaTrack);
+            return SearchOvhAsync(artist, title);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="artist"></param>
+        /// <param name="title"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static async ValueTask<string> SearchOvhAsync(string artist, string title) {
+            if (string.IsNullOrWhiteSpace(artist)) {
+                throw new ArgumentNullException(nameof(artist));
+            }
+
+            if (string.IsNullOrWhiteSpace(title)) {
+                throw new ArgumentNullException(title);
+            }
+
             using var requestMessage =
-                new HttpRequestMessage(HttpMethod.Get, string.Format(EP_OVH, author, title));
+                new HttpRequestMessage(HttpMethod.Get, string.Format(EP_OVH, artist, title));
 
             var jsonRoot = await Extensions.GetJsonRootAsync(requestMessage);
             return !jsonRoot.TryGetProperty("lyrics", out var lyricsElement)
