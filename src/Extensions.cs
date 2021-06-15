@@ -29,8 +29,7 @@ namespace Victoria {
         };
 
         internal static CancellationToken DefaultTimeout =
-            new CancellationTokenSource(TimeSpan.FromSeconds(30))
-                .Token;
+            new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
 
         /// <summary>
         /// 
@@ -54,20 +53,20 @@ namespace Victoria {
                 throw new NullReferenceException(nameof(requestMessage.RequestUri));
             }
 
-            using var responseMessage = await HttpClient.SendAsync(requestMessage);
+            using var responseMessage = await HttpClient.SendAsync(requestMessage, cancellationToken);
             if (!responseMessage.IsSuccessStatusCode) {
                 throw new HttpRequestException(responseMessage.ReasonPhrase);
             }
 
             using var content = responseMessage.Content;
-            await using var stream = await content.ReadAsStreamAsync();
+            await using var stream = await content.ReadAsStreamAsync(cancellationToken);
 
             var deserialized = await JsonSerializer.DeserializeAsync<T>(stream,
                 jsonConverter == default
                     ? default
                     : new JsonSerializerOptions {
                         Converters = {jsonConverter}
-                    });
+                    }, cancellationToken);
             return deserialized;
         }
 
@@ -96,8 +95,8 @@ namespace Victoria {
             }
 
             using var content = requestMessage.Content;
-            await using var stream = await content.ReadAsStreamAsync();
-            using var document = await JsonDocument.ParseAsync(stream);
+            await using var stream = await content.ReadAsStreamAsync(cancellationToken);
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
 
             return document.RootElement;
         }
@@ -168,8 +167,7 @@ namespace Victoria {
         /// <param name="track"></param>
         /// <returns><see cref="string"/></returns>
         public static ValueTask<string> FetchLyricsFromGeniusAsync(this LavaTrack track) {
-            //return LyricsResolver.SearchGeniusAsync(track);
-            return default;
+            return LyricsResolver.SearchGeniusAsync(track);
         }
 
         /// <summary>
