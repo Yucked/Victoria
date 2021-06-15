@@ -1,8 +1,7 @@
 using System;
-using System.Net;
-using System.Text;
+using System.Net.Http;
 using System.Text.Json;
-using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Victoria.Enums;
@@ -13,8 +12,42 @@ namespace Victoria {
     /// Additional extension methods to make workflow easier.
     /// </summary>
     public static class VictoriaExtensions {
-        private static readonly Regex TitleRegex
-            = new Regex(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Lazy<HttpClient> LazyHttpClient = new Lazy<HttpClient>(new HttpClient());
+        internal static readonly HttpClient HttpClient = LazyHttpClient.Value;
+
+        internal static CancellationToken DefaultTimeout =
+            new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestMessage"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="HttpRequestException"></exception>
+        public static async Task<JsonElement> GetJsonRootAsync(HttpRequestMessage requestMessage,
+                                                               CancellationToken cancellationToken = default) {
+            if (requestMessage == null) {
+                throw new ArgumentNullException(nameof(requestMessage));
+            }
+
+            if (requestMessage.RequestUri == null) {
+                throw new NullReferenceException(nameof(requestMessage.RequestUri));
+            }
+
+            using var responseMessage = await HttpClient.SendAsync(requestMessage, cancellationToken);
+            if (!responseMessage.IsSuccessStatusCode) {
+                throw new HttpRequestException(responseMessage.ReasonPhrase);
+            }
+
+            using var content = requestMessage.Content;
+            await using var stream = await content.ReadAsStreamAsync();
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+
+            return document.RootElement;
+        }
 
         /// <summary>
         ///     Shortcut method to add Victoria to <see cref="IServiceCollection" />.
@@ -90,8 +123,8 @@ namespace Victoria {
         /// </summary>
         /// <param name="track"></param>
         /// <returns><see cref="string"/></returns>
-        public static ValueTask<string> FetchLyricsFromOVHAsync(this LavaTrack track) {
-            return LyricsResolver.SearchOVHAsync(track);
+        public static ValueTask<string> FetchLyricsFromOvhAsync(this LavaTrack track) {
+            return LyricsResolver.SearchOvhAsync(track);
         }
 
         internal static bool TryRead(this ref Utf8JsonReader reader, string content) {
@@ -114,48 +147,6 @@ namespace Victoria {
             return state == PlayerState.Connected
                    || state == PlayerState.Playing
                    || state == PlayerState.Paused;
-        }
-
-        internal static string Encode(this string str) {
-            return WebUtility.UrlEncode(str);
-        }
-
-        internal static (string Author, string Title) GetAuthorAndTitle(this LavaTrack lavaTrack) {
-            var split = lavaTrack.Title.Split('-');
-
-            if (split.Length is 1) {
-                return (lavaTrack.Author, lavaTrack.Title);
-            }
-
-            var author = split[0];
-            var title = split[1];
-
-            while (TitleRegex.IsMatch(title)) {
-                title = TitleRegex.Replace(title, string.Empty);
-            }
-
-            title = title.TrimStart().TrimEnd();
-            return author switch {
-                ""                                             => (lavaTrack.Author, title),
-                _ when string.Equals(author, lavaTrack.Author) => (lavaTrack.Author, title),
-                _                                              => (author, title)
-            };
-        }
-
-        internal static string ParseGeniusHtml(Span<byte> bytes) {
-            var start = Encoding.UTF8.GetBytes("<!--sse-->");
-            var end = Encoding.UTF8.GetBytes("<!--/sse-->");
-
-            bytes = bytes.Slice(bytes.LastIndexOf(start));
-            bytes = bytes.Slice(0, bytes.LastIndexOf(end));
-
-            var rawHtml = Encoding.UTF8.GetString(bytes);
-            if (rawHtml.Contains("Genius.ads")) {
-                return string.Empty;
-            }
-
-            var htmlRegex = new Regex("<[^>]*?>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            return htmlRegex.Replace(rawHtml, string.Empty).TrimStart().TrimEnd();
         }
     }
 }
