@@ -1,85 +1,170 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace Victoria.Resolvers {
-	/// <summary>
-	///     Lyrics resolver for fetching lyrics from Genius and OVH.
-	/// </summary>
-	public readonly struct LyricsResolver {
-		/// <summary>
-		///     Searches Genius for lyrics and returns them as string.
-		/// </summary>
-		/// <param name="lavaTrack">
-		///     <see cref="LavaTrack" />
-		/// </param>
-		/// <returns>
-		///     <see cref="string" />
-		/// </returns>
-		/// <exception cref="ArgumentNullException">Throws if LavaTrack is null.</exception>
-		public static async ValueTask<string> SearchGeniusAsync(LavaTrack lavaTrack) {
-			if (lavaTrack == null) {
-				throw new ArgumentNullException(nameof(lavaTrack));
-			}
+    /// <summary>
+    ///     Lyrics resolver for fetching lyrics from Genius and OVH.
+    /// </summary>
+    public readonly struct LyricsResolver {
+        private static readonly Regex NewLineRegex
+            = new Regex(@"[\r\n]{2,}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-			var (author, title) = lavaTrack.GetAuthorAndTitle();
-			var authorTitle = $"{author}{title}"
-			   .TrimStart()
-			   .TrimEnd()
-			   .Replace(' ', '-');
+        private static readonly Regex ParanReg
+            = new Regex(@"(\(.*?\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-			var url = $"https://genius.com/{authorTitle}-lyrics";
-			var bytes = await GetBytesAsync(url)
-			   .ConfigureAwait(false);
-			return VictoriaExtensions.ParseGeniusHtml(bytes);
-		}
+        private static readonly Regex ArtistReg
+            = new Regex(@"\w+.\w+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		/// <summary>
-		///     Searches OVH for lyrics and returns them as string.
-		/// </summary>
-		/// <param name="lavaTrack">
-		///     <see cref="LavaTrack" />
-		/// </param>
-		/// <returns>
-		///     <see cref="string" />
-		/// </returns>
-		/// <exception cref="ArgumentNullException">Throws if LavaTrack is null.</exception>
-		public static async ValueTask<string> SearchOVHAsync(LavaTrack lavaTrack) {
-			if (lavaTrack == null) {
-				throw new ArgumentNullException(nameof(lavaTrack));
-			}
+        private const string EP_OVH = "https://api.lyrics.ovh/v1/{0}/{1}";
+        private const string EP_GEN = "https://genius.com/{0}-{1}-lyrics";
 
-			var (author, title) = lavaTrack.GetAuthorAndTitle();
-			var url = $"https://api.lyrics.ovh/v1/{author.Encode()}/{title.Encode()}";
-			var bytes = await GetBytesAsync(url)
-			   .ConfigureAwait(false);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lavaTrack"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static ValueTask<string> SearchGeniusAsync(LavaTrack lavaTrack) {
+            if (lavaTrack == null) {
+                throw new ArgumentNullException(nameof(lavaTrack));
+            }
 
-			if (bytes.Length == 0) {
-				throw new Exception($"No lyrics found for {lavaTrack.Title}");
-			}
+            var (artist, title) = GetArtistAndTitle(lavaTrack);
+            return SearchGeniusAsync(artist, title);
+        }
 
-			var rawJson = Encoding.UTF8.GetString(bytes);
-			var parse = JObject.Parse(rawJson);
-			if (!parse.TryGetValue("lyrics", out var result)) {
-				return parse.GetValue("error").ToObject<string>();
-			}
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="artist"></param>
+        /// <param name="title"></param>
+        /// <returns></returns>
+        public static async ValueTask<string> SearchGeniusAsync(string artist, string title) {
+            if (string.IsNullOrWhiteSpace(artist)) {
+                throw new ArgumentNullException(nameof(artist));
+            }
 
-			var regex = new Regex(@"[\r\n]{2,}");
-			return regex.Replace($"{result}", "\n");
-		}
+            if (string.IsNullOrWhiteSpace(title)) {
+                throw new ArgumentNullException(nameof(title));
+            }
 
-		private static async ValueTask<byte[]> GetBytesAsync(string url) {
-			using var httpClient = new HttpClient();
-			using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
-			using var responseMessage = await httpClient.SendAsync(requestMessage)
-			   .ConfigureAwait(false);
-			using var content = responseMessage.Content;
-			var bytes = await content.ReadAsByteArrayAsync()
-			   .ConfigureAwait(false);
-			return bytes;
-		}
-	}
+            artist = artist.Replace(' ', '-');
+            title = title.Replace(' ', '-');
+
+            using var requestMessage =
+                new HttpRequestMessage(HttpMethod.Get, string.Format(EP_GEN, artist, title));
+            var responseMessage = await VictoriaExtensions.HttpClient.SendAsync(requestMessage);
+
+            if (!responseMessage.IsSuccessStatusCode) {
+                throw new HttpRequestException(responseMessage.ReasonPhrase);
+            }
+
+            using var content = responseMessage.Content;
+            var responseData = await content.ReadAsByteArrayAsync();
+
+            string ExtractJson() {
+                var start = Encoding.UTF8.GetBytes("\\\"children\\\":[{\\\"children\\\":[");
+                var end = Encoding.UTF8.GetBytes("\\\"\\\"],\\\"tag\\\":\\\"root\\\"}");
+
+                Span<byte> bytes = responseData;
+                bytes = bytes[bytes.LastIndexOf(start)..];
+                bytes = bytes[..(bytes.LastIndexOf(end) + end.Length)];
+                return Encoding.UTF8.GetString(bytes[28..^39])
+                    .Replace("\'", string.Empty)
+                    .Replace("\\", string.Empty);
+            }
+
+            var jsonDocument = JsonDocument.Parse(ExtractJson());
+            var lyrics = new Queue<string>();
+
+            void ExtractLyrics(IEnumerable<JsonElement> elements) {
+                foreach (var element in elements) {
+                    switch (element.ValueKind) {
+                        case JsonValueKind.String:
+                            var str = element.GetString();
+                            if (string.IsNullOrWhiteSpace(str)) {
+                                break;
+                            }
+
+                            lyrics.Enqueue(str);
+                            break;
+
+                        case JsonValueKind.Object:
+                            if (!element.TryGetProperty("children", out var child)) {
+                                break;
+                            }
+
+                            ExtractLyrics(child.EnumerateArray());
+                            break;
+                    }
+                }
+            }
+
+            ExtractLyrics(jsonDocument.RootElement.EnumerateArray());
+            return string.Join(Environment.NewLine, lyrics);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lavaTrack"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static ValueTask<string> SearchOvhAsync(LavaTrack lavaTrack) {
+            if (lavaTrack == null) {
+                throw new ArgumentNullException(nameof(lavaTrack));
+            }
+
+            var (artist, title) = GetArtistAndTitle(lavaTrack);
+            return SearchOvhAsync(artist, title);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="artist"></param>
+        /// <param name="title"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static async ValueTask<string> SearchOvhAsync(string artist, string title) {
+            if (string.IsNullOrWhiteSpace(artist)) {
+                throw new ArgumentNullException(nameof(artist));
+            }
+
+            if (string.IsNullOrWhiteSpace(title)) {
+                throw new ArgumentNullException(title);
+            }
+
+            using var requestMessage =
+                new HttpRequestMessage(HttpMethod.Get, string.Format(EP_OVH, artist, title));
+            var jsonRoot = await VictoriaExtensions
+                .GetJsonRootAsync(requestMessage, VictoriaExtensions.DefaultTimeout);
+
+            return !jsonRoot.TryGetProperty("lyrics", out var lyricsElement)
+                ? $"{jsonRoot.GetProperty("error")}"
+                : NewLineRegex.Replace($"{lyricsElement}", "\n");
+        }
+
+        internal static (string Artist, string Title) GetArtistAndTitle(LavaTrack lavaTrack) {
+            var title = ParanReg.Replace(lavaTrack.Title, string.Empty);
+            var titleSplit = title.Split('-');
+
+            if (titleSplit.Length == 1) {
+                return (default, title);
+            }
+
+            var artist = ArtistReg.Match(titleSplit[0]);
+            if (artist.Value.Equals(titleSplit[0], StringComparison.OrdinalIgnoreCase) ||
+                artist.Value.Equals(lavaTrack.Author, StringComparison.OrdinalIgnoreCase)) {
+                return (titleSplit[0], titleSplit[1]);
+            }
+
+            return (artist.Value, titleSplit[1]);
+        }
+    }
 }
