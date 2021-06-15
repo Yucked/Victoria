@@ -12,14 +12,32 @@ namespace Victoria.Resolvers {
     ///     Lyrics resolver for fetching lyrics from Genius and OVH.
     /// </summary>
     public readonly struct LyricsResolver {
-        private static readonly Regex TitleRegex
-            = new(@"(ft).\s+\w+|\(.*?\)|(lyrics)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         private static readonly Regex NewLineRegex
             = new(@"[\r\n]{2,}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private static readonly Regex ParanReg
+            = new(@"(\(.*?\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex ArtistReg
+            = new(@"\w+.\w+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         private const string EP_OVH = "https://api.lyrics.ovh/v1/{0}/{1}";
         private const string EP_GEN = "https://genius.com/{0}-{1}-lyrics";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lavaTrack"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static ValueTask<string> SearchGeniusAsync(LavaTrack lavaTrack) {
+            if (lavaTrack == null) {
+                throw new ArgumentNullException(nameof(lavaTrack));
+            }
+
+            var (artist, title) = GetArtistAndTitle(lavaTrack);
+            return SearchGeniusAsync(artist, title);
+        }
 
         /// <summary>
         /// 
@@ -103,7 +121,7 @@ namespace Victoria.Resolvers {
                 throw new ArgumentNullException(nameof(lavaTrack));
             }
 
-            var (artist, title) = GetAuthorAndTitle(lavaTrack);
+            var (artist, title) = GetArtistAndTitle(lavaTrack);
             return SearchOvhAsync(artist, title);
         }
 
@@ -133,29 +151,20 @@ namespace Victoria.Resolvers {
         }
 
         internal static (string Artist, string Title) GetArtistAndTitle(LavaTrack lavaTrack) {
-            return default;
-        }
+            var title = ParanReg.Replace(lavaTrack.Title, string.Empty);
+            var titleSplit = title.Split('-');
 
-        internal static (string Author, string Title) GetAuthorAndTitle(LavaTrack lavaTrack) {
-            var split = lavaTrack.Title.Split('-');
-
-            if (split.Length is 1) {
-                return (lavaTrack.Author, lavaTrack.Title);
+            if (titleSplit.Length == 1) {
+                return (default, title);
             }
 
-            var author = split[0];
-            var title = split[1];
-
-            while (TitleRegex.IsMatch(title)) {
-                title = TitleRegex.Replace(title, string.Empty);
+            var artist = ArtistReg.Match(titleSplit[0]);
+            if (artist.Value.Equals(titleSplit[0], StringComparison.OrdinalIgnoreCase) ||
+                artist.Value.Equals(lavaTrack.Author, StringComparison.OrdinalIgnoreCase)) {
+                return (titleSplit[0], titleSplit[1]);
             }
 
-            title = title.TrimStart().TrimEnd();
-            return author switch {
-                ""                                             => (lavaTrack.Author, title),
-                _ when string.Equals(author, lavaTrack.Author) => (lavaTrack.Author, title),
-                _                                              => (author, title)
-            };
+            return (artist.Value, titleSplit[1]);
         }
     }
 }
