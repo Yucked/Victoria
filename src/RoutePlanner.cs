@@ -28,6 +28,10 @@ namespace Victoria {
                 };
 
             var routeStatus = await Extensions.ReadAsJsonAsync<RouteStatus>(requestMessage);
+            if (!routeStatus.Equals(default)) {
+                return routeStatus;
+            }
+
             var routeResponse = await Extensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
             throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
         }
