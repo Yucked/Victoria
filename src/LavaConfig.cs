@@ -67,5 +67,15 @@ namespace Victoria {
         ///     Whether to enable self deaf for bot.
         /// </summary>
         public bool SelfDeaf { get; set; } = true;
+        
+        
+        internal string SocketEndpoint
+            => (IsSSL ? "wss" : "ws") + Endpoint;
+
+        internal string HttpEndpoint
+            => (IsSSL ? "https" : "http") + Endpoint;
+
+        internal string Endpoint
+            => $"://{Hostname}:{Port}";
     }
 }
