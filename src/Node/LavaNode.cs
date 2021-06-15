@@ -237,7 +237,7 @@ namespace Victoria.Node {
 
             player = (TPlayer) Activator
                 .CreateInstance(typeof(TPlayer), _webSocketClient, voiceChannel, textChannel);
-            
+
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -332,7 +332,20 @@ namespace Victoria.Node {
         private Task OnCloseAsync(CloseEventArgs arg) {
             Volatile.Write(ref _refConnected, false);
             _logger.LogWarning("WebSocket connection closed");
-            return Task.CompletedTask;
+            return _nodeConfiguration.ReconnectAttempts < 0 ? Task.CompletedTask : ReconnectAsync();
+        }
+
+        private async Task ReconnectAsync() {
+            var timeout = _nodeConfiguration.ResumeTimeout;
+            var attempts = 0;
+
+            do {
+                await Task.Delay(timeout);
+                await _webSocketClient.ConnectAsync();
+
+                timeout += _nodeConfiguration.ResumeTimeout;
+                attempts++;
+            } while (attempts != _nodeConfiguration.ReconnectAttempts && Volatile.Read(ref _refConnected));
         }
 
         private Task OnErrorAsync(ErrorEventArgs arg) {
