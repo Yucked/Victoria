@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Victoria.Payloads.Player;
 using Victoria.Player.Args;
+using Victoria.Player.Filters;
 using Victoria.WebSocket;
 
 namespace Victoria.Player {
@@ -236,6 +237,23 @@ namespace Victoria.Player {
         /// <exception cref="ArgumentNullException"></exception>
         public void SetTextChannel(ITextChannel textChannel) {
             TextChannel = textChannel ?? throw new ArgumentNullException(nameof(textChannel));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="volume"></param>
+        /// <param name="equalizerBands"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public Task ApplyFilterAsync(IFilter filter, double volume = 1.0, params EqualizerBand[] equalizerBands) {
+            if (filter == null) {
+                throw new ArgumentNullException(nameof(filter));
+            }
+
+            Volume = (int) volume * 100;
+            return _socketClient.SendAsync(new FilterPayload(_guildId, filter, volume, equalizerBands));
         }
 
         /// <inheritdoc />
