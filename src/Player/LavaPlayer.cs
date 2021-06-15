@@ -256,6 +256,30 @@ namespace Victoria.Player {
             return _socketClient.SendAsync(new FilterPayload(_guildId, filter, volume, equalizerBands));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filters"></param>
+        /// <param name="volume"></param>
+        /// <param name="equalizerBands"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public Task ApplyFiltersAsync(IEnumerable<IFilter> filters, double volume = 1.0,
+                                      params EqualizerBand[] equalizerBands) {
+            if (filters == null) {
+                throw new ArgumentNullException(nameof(filters));
+            }
+
+            if (equalizerBands != null) {
+                foreach (var band in equalizerBands) {
+                    _bands[band.Band] = band.Gain;
+                }
+            }
+
+            Volume = (int) volume * 100;
+            return _socketClient.SendAsync(new FilterPayload(_guildId, filters, volume, equalizerBands));
+        }
+
         /// <inheritdoc />
         public async ValueTask DisposeAsync() {
             await StopAsync()
