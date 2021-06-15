@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 #pragma warning disable 8632
 
-namespace Victoria.Player {
+namespace Victoria.Player.Filters {
     /// <summary>
     ///     Equalizer band
     /// </summary>
