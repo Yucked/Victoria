@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using Victoria.Player;
 using Victoria.Player.Filters;
 
 namespace Victoria.Payloads.Player {
