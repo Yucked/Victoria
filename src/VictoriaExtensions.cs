@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,45 @@ namespace Victoria {
 
         internal static CancellationToken DefaultTimeout =
             new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestMessage"></param>
+        /// <param name="jsonConverter"></param>
+        /// <param name="cancellationToken"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="HttpRequestException"></exception>
+        public static async Task<T> ReadAsJsonAsync<T>(HttpRequestMessage requestMessage,
+                                                       JsonConverter jsonConverter = default,
+                                                       CancellationToken cancellationToken = default) {
+            if (requestMessage == null) {
+                throw new ArgumentNullException(nameof(requestMessage));
+            }
+
+            if (requestMessage.RequestUri == null) {
+                throw new NullReferenceException(nameof(requestMessage.RequestUri));
+            }
+
+            using var responseMessage = await HttpClient.SendAsync(requestMessage, cancellationToken);
+            if (!responseMessage.IsSuccessStatusCode) {
+                throw new HttpRequestException(responseMessage.ReasonPhrase);
+            }
+
+            using var content = responseMessage.Content;
+            await using var stream = await content.ReadAsStreamAsync();
+
+            var deserialized = await JsonSerializer.DeserializeAsync<T>(stream,
+                jsonConverter == default
+                    ? default
+                    : new JsonSerializerOptions {
+                        Converters = {jsonConverter}
+                    }, cancellationToken);
+            return deserialized;
+        }
 
         /// <summary>
         /// 
