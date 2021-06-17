@@ -155,16 +155,16 @@ namespace Victoria.Resolvers {
             var titleSplit = title.Split('-');
 
             if (titleSplit.Length == 1) {
-                return (default, title);
+                return (default, title.Trim());
             }
 
             var artist = ArtistReg.Match(titleSplit[0]);
             if (artist.Value.Equals(titleSplit[0], StringComparison.OrdinalIgnoreCase) ||
                 artist.Value.Equals(lavaTrack.Author, StringComparison.OrdinalIgnoreCase)) {
-                return (titleSplit[0], titleSplit[1]);
+                return (titleSplit[0].Trim(), titleSplit[1].Trim());
             }
 
-            return (artist.Value, titleSplit[1]);
+            return (artist.Value, titleSplit[1].Trim());
         }
     }
 }
