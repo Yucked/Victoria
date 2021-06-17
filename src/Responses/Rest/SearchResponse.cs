@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Victoria.Converters;
 using Victoria.Enums;
 
 namespace Victoria.Responses.Rest {
@@ -6,24 +8,28 @@ namespace Victoria.Responses.Rest {
 	///     Lavalink's REST response.
 	/// </summary>
 	public struct SearchResponse {
-		/// <summary>
-		///     Search load type.
-		/// </summary>
-		public LoadStatus LoadStatus { get; internal set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        [JsonPropertyName("loadType"), JsonInclude, JsonConverter(typeof(LoadStatusConverter))]
+        public LoadStatus Status { get; private set; }
 
-		/// <summary>
-		///     If loadtype is a playlist then playlist info is returned.
-		/// </summary>
-		public PlaylistInfo Playlist { get; internal set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        [JsonPropertyName("playlistInfo"), JsonInclude]
+        public SearchPlaylist Playlist { get; private set; }
 
-		/// <summary>
-		///     Collection of tracks returned.
-		/// </summary>
-		public IReadOnlyList<LavaTrack> Tracks { get; internal set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        [JsonPropertyName("exception"), JsonInclude]
+        public RestException Exception { get; private set; }
 
-		/// <summary>
-		///     If LoadStatus was LoadFailed then Exception is returned.
-		/// </summary>
-		public RestException Exception { get; internal set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        [JsonPropertyName("tracks"), JsonInclude, JsonConverter(typeof(LavaTracksPropertyConverter))]
+        public IReadOnlyCollection<LavaTrack> Tracks { get; private set; }
 	}
 }
