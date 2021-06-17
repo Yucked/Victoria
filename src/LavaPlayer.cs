@@ -62,7 +62,6 @@ namespace Victoria {
         public int Volume { get; private set; }
 
         private readonly IDictionary<int, EqualizerBand> _equalizer;
-
         private readonly LavaSocket _lavaSocket;
 
         /// <summary>
