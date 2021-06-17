@@ -50,11 +50,6 @@ namespace Victoria {
             => _playerCache.Values;
 
         /// <summary>
-        ///     IP rotation extension.
-        /// </summary>
-        public RoutePlanner RoutePlanner { get; }
-
-        /// <summary>
         ///     Fires when a player update is received.
         /// </summary>
         public event Func<PlayerUpdateEventArgs, Task> OnPlayerUpdated;
