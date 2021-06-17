@@ -1,95 +1,89 @@
 ﻿using System;
-using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Victoria.Converters;
 using Victoria.Responses.Rest;
 
 namespace Victoria {
-	/// <summary>
-	///     Interacting with Lavalink's RoutePlanner API.
-	/// </summary>
-	public readonly struct RoutePlanner {
-		private readonly HttpClient _httpClient;
+    /// <summary>
+    ///     Interacting with Lavalink's RoutePlanner API.
+    /// </summary>
+    public sealed class RoutePlanner {
+        /// <summary>
+        ///     Returns the current status of route planner.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public static async Task<RouteStatus> GetStatusAsync(LavaConfig lavaConfig) {
+            if (lavaConfig == null) {
+                throw new ArgumentNullException(nameof(lavaConfig));
+            }
 
-		private static readonly JsonSerializerOptions SerializerOptions
-			= new JsonSerializerOptions {
-				Converters = {
-					new RouteResponseConverter()
-				}
-			};
+            var requestMessage =
+                new HttpRequestMessage(HttpMethod.Get, $"{lavaConfig.HttpEndpoint}/routeplanner/status") {
+                    Headers = {
+                        {"Authorization", lavaConfig.Authorization}
+                    }
+                };
 
-		internal RoutePlanner(HttpClient httpClient) {
-			_httpClient = httpClient;
-		}
+            var routeStatus = await VictoriaExtensions.ReadAsJsonAsync<RouteStatus>(requestMessage);
+            if (!routeStatus.Equals(default)) {
+                return routeStatus;
+            }
 
-		/// <summary>
-		///     Returns the current status of route planner.
-		/// </summary>
-		/// <returns></returns>
-		/// <exception cref="NotImplementedException"></exception>
-		public async Task<RouteStatus> GetStatusAsync() {
-			using var requestMessage = new HttpRequestMessage(HttpMethod.Get, "/routeplanner/status");
-			using var responseMessage = await _httpClient.SendAsync(requestMessage)
-			   .ConfigureAwait(false);
+            var routeResponse = await VictoriaExtensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
+            throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
+        }
 
-			var responseContent = await responseMessage.Content.ReadAsByteArrayAsync()
-			   .ConfigureAwait(false);
+        /// <summary>
+        ///     Unmark a failed address.
+        /// </summary>
+        /// <param name="lavaConfig"></param>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception">Throws if Lavalink throws an exception.</exception>
+        public static async Task FreeAddressAsync(LavaConfig lavaConfig, string address) {
+            if (lavaConfig == null) {
+                throw new ArgumentNullException(nameof(lavaConfig));
+            }
 
-			if (responseContent.TryDeserialize<RouteStatus>(out var routeStatus, SerializerOptions)) {
-				return routeStatus;
-			}
+            if (string.IsNullOrWhiteSpace(address)) {
+                throw new ArgumentNullException(nameof(address));
+            }
 
-			var routeResponse = JsonSerializer.Deserialize<RouteResponse>(responseContent);
-			throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
-		}
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post,
+                $"{lavaConfig.HttpEndpoint}/routeplanner/free/address") {
+                Headers = {
+                    {"Authorization", lavaConfig.Authorization}
+                },
+                Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(new {
+                    address
+                }))
+            };
 
-		/// <summary>
-		///     Unmark a failed address.
-		/// </summary>
-		/// <param name="address"></param>
-		/// <returns></returns>
-		/// <exception cref="Exception">Throws if Lavalink throws an exception.</exception>
-		public async Task FreeAddressAsync(string address) {
-			var payload = JsonSerializer.SerializeToUtf8Bytes(new {
-				address
-			});
+            var routeResponse = await VictoriaExtensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
+            throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
+        }
 
-			var responseMessage = await _httpClient
-			   .PostAsync("/routeplanner/free/address", new ByteArrayContent(payload))
-			   .ConfigureAwait(false);
+        /// <summary>
+        ///     Unmark all failed address.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception">Throws if Lavalink throws an exception.</exception>
+        public static async Task FreeAllAsync(LavaConfig lavaConfig) {
+            if (lavaConfig == null) {
+                throw new ArgumentNullException(nameof(lavaConfig));
+            }
 
-			if (responseMessage.IsSuccessStatusCode) {
-				return;
-			}
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post,
+                $"{lavaConfig.HttpEndpoint}/routeplanner/free/all") {
+                Headers = {
+                    {"Authorization", lavaConfig.Authorization}
+                }
+            };
 
-			var responseContent = await responseMessage.Content.ReadAsByteArrayAsync()
-			   .ConfigureAwait(false);
-
-			var routeResponse = JsonSerializer.Deserialize<RouteResponse>(responseContent);
-			throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
-		}
-
-		/// <summary>
-		///     Unmark all failed address.
-		/// </summary>
-		/// <returns></returns>
-		/// <exception cref="Exception">Throws if Lavalink throws an exception.</exception>
-		public async Task FreeAllAsync() {
-			using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/routeplanner/free/all");
-			using var responseMessage = await _httpClient.SendAsync(requestMessage)
-			   .ConfigureAwait(false);
-
-			if (responseMessage.StatusCode == HttpStatusCode.NoContent) {
-				return;
-			}
-
-			var responseContent = await responseMessage.Content.ReadAsByteArrayAsync()
-			   .ConfigureAwait(false);
-
-			var routeResponse = JsonSerializer.Deserialize<RouteResponse>(responseContent);
-			throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
-		}
-	}
+            var routeResponse = await VictoriaExtensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
+            throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
+        }
+    }
 }
