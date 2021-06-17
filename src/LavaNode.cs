@@ -119,7 +119,6 @@ namespace Victoria {
             _lavaSocket.OnDisconnected += OnDisconnectedAsync;
 
             _jsonOptions = new JsonSerializerOptions();
-            _jsonOptions.Converters.Add(new SearchResponseConverter());
             _jsonOptions.Converters.Add(new WebsocketResponseConverter());
             _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
         }
