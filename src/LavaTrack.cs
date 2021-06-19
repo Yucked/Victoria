@@ -51,6 +51,11 @@ namespace Victoria {
         public string Url { get; }
 
         /// <summary>
+        ///     Set track to repeat
+        /// </summary>
+        public bool Repeat { get; set; }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="hash"></param>
@@ -62,6 +67,7 @@ namespace Victoria {
         /// <param name="duration"></param>
         /// <param name="canSeek"></param>
         /// <param name="isStream"></param>
+        /// <param name="Repeat"></param>
         public LavaTrack(string hash, string id, string title, string author,
                          string url, TimeSpan position, long duration,
                          bool canSeek, bool isStream) {
@@ -76,6 +82,7 @@ namespace Victoria {
                 : TimeSpan.MaxValue;
             CanSeek = canSeek;
             IsStream = isStream;
+            Repeat = false;
         }
 
         /// <summary>
@@ -97,6 +104,7 @@ namespace Victoria {
             Duration = lavaTrack.Duration;
             CanSeek = lavaTrack.CanSeek;
             IsStream = lavaTrack.IsStream;
+            Repeat = lavaTrack.Repeat;
         }
     }
 }
