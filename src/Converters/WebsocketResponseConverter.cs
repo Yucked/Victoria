@@ -9,264 +9,268 @@ using Victoria.Responses.WebSocket;
 using PlayerState = Victoria.Responses.WebSocket.PlayerState;
 
 namespace Victoria.Converters {
-	internal sealed class WebsocketResponseConverter : JsonConverter<BaseWsResponse> {
-		/// <inheritdoc />
-		public override BaseWsResponse Read(ref Utf8JsonReader reader, Type typeToConvert,
-			JsonSerializerOptions options) {
-			if (reader.TokenType != JsonTokenType.StartObject) {
-				throw new JsonException();
-			}
+    internal sealed class WebsocketResponseConverter : JsonConverter<BaseWsResponse> {
+        /// <inheritdoc />
+        public override BaseWsResponse Read(ref Utf8JsonReader reader, Type typeToConvert,
+                                            JsonSerializerOptions options) {
+            if (reader.TokenType != JsonTokenType.StartObject) {
+                throw new JsonException();
+            }
 
-			var response = new BaseWsResponse();
-			while (reader.Read()) {
-				if (reader.TokenType == JsonTokenType.EndObject) {
-					break;
-				}
+            var response = new BaseWsResponse();
+            while (reader.Read()) {
+                if (reader.TokenType == JsonTokenType.EndObject) {
+                    break;
+                }
 
-				if (reader.TokenType != JsonTokenType.PropertyName) {
-					continue;
-				}
+                if (reader.TokenType != JsonTokenType.PropertyName) {
+                    continue;
+                }
 
-				var index = reader.ValueSpan[0];
-				if (index == 111) {
-					reader.Read();
+                var index = reader.ValueSpan[0];
+                switch (index) {
+                    case 111: {
+                        reader.Read();
 
-					if (reader.ValueTextEquals("playerUpdate")) {
-						ProcessPlayerUpdate(ref reader, out var playerUpdateResponse);
-						response = playerUpdateResponse;
-					}
-					else if (reader.ValueTextEquals("event")) {
-						ProcessEvent(ref reader, out var eventResponse);
-						response = eventResponse;
-					}
-					else {
-						throw new JsonException("Unhandled OP.");
-					}
-				}
-				else if (index == 112) {
-					ProcessStats(ref reader, out var statsResponse);
-					response = statsResponse;
-				}
-				else {
-					throw new JsonException("Index was out of range. Only handled indexes are: 111, 112.");
-				}
-			}
+                        if (reader.ValueTextEquals("playerUpdate")) {
+                            ProcessPlayerUpdate(ref reader, out var playerUpdateResponse);
+                            response = playerUpdateResponse;
+                        }
+                        else if (reader.ValueTextEquals("event")) {
+                            ProcessEvent(ref reader, out var eventResponse);
+                            response = eventResponse;
+                        }
+                        else {
+                            throw new JsonException("Unhandled OP.");
+                        }
 
-			return response;
-		}
+                        break;
+                    }
+                    case 112:
+                        ProcessStats(ref reader, out var statsResponse);
+                        response = statsResponse;
+                        break;
+                    default:
+                        throw new JsonException("Index was out of range. Only handled indexes are: 111, 112.");
+                }
+            }
 
-		/// <inheritdoc />
-		public override void Write(Utf8JsonWriter writer, BaseWsResponse value, JsonSerializerOptions options) {
-			throw new NotImplementedException("This method can't be used for writing.'");
-		}
+            return response;
+        }
 
-		private static void ProcessPlayerUpdate(ref Utf8JsonReader reader, out PlayerUpdateResponse playerUpdateResponse) {
-			//    {"op":"playerUpdate","state":{"position":4720,"time":1566866929606},"guildId":"522440206494728203"}
+        /// <inheritdoc />
+        public override void Write(Utf8JsonWriter writer, BaseWsResponse value, JsonSerializerOptions options) {
+            throw new NotImplementedException("This method can't be used for writing.'");
+        }
 
-			playerUpdateResponse = new PlayerUpdateResponse();
-			while (reader.Read()) {
-				switch (reader.TokenType) {
-					case JsonTokenType.PropertyName when reader.ValueTextEquals("guildId"):
-						reader.Read();
-						playerUpdateResponse.GuildId = ulong.Parse(reader.GetString());
-						break;
+        private static void ProcessPlayerUpdate(ref Utf8JsonReader reader,
+                                                out PlayerUpdateResponse playerUpdateResponse) {
+            //    {"op":"playerUpdate","state":{"position":4720,"time":1566866929606},"guildId":"522440206494728203"}
 
-					case JsonTokenType.PropertyName when reader.ValueTextEquals("state"):
-						var state = new PlayerState();
+            playerUpdateResponse = new PlayerUpdateResponse();
+            while (reader.Read()) {
+                switch (reader.TokenType) {
+                    case JsonTokenType.PropertyName when reader.ValueTextEquals("guildId"):
+                        reader.Read();
+                        playerUpdateResponse.GuildId = ulong.Parse(reader.GetString()!);
+                        break;
 
-						while (reader.Read()) {
-							if (reader.TokenType == JsonTokenType.EndObject) {
-								playerUpdateResponse.State = state;
-								break;
-							}
+                    case JsonTokenType.PropertyName when reader.ValueTextEquals("state"):
+                        var state = new PlayerState();
 
-							if (reader.TokenType != JsonTokenType.PropertyName) {
-								continue;
-							}
+                        while (reader.Read()) {
+                            if (reader.TokenType == JsonTokenType.EndObject) {
+                                playerUpdateResponse.State = state;
+                                break;
+                            }
 
-							if (reader.ValueTextEquals("time") && reader.Read()) {
-								state.Time = DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64());
-							}
-							else if (reader.ValueTextEquals("position") && reader.Read()) {
-								state.Position = TimeSpan.FromMilliseconds(reader.GetInt64());
-							}
-						}
+                            if (reader.TokenType != JsonTokenType.PropertyName) {
+                                continue;
+                            }
 
-						break;
-				}
-			}
-		}
+                            if (reader.ValueTextEquals("time") && reader.Read()) {
+                                state.Time = DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64());
+                            }
+                            else if (reader.ValueTextEquals("position") && reader.Read()) {
+                                state.Position = TimeSpan.FromMilliseconds(reader.GetInt64());
+                            }
+                        }
 
-		private static void ProcessStats(ref Utf8JsonReader reader, out StatsResponse statsResponse) {
-			//    {"playingPlayers":0,"op":"stats",
-			//    "memory":{"reservable":1234567890,"used":1234567890,"free":1234567890,"allocated":1234567890},
-			//    "players":0,"cpu":{"cores":4,"systemLoad":0,"lavalinkLoad":0.27354256456787324},"uptime":33731}
+                        break;
+                }
+            }
+        }
 
-			statsResponse = new StatsResponse();
+        private static void ProcessStats(ref Utf8JsonReader reader, out StatsResponse statsResponse) {
+            //    {"playingPlayers":0,"op":"stats",
+            //    "memory":{"reservable":1234567890,"used":1234567890,"free":1234567890,"allocated":1234567890},
+            //    "players":0,"cpu":{"cores":4,"systemLoad":0,"lavalinkLoad":0.27354256456787324},"uptime":33731}
 
-			if (reader.ValueTextEquals("playingPlayers") && reader.Read()) {
-				statsResponse.Players = reader.GetInt32();
-			}
+            statsResponse = new StatsResponse();
 
-			while (reader.Read()) {
-				if (reader.TokenType == JsonTokenType.EndObject) {
-					break;
-				}
+            if (reader.ValueTextEquals("playingPlayers") && reader.Read()) {
+                statsResponse.Players = reader.GetInt32();
+            }
 
-				if (reader.TokenType != JsonTokenType.PropertyName) {
-					continue;
-				}
+            while (reader.Read()) {
+                if (reader.TokenType == JsonTokenType.EndObject) {
+                    break;
+                }
 
-				// MEMORY OBJECT
-				if (reader.ValueTextEquals("memory") && reader.Read()) {
-					var memory = new Memory();
-					while (reader.Read()) {
-						if (reader.TokenType == JsonTokenType.EndObject) {
-							break;
-						}
+                if (reader.TokenType != JsonTokenType.PropertyName) {
+                    continue;
+                }
 
-						if (reader.ValueTextEquals("free") && reader.Read()) {
-							memory.Free = reader.GetInt64();
-						}
-						else if (reader.ValueTextEquals("used") && reader.Read()) {
-							memory.Used = reader.GetInt64();
-						}
-						else if (reader.ValueTextEquals("allocated") && reader.Read()) {
-							memory.Allocated = reader.GetInt64();
-						}
-						else if (reader.ValueTextEquals("reservable") && reader.Read()) {
-							memory.Reservable = reader.GetInt64();
-						}
-					}
+                // MEMORY OBJECT
+                if (reader.ValueTextEquals("memory") && reader.Read()) {
+                    var memory = new Memory();
+                    while (reader.Read()) {
+                        if (reader.TokenType == JsonTokenType.EndObject) {
+                            break;
+                        }
 
-					statsResponse.Memory = memory;
-				}
-				else if (reader.ValueTextEquals("players") && reader.Read()) {
-					statsResponse.Players = reader.GetInt32();
-				}
+                        if (reader.ValueTextEquals("free") && reader.Read()) {
+                            memory.Free = reader.GetInt64();
+                        }
+                        else if (reader.ValueTextEquals("used") && reader.Read()) {
+                            memory.Used = reader.GetInt64();
+                        }
+                        else if (reader.ValueTextEquals("allocated") && reader.Read()) {
+                            memory.Allocated = reader.GetInt64();
+                        }
+                        else if (reader.ValueTextEquals("reservable") && reader.Read()) {
+                            memory.Reservable = reader.GetInt64();
+                        }
+                    }
 
-				// CPU RESPOSNE
-				else if (reader.ValueTextEquals("cpu") && reader.Read()) {
-					var cpu = new Cpu();
-					while (reader.Read()) {
-						if (reader.TokenType == JsonTokenType.EndObject) {
-							break;
-						}
+                    statsResponse.Memory = memory;
+                }
+                else if (reader.ValueTextEquals("players") && reader.Read()) {
+                    statsResponse.Players = reader.GetInt32();
+                }
 
-						if (reader.ValueTextEquals("cores") && reader.Read()) {
-							cpu.Cores = reader.GetInt32();
-						}
-						else if (reader.ValueTextEquals("systemLoad") && reader.Read()) {
-							cpu.SystemLoad = reader.GetDouble();
-						}
-						else if (reader.ValueTextEquals("lavalinkLoad") && reader.Read()) {
-							cpu.LavalinkLoad = reader.GetDouble();
-						}
-					}
+                // CPU RESPOSNE
+                else if (reader.ValueTextEquals("cpu") && reader.Read()) {
+                    var cpu = new Cpu();
+                    while (reader.Read()) {
+                        if (reader.TokenType == JsonTokenType.EndObject) {
+                            break;
+                        }
 
-					statsResponse.Cpu = cpu;
-				}
+                        if (reader.ValueTextEquals("cores") && reader.Read()) {
+                            cpu.Cores = reader.GetInt32();
+                        }
+                        else if (reader.ValueTextEquals("systemLoad") && reader.Read()) {
+                            cpu.SystemLoad = reader.GetDouble();
+                        }
+                        else if (reader.ValueTextEquals("lavalinkLoad") && reader.Read()) {
+                            cpu.LavalinkLoad = reader.GetDouble();
+                        }
+                    }
 
-				else if (reader.ValueTextEquals("uptime") && reader.Read()) {
-					statsResponse.Uptime = reader.GetInt64();
-				}
+                    statsResponse.Cpu = cpu;
+                }
 
-				// FRAMES (MIGHT THROW EXCEPTION)
-				else if (reader.ValueTextEquals("frames")) {
-					var frames = new Frames();
+                else if (reader.ValueTextEquals("uptime") && reader.Read()) {
+                    statsResponse.Uptime = reader.GetInt64();
+                }
 
-					while (reader.Read()) {
-						if (reader.TokenType == JsonTokenType.EndObject) {
-							break;
-						}
+                // FRAMES (MIGHT THROW EXCEPTION)
+                else if (reader.ValueTextEquals("frames")) {
+                    var frames = new Frames();
 
-						if (reader.ValueTextEquals("sent") && reader.Read()) {
-							frames.Sent = reader.GetInt32();
-						}
-						else if (reader.ValueTextEquals("nulled") && reader.Read()) {
-							frames.Nulled = reader.GetInt32();
-						}
-						else if (reader.ValueTextEquals("deficit") && reader.Read()) {
-							frames.Deficit = reader.GetInt32();
-						}
-					}
+                    while (reader.Read()) {
+                        if (reader.TokenType == JsonTokenType.EndObject) {
+                            break;
+                        }
 
-					statsResponse.Frames = frames;
-				}
-			}
-		}
+                        if (reader.ValueTextEquals("sent") && reader.Read()) {
+                            frames.Sent = reader.GetInt32();
+                        }
+                        else if (reader.ValueTextEquals("nulled") && reader.Read()) {
+                            frames.Nulled = reader.GetInt32();
+                        }
+                        else if (reader.ValueTextEquals("deficit") && reader.Read()) {
+                            frames.Deficit = reader.GetInt32();
+                        }
+                    }
 
-		private static void ProcessEvent(ref Utf8JsonReader reader, out BaseEventResponse eventResponse) {
-			//{"op":"event","reason":"FINISHED","type":"TrackEndEvent","track":"QAAAcwIADUxhdGUgRm9y...","guildId":"522440206494728203"}
+                    statsResponse.Frames = frames;
+                }
+            }
+        }
 
-			var dictionary = new Dictionary<string, string>();
+        private static void ProcessEvent(ref Utf8JsonReader reader, out BaseEventResponse eventResponse) {
+            //{"op":"event","reason":"FINISHED","type":"TrackEndEvent","track":"QAAAcwIADUxhdGUgRm9y...","guildId":"522440206494728203"}
 
-			while (reader.Read()) {
-				if (reader.TokenType == JsonTokenType.EndObject) {
-					break;
-				}
+            var dictionary = new Dictionary<string, string>();
 
-				if (reader.TokenType != JsonTokenType.PropertyName) {
-					continue;
-				}
+            while (reader.Read()) {
+                if (reader.TokenType == JsonTokenType.EndObject) {
+                    break;
+                }
 
-				var propName = reader.ValueSpan;
-				reader.Read();
-				var propValue = reader.ValueSpan;
+                if (reader.TokenType != JsonTokenType.PropertyName) {
+                    continue;
+                }
 
-				dictionary.Add(Encoding.UTF8.GetString(propName), Encoding.UTF8.GetString(propValue));
-			}
+                var propName = reader.ValueSpan;
+                reader.Read();
+                var propValue = reader.ValueSpan;
 
-			if (!dictionary.TryGetValue("type", out var type)) {
-				eventResponse = default;
-				return;
-			}
+                dictionary.Add(Encoding.UTF8.GetString(propName), Encoding.UTF8.GetString(propValue));
+            }
 
-			switch (type) {
-				case "TrackStartEvent":
-					eventResponse = new TrackStartEvent {
-						GuildId = ulong.Parse(dictionary["guildId"]),
-						Hash = dictionary["track"]
-					};
-					break;
+            if (!dictionary.TryGetValue("type", out var type)) {
+                eventResponse = default;
+                return;
+            }
 
-				case "TrackEndEvent":
-					eventResponse = new TrackEndEvent {
-						GuildId = ulong.Parse(dictionary["guildId"]),
-						Reason = (TrackEndReason) dictionary["reason"][0],
-						Hash = dictionary["track"]
-					};
-					break;
+            switch (type) {
+                case "TrackStartEvent":
+                    eventResponse = new TrackStartEvent {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
+                        Hash = dictionary["track"]
+                    };
+                    break;
 
-				case "TrackExceptionEvent":
-					eventResponse = new TrackExceptionEvent {
-						GuildId = ulong.Parse(dictionary["guildId"]),
-						Hash = dictionary["track"],
-						Error = dictionary["error"]
-					};
-					break;
+                case "TrackEndEvent":
+                    eventResponse = new TrackEndEvent {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
+                        Reason = (TrackEndReason)dictionary["reason"][0],
+                        Hash = dictionary["track"]
+                    };
+                    break;
 
-				case "TrackStuckEvent":
-					eventResponse = new TrackStuckEvent {
-						GuildId = ulong.Parse(dictionary["guildId"]),
-						Hash = dictionary["track"],
-						ThresholdMs = long.Parse(dictionary["thresholdMs"])
-					};
-					break;
+                case "TrackExceptionEvent":
+                    eventResponse = new TrackExceptionEvent {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
+                        Hash = dictionary["track"],
+                        Error = dictionary["error"]
+                    };
+                    break;
 
-				case "WebSocketClosedEvent":
-					eventResponse = new WebSocketClosedEvent {
-						GuildId = ulong.Parse(dictionary["guildId"]),
-						Code = int.Parse(dictionary["code"]),
-						Reason = dictionary["reason"],
-						ByRemote = bool.Parse(dictionary["byRemote"])
-					};
-					break;
+                case "TrackStuckEvent":
+                    eventResponse = new TrackStuckEvent {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
+                        Hash = dictionary["track"],
+                        ThresholdMs = long.Parse(dictionary["thresholdMs"])
+                    };
+                    break;
 
-				default:
-					eventResponse = default;
-					break;
-			}
-		}
-	}
+                case "WebSocketClosedEvent":
+                    eventResponse = new WebSocketClosedEvent {
+                        GuildId = ulong.Parse(dictionary["guildId"]),
+                        Code = int.Parse(dictionary["code"]),
+                        Reason = dictionary["reason"],
+                        ByRemote = bool.Parse(dictionary["byRemote"])
+                    };
+                    break;
+
+                default:
+                    eventResponse = default;
+                    break;
+            }
+        }
+    }
 }
