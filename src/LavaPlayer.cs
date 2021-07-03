@@ -198,25 +198,26 @@ namespace Victoria {
         /// <returns>
         ///     The next <see cref="LavaTrack" />.
         /// </returns>
-        public async Task<LavaTrack> SkipAsync(TimeSpan? delay = default) {
+        public async Task<(LavaTrack Skipped, LavaTrack Current)> SkipAsync(TimeSpan? delay = default) {
             if (!PlayerState.EnsureState()) {
                 throw new InvalidOperationException(
                     "Player state doesn't match any of the following states: Connected, Playing, Paused.");
             }
 
-            if (!Queue.TryDequeue(out var queueable)) {
+            if (!Queue.TryDequeue(out var lavaTrack)) {
                 throw new InvalidOperationException("Can't skip to the next item in queue.");
             }
 
-            if (!(queueable is LavaTrack track)) {
-                throw new InvalidCastException($"Couldn't cast {queueable.GetType()} to {typeof(LavaTrack)}.");
+            if (lavaTrack.GetType() != typeof(LavaTrack)) {
+                throw new InvalidCastException($"Couldn't cast {lavaTrack.GetType()} to {typeof(LavaTrack)}.");
             }
 
+            var skippedTrack = Track;
             await await Task.Delay(delay ?? TimeSpan.Zero)
-                .ContinueWith(_ => PlayAsync(track))
+                .ContinueWith(_ => PlayAsync(lavaTrack))
                 .ConfigureAwait(false);
 
-            return track;
+            return (skippedTrack, lavaTrack);
         }
 
         /// <summary>
