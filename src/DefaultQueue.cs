@@ -67,7 +67,7 @@ namespace Victoria {
         /// <param name="values">
         /// Any object that inherits <typeparamref name="T"/> />.
         /// </param>
-        /// <exception cref="ArgumentNullException">Throws <see cref="ArgumentNullException"/> if <param name="values"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Throws <see cref="ArgumentNullException"/> if <paramref name="values"/> is null.</exception>
         public void Enqueue(IEnumerable<T> values) {
             if (values == null) {
                 throw new ArgumentNullException(nameof(values));
