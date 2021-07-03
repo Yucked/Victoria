@@ -1,4 +1,6 @@
 using System;
+using System.Text.Json.Serialization;
+using Victoria.Converters;
 
 namespace Victoria {
     /// <summary>
@@ -6,49 +8,57 @@ namespace Victoria {
     /// </summary>
     public class LavaTrack {
         /// <summary>
-        ///     Track's author.
-        /// </summary>
-        public string Author { get; }
-
-        /// <summary>
-        ///     Whether the track is seekable.
-        /// </summary>
-        public bool CanSeek { get; }
-
-        /// <summary>
-        ///     Track's length.
-        /// </summary>
-        public TimeSpan Duration { get; }
-
-        /// <summary>
         ///     Track's encoded hash.
         /// </summary>
-        public string Hash { get; }
+        public string Hash { get; internal set; }
 
         /// <summary>
         ///     Audio / Video track Id.
         /// </summary>
-        public string Id { get; }
+        [JsonPropertyName("identifier"), JsonInclude]
+        public string Id { get; private set; }
 
         /// <summary>
-        ///     Whether the track is a stream.
+        ///     Track's author.
         /// </summary>
-        public bool IsStream { get; }
-
-        /// <summary>
-        ///     Track's current position.
-        /// </summary>
-        public TimeSpan Position { get; internal set; }
+        [JsonPropertyName("author"), JsonInclude]
+        public string Author { get; private set; }
 
         /// <summary>
         ///     Track's title.
         /// </summary>
-        public string Title { get; }
+        [JsonPropertyName("title"), JsonInclude]
+        public string Title { get; private set; }
+
+        /// <summary>
+        ///     Whether the track is seekable.
+        /// </summary>
+        [JsonPropertyName("isSeekable"), JsonInclude]
+        public bool CanSeek { get; private set; }
+
+        /// <summary>
+        ///     Track's length.
+        /// </summary>
+        [JsonPropertyName("length"), JsonConverter(typeof(LongToTimeSpanConverter)), JsonInclude]
+        public TimeSpan Duration { get; private set; }
+
+        /// <summary>
+        ///     Whether the track is a stream.
+        /// </summary>
+        [JsonPropertyName("isStream"), JsonInclude]
+        public bool IsStream { get; private set; }
+
+        /// <summary>
+        ///     Track's current position.
+        /// </summary>
+        [JsonPropertyName("position"), JsonConverter(typeof(LongToTimeSpanConverter)), JsonInclude]
+        public TimeSpan Position { get; private set; }
 
         /// <summary>
         ///     Track's url.
         /// </summary>
-        public string Url { get; }
+        [JsonPropertyName("uri"), JsonInclude]
+        public string Url { get; private set; }
 
         /// <summary>
         /// 
@@ -97,6 +107,16 @@ namespace Victoria {
             Duration = lavaTrack.Duration;
             CanSeek = lavaTrack.CanSeek;
             IsStream = lavaTrack.IsStream;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [Obsolete("Only used for desserialization.")]
+        public LavaTrack() { }
+
+        internal void UpdatePosition(long position) {
+            Position = TimeSpan.FromMilliseconds(position);
         }
     }
 }
