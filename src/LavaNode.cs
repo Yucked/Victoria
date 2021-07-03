@@ -13,7 +13,7 @@ using Victoria.Converters;
 using Victoria.Enums;
 using Victoria.EventArgs;
 using Victoria.Payloads;
-using Victoria.Responses.Rest;
+using Victoria.Responses.Search;
 using Victoria.Responses.WebSocket;
 using PlayerState = Victoria.Enums.PlayerState;
 
@@ -201,6 +201,10 @@ namespace Victoria {
         ///     <typeparamref name="TPlayer" />
         /// </returns>
         public async Task<TPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default) {
+            if (!Volatile.Read(ref _refConnected)) {
+                throw new InvalidOperationException("Can't execute this operation when client isn't connected.");
+            }
+
             if (voiceChannel == null) {
                 throw new ArgumentNullException(nameof(voiceChannel));
             }
@@ -212,7 +216,7 @@ namespace Victoria {
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _lavaSocket, voiceChannel, textChannel);
+            player = (TPlayer)Activator.CreateInstance(typeof(TPlayer), _lavaSocket, voiceChannel, textChannel);
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -383,7 +387,7 @@ namespace Victoria {
             using var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, $"{_config.HttpEndpoint}{urlPath}") {
                     Headers = {
-                        {"Authorization", _config.Authorization}
+                        { "Authorization", _config.Authorization }
                     }
                 };
 

@@ -38,7 +38,7 @@ namespace Victoria {
         /// <summary>
         ///     Use Secure Socket Layer (SSL) security protocol when connecting to Lavalink.
         /// </summary>
-        public bool IsSSL { get; set; } = false;
+        public bool IsSsl { get; set; } = false;
 
         /// <summary>
         ///     Applies User-Agent header to all requests.
@@ -67,13 +67,12 @@ namespace Victoria {
         ///     Whether to enable self deaf for bot.
         /// </summary>
         public bool SelfDeaf { get; set; } = true;
-        
-        
+
         internal string SocketEndpoint
-            => (IsSSL ? "wss" : "ws") + Endpoint;
+            => (IsSsl ? "wss" : "ws") + Endpoint;
 
         internal string HttpEndpoint
-            => (IsSSL ? "https" : "http") + Endpoint;
+            => (IsSsl ? "https" : "http") + Endpoint;
 
         internal string Endpoint
             => $"://{Hostname}:{Port}";
