@@ -1,7 +1,4 @@
-﻿using Victoria.Decoder;
-using Victoria.Responses.WebSocket;
-
-namespace Victoria.EventArgs {
+﻿namespace Victoria.EventArgs {
     /// <summary>
     ///     Information about the track that started.
     /// </summary>
@@ -16,9 +13,9 @@ namespace Victoria.EventArgs {
         /// </summary>
         public LavaTrack Track { get; }
 
-        internal TrackStartEventArgs(LavaPlayer player, TrackStartEvent trackStartEvent) {
+        internal TrackStartEventArgs(LavaPlayer player, LavaTrack track) {
             Player = player;
-            Track = TrackDecoder.Decode(trackStartEvent.Hash);
+            Track = track;
         }
     }
 }

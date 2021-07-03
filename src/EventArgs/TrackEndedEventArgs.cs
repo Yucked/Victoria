@@ -1,6 +1,4 @@
-﻿using Victoria.Decoder;
-using Victoria.Enums;
-using Victoria.Responses.WebSocket;
+﻿using Victoria.Enums;
 
 namespace Victoria.EventArgs {
     /// <summary>
@@ -22,10 +20,10 @@ namespace Victoria.EventArgs {
         /// </summary>
         public TrackEndReason Reason { get; }
 
-        internal TrackEndedEventArgs(LavaPlayer player, TrackEndEvent endEvent) {
+        internal TrackEndedEventArgs(LavaPlayer player, LavaTrack lavaTrack, string reason) {
             Player = player;
-            Track = TrackDecoder.Decode(endEvent.Hash);
-            Reason = endEvent.Reason;
+            Track = lavaTrack;
+            Reason = (TrackEndReason)(byte)reason[0];
         }
     }
 }

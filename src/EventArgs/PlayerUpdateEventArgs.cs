@@ -1,5 +1,4 @@
 ﻿using System;
-using Victoria.Responses.WebSocket;
 
 namespace Victoria.EventArgs {
     /// <summary>
@@ -21,10 +20,10 @@ namespace Victoria.EventArgs {
         /// </summary>
         public TimeSpan Position { get; }
 
-        internal PlayerUpdateEventArgs(LavaPlayer player, PlayerUpdateResponse response) {
+        internal PlayerUpdateEventArgs(LavaPlayer player) {
             Player = player;
             Track = player.Track;
-            Position = response.State.Position;
+            Position = player.Track.Position;
         }
     }
 }

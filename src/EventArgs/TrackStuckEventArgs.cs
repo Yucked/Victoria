@@ -1,6 +1,4 @@
 using System;
-using Victoria.Decoder;
-using Victoria.Responses.WebSocket;
 
 namespace Victoria.EventArgs {
     /// <summary>
@@ -22,10 +20,10 @@ namespace Victoria.EventArgs {
         /// </summary>
         public TimeSpan Threshold { get; }
 
-        internal TrackStuckEventArgs(LavaPlayer player, TrackStuckEvent stuckEvent) {
+        internal TrackStuckEventArgs(LavaPlayer player, LavaTrack track, long threshold) {
             Player = player;
-            Track = TrackDecoder.Decode(stuckEvent.Hash);
-            Threshold = new TimeSpan(stuckEvent.ThresholdMs);
+            Track = track;
+            Threshold = TimeSpan.FromTicks(threshold);
         }
     }
 }
