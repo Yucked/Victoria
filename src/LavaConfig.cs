@@ -17,6 +17,7 @@ namespace Victoria {
         public ushort BufferSize { get; set; } = 512;
 
         /// <summary>
+        /// Toggle Lavalink's resume capability.
         /// </summary>
         public bool EnableResume { get; set; } = false;
 
