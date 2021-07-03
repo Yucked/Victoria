@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Victoria.Converters;
 using Victoria.Enums;
 using Victoria.Resolvers;
 
@@ -13,8 +14,15 @@ namespace Victoria {
     /// Additional extension methods to make workflow easier.
     /// </summary>
     public static class VictoriaExtensions {
-        private static readonly Lazy<HttpClient> LazyHttpClient = new Lazy<HttpClient>(new HttpClient());
+        private static readonly Lazy<HttpClient> LazyHttpClient
+            = new Lazy<HttpClient>(new HttpClient());
+
         internal static readonly HttpClient HttpClient = LazyHttpClient.Value;
+
+        private static readonly Lazy<LavaTracksPropertyConverter> LazyLavaTrackConverter
+            = new Lazy<LavaTracksPropertyConverter>(new LavaTracksPropertyConverter());
+
+        internal static readonly LavaTracksPropertyConverter LavaTrackConverter = LazyLavaTrackConverter.Value;
 
         internal static CancellationToken DefaultTimeout =
             new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
@@ -53,7 +61,7 @@ namespace Victoria {
                 jsonConverter == default
                     ? default
                     : new JsonSerializerOptions {
-                        Converters = {jsonConverter}
+                        Converters = { jsonConverter }
                     }, cancellationToken);
             return deserialized;
         }
