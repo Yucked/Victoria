@@ -21,7 +21,9 @@
 ---
 
 ## `⚔️ Features:`
+
 With the release of Version 5, Victoria has now features from all previous versions. Some of these features are:
+
 - Keeping up to date with Lavalink features
 - Ability to extend Victoria for your needs
 - Lyrics support from OVH and Genius
@@ -36,9 +38,12 @@ With the release of Version 5, Victoria has now features from all previous versi
 > #### 👉 Please read the release notes to see what got changed, removed and, modified!
 
 ## `⚗️ Quick Start:`
+
 Getting started with Victoria is fairly simple and quick:
+
 - Add Victoria package from Nuget.
 - Add `LavaNode` and `LavaConfig` to `ServiceCollection`.
+
 ```cs
 // Make sure there is ONLY ONE instance of LavaNode and LavaConfig in your program unless you have several
 // Lavalink instances running and would like to create node pool (which majority of the users don't).
@@ -51,6 +56,7 @@ Getting started with Victoria is fairly simple and quick:
 		
 	var provider = services.BuildServiceProvider();
 ```
+
 ```cs
 // Make sure there is ONLY ONE instance of LavaNode and LavaConfig in your program unless you have several
 // Lavalink instances running and would like to create node pool (which majority of the users don't).
@@ -64,7 +70,9 @@ Getting started with Victoria is fairly simple and quick:
 		
 	var provider = services.BuildServiceProvider();
 ```
+
 - In your `DiscordSocketClient` or `DiscordShardedClient` `Ready` event call `_instanceOfLavaNode.ConnectAsync();`
+
 ```cs
 	discordSocketClient.Ready += OnReadyAsync;
 	....
@@ -79,7 +87,9 @@ Getting started with Victoria is fairly simple and quick:
 		// Other ready related stuff
 	}
 ```
+
 - Create a Music/Audio command module and start writing Victoria related commands!
+
 ```cs
 public sealed class MusicModule : SocketCommandContext {
 	private readonly LavaNode _lavaNode;
@@ -110,4 +120,5 @@ public sealed class MusicModule : SocketCommandContext {
 	}
 }
 ```
+
 > #### 👉 If you'd like a complete example, head over to https://victoria.yucked.wtf/
