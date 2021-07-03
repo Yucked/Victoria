@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Text.Json.Serialization;
 
+#pragma warning disable 8632
+
 namespace Victoria.Payloads {
     /// <summary>
     ///     Equalizer band
@@ -39,7 +41,7 @@ namespace Victoria.Payloads {
 
         /// <inheritdoc />
         public override bool Equals(object? obj) {
-            if (obj == null || !(obj is EqualizerBand equalizerBand)) {
+            if (!(obj is EqualizerBand equalizerBand)) {
                 return false;
             }
 
