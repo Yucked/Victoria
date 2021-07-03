@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Victoria.Converters;
-using Victoria.Enums;
 
-namespace Victoria.Responses.Rest {
-	/// <summary>
-	///     Lavalink's REST response.
-	/// </summary>
-	public struct SearchResponse {
+namespace Victoria.Responses.Search {
+    /// <summary>
+    ///     Lavalink's REST response.
+    /// </summary>
+    public struct SearchResponse {
         /// <summary>
         /// 
         /// </summary>
@@ -31,5 +30,5 @@ namespace Victoria.Responses.Rest {
         /// </summary>
         [JsonPropertyName("tracks"), JsonInclude, JsonConverter(typeof(LavaTracksPropertyConverter))]
         public IReadOnlyCollection<LavaTrack> Tracks { get; private set; }
-	}
+    }
 }

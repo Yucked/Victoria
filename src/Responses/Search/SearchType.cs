@@ -1,4 +1,4 @@
-namespace Victoria.Responses.Rest {
+namespace Victoria.Responses.Search {
     /// <summary>
     /// 
     /// </summary>
@@ -7,7 +7,7 @@ namespace Victoria.Responses.Rest {
         /// 
         /// </summary>
         YouTube,
-        
+
         /// <summary>
         /// 
         /// </summary>
