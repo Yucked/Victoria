@@ -1,7 +1,6 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Victoria.Enums;
 using Victoria.Responses.Search;
 
 namespace Victoria.Converters {
