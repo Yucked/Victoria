@@ -1,5 +1,6 @@
 using System;
-using Victoria.Responses.WebSocket;
+using System.Text.Json.Serialization;
+using Victoria.Converters;
 
 namespace Victoria.EventArgs {
     /// <summary>
@@ -9,43 +10,38 @@ namespace Victoria.EventArgs {
         /// <summary>
         ///     Machine's CPU info.
         /// </summary>
-        public Cpu Cpu { get; }
+        [JsonPropertyName("cpu"), JsonInclude]
+        public Cpu Cpu { get; private set; }
 
         /// <summary>
         ///     Audio frames.
         /// </summary>
-        public Frames Frames { get; }
+        [JsonPropertyName("frames"), JsonInclude]
+        public Frames Frames { get; private set; }
 
         /// <summary>
         ///     General memory information about Lavalink.
         /// </summary>
-        public Memory Memory { get; }
+        [JsonPropertyName("memory"), JsonInclude]
+        public Memory Memory { get; private set; }
 
         /// <summary>
         ///     Connected players.
         /// </summary>
-        public int Players { get; }
+        [JsonPropertyName("players"), JsonInclude]
+        public int Players { get; private set; }
 
         /// <summary>
         ///     Players that are currently playing.
         /// </summary>
-        public int PlayingPlayers { get; }
+        [JsonPropertyName("playingPlayers"), JsonInclude]
+        public int PlayingPlayers { get; private set; }
 
         /// <summary>
         ///     Lavalink uptime.
         /// </summary>
-        public TimeSpan Uptime { get; }
-
-        internal StatsEventArgs(StatsResponse response) {
-            Players = response.Players;
-            PlayingPlayers = response.PlayingPlayers;
-            Uptime = response.Uptime < TimeSpan.MaxValue.Ticks
-                ? TimeSpan.FromMilliseconds(response.Uptime)
-                : TimeSpan.MaxValue;
-            Memory = response.Memory;
-            Frames = response.Frames;
-            Cpu = response.Cpu;
-        }
+        [JsonPropertyName("uptime"), JsonConverter(typeof(LongToTimeSpanConverter)), JsonInclude]
+        public TimeSpan Uptime { get; private set; }
     }
 
     /// <summary>
@@ -55,22 +51,26 @@ namespace Victoria.EventArgs {
         /// <summary>
         ///     Memory used by Lavalink.
         /// </summary>
-        public long Used { get; internal set; }
+        [JsonPropertyName("used"), JsonInclude]
+        public ulong Used { get; private set; }
 
         /// <summary>
         ///     Some JAVA stuff.
         /// </summary>
-        public long Free { get; internal set; }
+        [JsonPropertyName("free"), JsonInclude]
+        public ulong Free { get; private set; }
 
         /// <summary>
         ///     Memory allocated by Lavalink.
         /// </summary>
-        public long Allocated { get; internal set; }
+        [JsonPropertyName("allocated"), JsonInclude]
+        public ulong Allocated { get; private set; }
 
         /// <summary>
         ///     Reserved memory?
         /// </summary>
-        public long Reservable { get; internal set; }
+        [JsonPropertyName("reservable"), JsonInclude]
+        public ulong Reservable { get; private set; }
     }
 
     /// <summary>
@@ -80,17 +80,20 @@ namespace Victoria.EventArgs {
         /// <summary>
         ///     Audio frames sent.
         /// </summary>
-        public int Sent { get; internal set; }
+        [JsonPropertyName("sent"), JsonInclude]
+        public int Sent { get; private set; }
 
         /// <summary>
         ///     Frames that were null.
         /// </summary>
-        public int Nulled { get; internal set; }
+        [JsonPropertyName("nulled"), JsonInclude]
+        public int Nulled { get; private set; }
 
         /// <summary>
         ///     Frame deficit.
         /// </summary>
-        public int Deficit { get; internal set; }
+        [JsonPropertyName("deficit"), JsonInclude]
+        public int Deficit { get; private set; }
     }
 
     /// <summary>
@@ -100,16 +103,19 @@ namespace Victoria.EventArgs {
         /// <summary>
         ///     CPU Cores.
         /// </summary>
-        public int Cores { get; internal set; }
+        [JsonPropertyName("cores"), JsonInclude]
+        public int Cores { get; private set; }
 
         /// <summary>
         ///     General load on CPU.
         /// </summary>
-        public double SystemLoad { get; internal set; }
+        [JsonPropertyName("systemLoad"), JsonInclude]
+        public double SystemLoad { get; private set; }
 
         /// <summary>
         ///     Lavalink process load on CPU.
         /// </summary>
-        public double LavalinkLoad { get; internal set; }
+        [JsonPropertyName("lavalinkLoad"), JsonInclude]
+        public double LavalinkLoad { get; private set; }
     }
 }

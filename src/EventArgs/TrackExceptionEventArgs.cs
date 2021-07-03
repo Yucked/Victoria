@@ -1,7 +1,4 @@
-﻿using Victoria.Decoder;
-using Victoria.Responses.WebSocket;
-
-namespace Victoria.EventArgs {
+﻿namespace Victoria.EventArgs {
     /// <summary>
     ///     Information about track that threw an exception.
     /// </summary>
@@ -21,10 +18,10 @@ namespace Victoria.EventArgs {
         /// </summary>
         public string ErrorMessage { get; }
 
-        internal TrackExceptionEventArgs(LavaPlayer player, TrackExceptionEvent exceptionEvent) {
+        internal TrackExceptionEventArgs(LavaPlayer player, LavaTrack lavaTrack, string errorMessage) {
             Player = player;
-            Track = TrackDecoder.Decode(exceptionEvent.Hash);
-            ErrorMessage = exceptionEvent.Error;
+            Track = lavaTrack;
+            ErrorMessage = errorMessage;
         }
     }
 }
