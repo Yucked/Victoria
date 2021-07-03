@@ -62,6 +62,25 @@ namespace Victoria {
         }
 
         /// <summary>
+        /// Adds several objects of <typeparamref name="T"/>.
+        /// </summary>
+        /// <param name="values">
+        /// Any object that inherits <typeparamref name="T"/> />.
+        /// </param>
+        /// <exception cref="ArgumentNullException">Throws <see cref="ArgumentNullException"/> if <param name="values"/> is null.</exception>
+        public void Enqueue(IEnumerable<T> values) {
+            if (values == null) {
+                throw new ArgumentNullException(nameof(values));
+            }
+
+            lock (_list) {
+                foreach (var value in values) {
+                    _list.AddLast(value);
+                }
+            }
+        }
+
+        /// <summary>
         ///     Safe way to dequeue an item.
         /// </summary>
         /// <param name="value">First object of type <typeparamref name="T"/>.</param>
