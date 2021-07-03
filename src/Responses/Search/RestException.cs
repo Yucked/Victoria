@@ -1,10 +1,10 @@
 using System.Text.Json.Serialization;
 
-namespace Victoria.Responses.Rest {
-	/// <summary>
-	///     If LoadStatus was LoadFailed then Exception is returned.
-	/// </summary>
-	public struct RestException {
+namespace Victoria.Responses.Search {
+    /// <summary>
+    ///     If LoadStatus was LoadFailed then Exception is returned.
+    /// </summary>
+    public struct RestException {
         /// <summary>
         /// 
         /// </summary>
@@ -16,5 +16,5 @@ namespace Victoria.Responses.Rest {
         /// </summary>
         [JsonPropertyName("severity"), JsonInclude]
         public string Severity { get; private set; }
-	}
+    }
 }
