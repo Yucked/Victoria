@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 
-namespace Victoria.Responses.Rest {
-	/// <summary>
-	///     Only available if LoadStatus was PlaylistLoaded.
-	/// </summary>
+namespace Victoria.Responses.Search {
+    /// <summary>
+    ///     Only available if LoadStatus was PlaylistLoaded.
+    /// </summary>
     public struct SearchPlaylist {
         /// <summary>
         /// 
