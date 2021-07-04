@@ -292,7 +292,7 @@ namespace Victoria.Node {
                     }
                 };
 
-            var searchResponse = await Extensions.ReadAsJsonAsync<SearchResponse>(requestMessage);
+            var searchResponse = await VictoriaExtensions.ReadAsJsonAsync<SearchResponse>(requestMessage);
             return searchResponse;
         }
 
@@ -360,7 +360,7 @@ namespace Victoria.Node {
             }
 
             _logger.LogDebug(arg.Data);
-            switch (Extensions.GetOp(arg.Data)) {
+            switch (VictoriaExtensions.GetOp(arg.Data)) {
                 case "stats":
                     if (OnStatsReceived == null) {
                         return;
@@ -370,7 +370,7 @@ namespace Victoria.Node {
                     break;
 
                 case "playerUpdate":
-                    var (guildId, time, position) = Extensions.GetPlayerUpdate(arg.Data);
+                    var (guildId, time, position) = VictoriaExtensions.GetPlayerUpdate(arg.Data);
                     if (!_playerCache.TryGetValue(guildId, out var player)) {
                         return;
                     }
@@ -477,7 +477,7 @@ namespace Victoria.Node {
                             break;
 
                         default:
-                            _logger.LogWarning($"Unknown event type received: {Extensions.GetEventType(arg.Data)}");
+                            _logger.LogWarning($"Unknown event type received: {VictoriaExtensions.GetEventType(arg.Data)}");
                             break;
                     }
                 }
