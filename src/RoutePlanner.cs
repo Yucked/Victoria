@@ -27,12 +27,12 @@ namespace Victoria {
                     }
                 };
 
-            var routeStatus = await Extensions.ReadAsJsonAsync<RouteStatus>(requestMessage);
+            var routeStatus = await VictoriaExtensions.ReadAsJsonAsync<RouteStatus>(requestMessage);
             if (!routeStatus.Equals(default)) {
                 return routeStatus;
             }
 
-            var routeResponse = await Extensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
+            var routeResponse = await VictoriaExtensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
             throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
         }
 
@@ -62,7 +62,7 @@ namespace Victoria {
                 }))
             };
 
-            var routeResponse = await Extensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
+            var routeResponse = await VictoriaExtensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
             throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
         }
 
@@ -83,7 +83,7 @@ namespace Victoria {
                 }
             };
 
-            var routeResponse = await Extensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
+            var routeResponse = await VictoriaExtensions.ReadAsJsonAsync<RouteResponse>(requestMessage);
             throw new Exception($"{routeResponse.Error} - {routeResponse.Message}");
         }
     }

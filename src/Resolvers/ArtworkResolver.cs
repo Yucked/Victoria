@@ -39,7 +39,7 @@ namespace Victoria.Resolvers {
                 return requestUrl;
             }
 
-            var responseMessage = await Extensions.HttpClient.GetAsync(requestUrl);
+            var responseMessage = await VictoriaExtensions.HttpClient.GetAsync(requestUrl);
             if (!responseMessage.IsSuccessStatusCode) {
                 throw new Exception(responseMessage.ReasonPhrase);
             }

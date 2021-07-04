@@ -59,7 +59,7 @@ namespace Victoria.Resolvers {
 
             using var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, string.Format(EP_GEN, artist, title));
-            var responseMessage = await Extensions.HttpClient.SendAsync(requestMessage);
+            var responseMessage = await VictoriaExtensions.HttpClient.SendAsync(requestMessage);
 
             if (!responseMessage.IsSuccessStatusCode) {
                 throw new HttpRequestException(responseMessage.ReasonPhrase);
@@ -143,7 +143,7 @@ namespace Victoria.Resolvers {
 
             using var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, string.Format(EP_OVH, artist, title));
-            var jsonRoot = await Extensions.GetJsonRootAsync(requestMessage, Extensions.DefaultTimeout);
+            var jsonRoot = await VictoriaExtensions.GetJsonRootAsync(requestMessage, VictoriaExtensions.DefaultTimeout);
 
             return !jsonRoot.TryGetProperty("lyrics", out var lyricsElement)
                 ? $"{jsonRoot.GetProperty("error")}"

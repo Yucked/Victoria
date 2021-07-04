@@ -73,7 +73,7 @@ namespace Victoria.Player.Decoder {
                 }
             };
 
-            var lavaTrack = await Extensions.ReadAsJsonAsync<LavaTrack>(requestMessage);
+            var lavaTrack = await VictoriaExtensions.ReadAsJsonAsync<LavaTrack>(requestMessage);
             lavaTrack.Hash = trackHash;
 
             return lavaTrack;
@@ -111,7 +111,7 @@ namespace Victoria.Player.Decoder {
                     Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(trackHashes))
                 };
 
-            return Extensions.ReadAsJsonAsync<IEnumerable<LavaTrack>>(requestMessage, Extensions.LavaTrackConverter);
+            return VictoriaExtensions.ReadAsJsonAsync<IEnumerable<LavaTrack>>(requestMessage, VictoriaExtensions.LavaTrackConverter);
         }
     }
 }

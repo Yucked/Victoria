@@ -17,7 +17,7 @@ namespace Victoria {
     /// <summary>
     /// Additional extension methods to make workflow easier.
     /// </summary>
-    public static class Extensions {
+    public static class VictoriaExtensions {
         private static readonly Lazy<HttpClient> LazyHttpClient = new();
         internal static readonly HttpClient HttpClient = LazyHttpClient.Value;
 

@@ -90,7 +90,7 @@ namespace Victoria.Player {
                     "Volume must be greater than or equal to 0."),
                 > 1000 => throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
                     "Volume must be less than or equal to 1000."),
-                _ => _socketClient.SendAsync(new PlayPayload(_guildId, playArgs), false, Extensions.JsonOptions)
+                _ => _socketClient.SendAsync(new PlayPayload(_guildId, playArgs), false, VictoriaExtensions.JsonOptions)
             };
         }
 
@@ -110,7 +110,7 @@ namespace Victoria.Player {
                 Track = lavaTrack,
                 Volume = 100,
                 ShouldPause = false
-            }), false, Extensions.JsonOptions);
+            }), false, VictoriaExtensions.JsonOptions);
         }
 
         /// <summary>
