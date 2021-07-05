@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 namespace Victoria.Responses.Search {
     /// <summary>
-    /// 
+    ///     If LoadStatus was LoadFailed then Exception is returned.
     /// </summary>
     public struct SearchException {
         /// <summary>
