@@ -35,6 +35,11 @@ namespace Victoria.WebSocket {
         /// <summary>
         /// 
         /// </summary>
+        public event Func<RetryEventArgs, Task> OnRetryAsync;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsConnected { get; private set; }
 
         /// <summary>
@@ -42,40 +47,26 @@ namespace Victoria.WebSocket {
         /// </summary>
         public Uri Host { get; }
 
-        private readonly ushort _bufferSize;
+        private readonly WebSocketConfiguration _webSocketConfiguration;
         private readonly WebSocket _webSocket;
         private readonly ConcurrentQueue<byte[]> _messageQueue;
         private CancellationTokenSource _connectionTokenSource;
+        private int _reconnectAttempts;
+        private TimeSpan _reconnectDelay;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="websocketAddress"></param>
-        /// <param name="bufferSize"></param>
-        public WebSocketClient(Uri websocketAddress, ushort bufferSize) :
-            this(websocketAddress.Host, websocketAddress.Port, websocketAddress.Scheme, bufferSize) { }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="hostname"></param>
-        /// <param name="port"></param>
-        /// <param name="scheme"></param>
-        /// <param name="bufferSize"></param>
+        /// <param name="webSocketConfiguration"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public WebSocketClient(string hostname, int port, string scheme, ushort bufferSize) {
-            if (string.IsNullOrWhiteSpace(hostname)) {
-                throw new ArgumentNullException(nameof(hostname),
-                    "Hostname was not provided.");
+        public WebSocketClient(WebSocketConfiguration webSocketConfiguration) {
+            if (webSocketConfiguration == null) {
+                throw new ArgumentNullException(nameof(webSocketConfiguration));
             }
 
-            if (port <= 0) {
-                throw new ArgumentOutOfRangeException(nameof(port), "Invalid port provided.");
-            }
-
-            Host = new Uri($"{scheme}://{hostname}:{port}");
-            _bufferSize = bufferSize;
+            Host = new Uri(webSocketConfiguration.Endpoint);
+            _webSocketConfiguration = webSocketConfiguration;
             _webSocket = new ClientWebSocket();
             _messageQueue = new ConcurrentQueue<byte[]>();
             _connectionTokenSource = new CancellationTokenSource();
@@ -114,10 +105,12 @@ namespace Victoria.WebSocket {
                 .ContinueWith(async task => {
                     if (task.Exception != null) {
                         await OnErrorAsync.Invoke(new ErrorEventArgs(task.Exception));
+                        await ReconnectAsync();
                         return;
                     }
 
                     IsConnected = true;
+                    _connectionTokenSource = new CancellationTokenSource();
                     await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync(), SendAsync());
                 });
         }
@@ -186,16 +179,16 @@ namespace Victoria.WebSocket {
 
         private async Task ReceiveAsync() {
             try {
-                var buffer = new byte[_bufferSize];
+                var buffer = new byte[_webSocketConfiguration.BufferSize];
                 var finalBuffer = default(byte[]);
                 var offset = 0;
                 do {
                     var receiveResult = await _webSocket.ReceiveAsync(buffer, _connectionTokenSource.Token);
                     if (!receiveResult.EndOfMessage) {
-                        finalBuffer = new byte[_bufferSize * 2];
+                        finalBuffer = new byte[_webSocketConfiguration.BufferSize * 2];
                         buffer.CopyTo(finalBuffer, offset);
                         offset += receiveResult.Count;
-                        buffer = new byte[_bufferSize];
+                        buffer = new byte[_webSocketConfiguration.BufferSize];
                         continue;
                     }
 
@@ -204,12 +197,13 @@ namespace Victoria.WebSocket {
                             await OnDataAsync.Invoke(new DataEventArgs((finalBuffer ?? buffer).RemoveTrailingNulls()));
 
                             finalBuffer = default;
-                            buffer = new byte[_bufferSize];
+                            buffer = new byte[_webSocketConfiguration.BufferSize];
                             offset = 0;
                             break;
 
                         case WebSocketMessageType.Close:
                             await DisconnectAsync();
+                            await ReconnectAsync();
                             break;
                     }
                 } while (_webSocket.State == WebSocketState.Open &&
@@ -240,6 +234,30 @@ namespace Victoria.WebSocket {
             catch (Exception exception) {
                 await OnErrorAsync.Invoke(new ErrorEventArgs(exception));
             }
+        }
+
+        private async Task ReconnectAsync() {
+            if (_webSocketConfiguration.ReconnectAttempts <= 0) {
+                await OnRetryAsync.Invoke(new RetryEventArgs(0, true));
+                return;
+            }
+
+            _connectionTokenSource.Cancel(false);
+            _reconnectDelay = _webSocketConfiguration.ReconnectDelay;
+
+            do {
+                await Task.Delay(_reconnectDelay);
+                await ConnectAsync();
+
+                _reconnectDelay += _webSocketConfiguration.ReconnectDelay;
+                _reconnectAttempts++;
+
+                await OnRetryAsync.Invoke(new RetryEventArgs(_reconnectAttempts, false));
+            } while (_reconnectAttempts != _webSocketConfiguration.ReconnectAttempts
+                     && _webSocket.State == WebSocketState.Open
+                     && !_connectionTokenSource.IsCancellationRequested);
+
+            await OnRetryAsync.Invoke(new RetryEventArgs(_reconnectAttempts, true));
         }
 
         /// <inheritdoc />
