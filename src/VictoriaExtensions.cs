@@ -65,7 +65,7 @@ namespace Victoria {
                 jsonConverter == default
                     ? default
                     : new JsonSerializerOptions {
-                        Converters = {jsonConverter}
+                        Converters = { jsonConverter }
                     }, cancellationToken);
             return deserialized;
         }
@@ -192,20 +192,18 @@ namespace Victoria {
             logger.LogDebug(Encoding.UTF8.GetString(utf8Data));
         }
 
-        internal static string GetOp(ReadOnlyMemory<byte> data) {
-            using var document = JsonDocument.Parse(data);
-            return !document.RootElement.TryGetProperty("op", out var element) ? default : $"{element}";
+        internal static string GetOp(JsonElement jsonElement) {
+            return !jsonElement.TryGetProperty("op", out var element) ? default : $"{element}";
         }
 
-        internal static (ulong GuildId, long Time, long Position) GetPlayerUpdate(ReadOnlyMemory<byte> data) {
-            using var document = JsonDocument.Parse(data);
+        internal static (ulong GuildId, long Time, long Position) GetPlayerUpdate(JsonElement jsonElement) {
             ulong guildId = 0;
             long time = 0, position = 0;
-            if (document.RootElement.TryGetProperty("guildId", out var guildElement)) {
+            if (jsonElement.TryGetProperty("guildId", out var guildElement)) {
                 guildId = ulong.Parse(guildElement.GetString()!);
             }
 
-            var stateElement = document.RootElement.GetProperty("state");
+            var stateElement = jsonElement.GetProperty("state");
             if (stateElement.TryGetProperty("time", out var timeElement)) {
                 time = timeElement.GetInt64();
             }
@@ -215,13 +213,6 @@ namespace Victoria {
             }
 
             return (guildId, time, position);
-        }
-
-        internal static string GetEventType(ReadOnlyMemory<byte> data) {
-            using var document = JsonDocument.Parse(data);
-            return !document.RootElement.TryGetProperty("type", out var typeElement)
-                ? string.Empty
-                : typeElement.GetString();
         }
     }
 }
