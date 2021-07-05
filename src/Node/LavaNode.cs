@@ -130,8 +130,9 @@ namespace Victoria.Node {
             _baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdatedAsync;
             _baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
 
-            _webSocketClient =
-                new WebSocketClient(new Uri(_nodeConfiguration.SocketEndpoint), nodeConfiguration.BufferSize);
+            _webSocketClient = new WebSocketClient(new WebSocketConfiguration {
+                Endpoint = (_nodeConfiguration.IsSecure ? "wss" : "ws") + _nodeConfiguration.Endpoint
+            });
             _webSocketClient.OnOpenAsync += OnOpenAsync;
             _webSocketClient.OnErrorAsync += OnErrorAsync;
             _webSocketClient.OnCloseAsync += OnCloseAsync;
@@ -235,7 +236,7 @@ namespace Victoria.Node {
             await voiceChannel.ConnectAsync(_nodeConfiguration.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer) Activator
+            player = (TPlayer)Activator
                 .CreateInstance(typeof(TPlayer), _webSocketClient, voiceChannel, textChannel);
 
             _playerCache.TryAdd(voiceChannel.GuildId, player);
@@ -288,7 +289,7 @@ namespace Victoria.Node {
             using var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, $"{_nodeConfiguration.HttpEndpoint}{urlPath}") {
                     Headers = {
-                        {"Authorization", _nodeConfiguration.Authorization}
+                        { "Authorization", _nodeConfiguration.Authorization }
                     }
                 };
 
@@ -332,20 +333,7 @@ namespace Victoria.Node {
         private Task OnCloseAsync(CloseEventArgs arg) {
             Volatile.Write(ref _refConnected, false);
             _logger.LogWarning("WebSocket connection closed");
-            return _nodeConfiguration.ReconnectAttempts < 0 ? Task.CompletedTask : ReconnectAsync();
-        }
-
-        private async Task ReconnectAsync() {
-            var timeout = _nodeConfiguration.ResumeTimeout;
-            var attempts = 0;
-
-            do {
-                await Task.Delay(timeout);
-                await _webSocketClient.ConnectAsync();
-
-                timeout += _nodeConfiguration.ResumeTimeout;
-                attempts++;
-            } while (attempts != _nodeConfiguration.ReconnectAttempts && Volatile.Read(ref _refConnected));
+            return Task.CompletedTask;
         }
 
         private Task OnErrorAsync(ErrorEventArgs arg) {
@@ -360,7 +348,10 @@ namespace Victoria.Node {
             }
 
             _logger.LogDebug(arg.Data);
-            switch (VictoriaExtensions.GetOp(arg.Data)) {
+            using var document = JsonDocument.Parse(arg.Data);
+            var root = document.RootElement;
+
+            switch (VictoriaExtensions.GetOp(root)) {
                 case "stats":
                     if (OnStatsReceived == null) {
                         return;
@@ -370,7 +361,7 @@ namespace Victoria.Node {
                     break;
 
                 case "playerUpdate":
-                    var (guildId, time, position) = VictoriaExtensions.GetPlayerUpdate(arg.Data);
+                    var (guildId, time, position) = VictoriaExtensions.GetPlayerUpdate(root);
                     if (!_playerCache.TryGetValue(guildId, out var player)) {
                         return;
                     }
@@ -390,10 +381,7 @@ namespace Victoria.Node {
                     break;
 
                 case "event": {
-                    using var document = JsonDocument.Parse(arg.Data);
-                    var root = document.RootElement;
                     guildId = ulong.Parse($"{root.GetProperty("guildId")}");
-
                     if (!_playerCache.TryGetValue(guildId, out player)) {
                         return;
                     }
@@ -403,7 +391,8 @@ namespace Victoria.Node {
                         lavaTrack = TrackDecoder.Decode($"{trackElement}");
                     }
 
-                    switch ($"{root.GetProperty("type")}") {
+                    var type = $"{root.GetProperty("type")}";
+                    switch (type) {
                         case "TrackStartEvent":
                             player.Track = lavaTrack;
                             player.PlayerState = PlayerState.Playing;
@@ -429,7 +418,7 @@ namespace Victoria.Node {
                             await OnTrackEnd.Invoke(new TrackEndEventArg<TPlayer> {
                                 Player = player,
                                 Track = lavaTrack,
-                                Reason = (TrackEndReason) (byte) $"{root.GetProperty("reason")}"[0]
+                                Reason = (TrackEndReason)(byte)$"{root.GetProperty("reason")}"[0]
                             });
                             break;
 
@@ -477,7 +466,8 @@ namespace Victoria.Node {
                             break;
 
                         default:
-                            _logger.LogWarning($"Unknown event type received: {VictoriaExtensions.GetEventType(arg.Data)}");
+                            _logger.LogWarning(
+                                $"Unknown event type received: {type}");
                             break;
                     }
                 }
