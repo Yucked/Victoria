@@ -237,27 +237,19 @@ namespace Victoria.WebSocket {
         }
 
         private async Task ReconnectAsync() {
-            if (_webSocketConfiguration.ReconnectAttempts <= 0) {
+            if (_webSocketConfiguration.ReconnectAttempts <= 0 ||
+                _webSocketConfiguration.ReconnectAttempts <= _reconnectAttempts) {
                 await OnRetryAsync.Invoke(new RetryEventArgs(0, true));
                 return;
             }
 
             _connectionTokenSource.Cancel(false);
-            _reconnectDelay = _webSocketConfiguration.ReconnectDelay;
+            _reconnectDelay += _webSocketConfiguration.ReconnectDelay;
+            _reconnectAttempts++;
 
-            do {
-                await Task.Delay(_reconnectDelay);
-                await ConnectAsync();
-
-                _reconnectDelay += _webSocketConfiguration.ReconnectDelay;
-                _reconnectAttempts++;
-
-                await OnRetryAsync.Invoke(new RetryEventArgs(_reconnectAttempts, false));
-            } while (_reconnectAttempts != _webSocketConfiguration.ReconnectAttempts
-                     && _webSocket.State == WebSocketState.Open
-                     && !_connectionTokenSource.IsCancellationRequested);
-
-            await OnRetryAsync.Invoke(new RetryEventArgs(_reconnectAttempts, true));
+            await OnRetryAsync.Invoke(new RetryEventArgs(_reconnectAttempts, false));
+            await Task.Delay(_reconnectDelay);
+            await ConnectAsync();
         }
 
         /// <inheritdoc />
