@@ -21,7 +21,7 @@ namespace Victoria.WebSocket {
         ///     Reconnection delay for retrying websocket connection.
         /// </summary>
         public TimeSpan ReconnectDelay { get; set; }
-            = TimeSpan.FromSeconds(10);
+            = TimeSpan.FromSeconds(3);
 
         internal string Endpoint { get; set; }
     }
