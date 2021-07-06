@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Concurrent;
+using System.Net;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,9 +50,9 @@ namespace Victoria.WebSocket {
         public Uri Host { get; }
 
         private readonly WebSocketConfiguration _webSocketConfiguration;
-        private readonly WebSocket _webSocket;
         private readonly ConcurrentQueue<byte[]> _messageQueue;
         private CancellationTokenSource _connectionTokenSource;
+        private WebSocket _webSocket;
         private int _reconnectAttempts;
         private TimeSpan _reconnectDelay;
 
@@ -100,19 +102,33 @@ namespace Victoria.WebSocket {
                     $"WebSocket is already in open state. Current state: {_webSocket.State}");
             }
 
-            await (_webSocket as ClientWebSocket)
-                .ConnectAsync(Host, _connectionTokenSource.Token)
-                .ContinueWith(async task => {
-                    if (task.Exception != null) {
-                        await OnErrorAsync.Invoke(new ErrorEventArgs(task.Exception));
-                        await ReconnectAsync();
-                        return;
-                    }
+            // if (_webSocket)
 
-                    IsConnected = true;
-                    _connectionTokenSource = new CancellationTokenSource();
-                    await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync(), SendAsync());
-                });
+            async Task VerifyConnectionAsync(Task task) {
+                if (task.Exception != null) {
+                    await OnErrorAsync.Invoke(new ErrorEventArgs(task.Exception));
+                    await ReconnectAsync();
+                    return;
+                }
+
+                IsConnected = true;
+                _connectionTokenSource = new CancellationTokenSource();
+                await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync(), SendAsync());
+            }
+
+            try {
+                await (_webSocket as ClientWebSocket)
+                    .ConnectAsync(Host, CancellationToken.None)
+                    .ContinueWith(VerifyConnectionAsync);
+            }
+            catch (Exception exception) {
+                if (exception is not ObjectDisposedException) {
+                    return;
+                }
+
+                ResetWebSocket();
+                await ReconnectAsync();
+            }
         }
 
         /// <summary>
@@ -250,6 +266,19 @@ namespace Victoria.WebSocket {
             await OnRetryAsync.Invoke(new RetryEventArgs(_reconnectAttempts, false));
             await Task.Delay(_reconnectDelay);
             await ConnectAsync();
+        }
+
+        private void ResetWebSocket() {
+            var options = (_webSocket as ClientWebSocket).Options;
+            var headerCollection = options.GetType()
+                    .GetProperty("RequestHeaders", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .GetValue(options, null)
+                as WebHeaderCollection;
+
+            _webSocket = new ClientWebSocket();
+            foreach (var key in headerCollection.Keys) {
+                (_webSocket as ClientWebSocket).Options.SetRequestHeader($"{key}", headerCollection.Get($"{key}"));
+            }
         }
 
         /// <inheritdoc />
