@@ -137,6 +137,7 @@ namespace Victoria.Node {
             _webSocketClient.OnErrorAsync += OnErrorAsync;
             _webSocketClient.OnCloseAsync += OnCloseAsync;
             _webSocketClient.OnDataAsync += OnDataAsync;
+            _webSocketClient.OnRetryAsync += OnRetryAsync;
 
             _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
             _voiceStates = new ConcurrentDictionary<ulong, VoiceState>();
@@ -338,6 +339,16 @@ namespace Victoria.Node {
 
         private Task OnErrorAsync(ErrorEventArgs arg) {
             _logger.LogError(arg.Exception, arg.Message);
+            return Task.CompletedTask;
+        }
+        
+        private Task OnRetryAsync(RetryEventArgs arg) {
+            if (arg.IsLastRetry) {
+                _logger.LogError("This was the last try in establishing connection with Lavalink");
+                return Task.CompletedTask;
+            }
+            
+            _logger.LogWarning($"Lavalink reconnect attempt #{arg.Count}");
             return Task.CompletedTask;
         }
 
