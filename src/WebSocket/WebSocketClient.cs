@@ -102,8 +102,6 @@ namespace Victoria.WebSocket {
                     $"WebSocket is already in open state. Current state: {_webSocket.State}");
             }
 
-            // if (_webSocket)
-
             async Task VerifyConnectionAsync(Task task) {
                 if (task.Exception != null) {
                     await OnErrorAsync.Invoke(new ErrorEventArgs(task.Exception));
