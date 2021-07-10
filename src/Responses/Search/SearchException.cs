@@ -2,9 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace Victoria.Responses.Search {
     /// <summary>
-    ///     If LoadStatus was LoadFailed then Exception is returned.
+    ///     If SearchStatus was LoadFailed then Exception is returned.
     /// </summary>
-    public struct RestException {
+    public struct SearchException {
         /// <summary>
         /// 
         /// </summary>
