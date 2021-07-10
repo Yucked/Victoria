@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 
-namespace Victoria.Payloads {
-    internal sealed class PausePayload : PlayerPayload {
+namespace Victoria.Payloads.Player {
+    internal sealed class PausePayload : AbstractPlayerPayload {
         [JsonPropertyName("pause")]
         public bool Pause { get; }
 
