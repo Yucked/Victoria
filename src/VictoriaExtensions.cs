@@ -27,6 +27,10 @@ namespace Victoria {
         internal static CancellationToken DefaultTimeout =
             new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
 
+        internal static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+        };
+
         /// <summary>
         /// 
         /// </summary>
