@@ -98,6 +98,7 @@ namespace Victoria {
         private readonly LavaConfig _config;
         private readonly LavaSocket _lavaSocket;
         private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
+        private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
         private readonly BaseSocketClient _socketClient;
 
         private bool _refConnected;
@@ -115,6 +116,7 @@ namespace Victoria {
             _lavaSocket.OnConnected += OnConnectedAsync;
             _lavaSocket.OnDisconnected += OnDisconnectedAsync;
             _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
+            _voiceStates = new ConcurrentDictionary<ulong, VoiceState>();
         }
 
         /// <inheritdoc />
@@ -389,43 +391,6 @@ namespace Victoria {
             return searchResponse;
         }
 
-        private Task OnUserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldState,
-                                                  SocketVoiceState newState) {
-            if (_socketClient?.CurrentUser == null || user.Id != _socketClient.CurrentUser.Id) {
-                return Task.CompletedTask;
-            }
-
-            var guildId = newState.VoiceChannel?.Guild.Id;
-
-            if (!_playerCache.TryGetValue(guildId.GetValueOrDefault(), out var player)) {
-                return Task.CompletedTask;
-            }
-
-            player.VoiceState = newState;
-            player.VoiceChannel = newState.VoiceChannel;
-
-            return Task.CompletedTask;
-        }
-
-        private async Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer) {
-            if (!_playerCache.TryGetValue(voiceServer.Guild.Id, out var player)) {
-                return;
-            }
-
-            player.VoiceServer = voiceServer;
-            var payload = new ServerUpdatePayload {
-                SessionId = player.VoiceState.VoiceSessionId,
-                GuildId = $"{voiceServer.Guild.Id}",
-                VoiceServerPayload = new VoiceServerPayload {
-                    Token = voiceServer.Token,
-                    Endpoint = voiceServer.Endpoint
-                }
-            };
-
-            await _lavaSocket.SendAsync(payload)
-                .ConfigureAwait(false);
-        }
-
         private Task OnRetryAsync(string retryMessage) {
             Log(LogSeverity.Warning, retryMessage);
             return Task.CompletedTask;
@@ -578,6 +543,41 @@ namespace Victoria {
                     Log(LogSeverity.Error, $"Unknown OP code received ({opElement}), check Lavalink implementation.");
                     break;
             }
+        }
+
+        private Task OnUserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState pastState,
+                                                  SocketVoiceState currentState) {
+            if (_socketClient.CurrentUser?.Id != user.Id) {
+                return Task.CompletedTask;
+            }
+
+            var voiceState = new VoiceState {
+                UserId = user.Id,
+                GuildId = (currentState.VoiceChannel ?? pastState.VoiceChannel).Guild.Id,
+                SessionId = currentState.VoiceSessionId ?? pastState.VoiceSessionId,
+                ChannelId = (currentState.VoiceChannel ?? pastState.VoiceChannel).Id
+            };
+
+            _voiceStates.AddOrUpdate(voiceState.GuildId, voiceState, (_, __) => voiceState);
+            return Task.CompletedTask;
+        }
+
+        private async Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer) {
+            if (!_voiceStates.TryGetValue(voiceServer.Guild.Id, out var voiceState)) {
+                return;
+            }
+
+            var payload = new ServerUpdatePayload {
+                SessionId = voiceState.SessionId,
+                GuildId = $"{voiceServer.Guild.Id}",
+                VoiceServerPayload = new VoiceServerPayload {
+                    Endpoint = voiceServer.Endpoint,
+                    Token = voiceServer.Token
+                }
+            };
+
+            await _lavaSocket.SendAsync(payload)
+                .ConfigureAwait(false);
         }
 
         private void Log(LogSeverity severity, string message, Exception exception = null) {
