@@ -2,11 +2,46 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
-using Discord.WebSocket;
 using Victoria.Enums;
 using Victoria.Payloads;
+using Victoria.Payloads.Player;
 
 namespace Victoria {
+    /// <summary>
+    /// Arguments for <see cref="LavaPlayer.PlayAsync{PlayArgs}"/>
+    /// </summary>
+    public struct PlayArgs {
+        /// <summary>
+        /// Which track to play, <see cref="LavaTrack"/>
+        /// </summary>
+        public LavaTrack Track { get; set; }
+
+        /// <summary>
+        /// Whether to replace the track. Returns <see cref="TrackEndReason.Replaced"/> when used.
+        /// </summary>
+        public bool NoReplace { get; set; }
+
+        /// <summary>
+        /// Set the volume of the player when playing <see cref="Track"/>.
+        /// </summary>
+        public int Volume { get; set; }
+
+        /// <summary>
+        /// Whether to pause the player when <see cref="Track"/> is ready to play.
+        /// </summary>
+        public bool ShouldPause { get; set; }
+
+        /// <summary>
+        /// Start time of <see cref="Track"/>.
+        /// </summary>
+        public TimeSpan? StartTime { get; set; }
+
+        /// <summary>
+        /// End time of <see cref="Track"/>.
+        /// </summary>
+        public TimeSpan? EndTime { get; set; }
+    }
+
     /// <summary>
     /// Represents a <see cref="IVoiceChannel"/> connection.
     /// </summary>
@@ -45,16 +80,6 @@ namespace Victoria {
         ///     Voice channel this player is connected to.
         /// </summary>
         public IVoiceChannel VoiceChannel { get; internal set; }
-
-        /// <summary>
-        ///     Voice server this player is connected to.
-        /// </summary>
-        public SocketVoiceServer VoiceServer { get; internal set; }
-
-        /// <summary>
-        ///     Player's current voice state.
-        /// </summary>
-        public IVoiceState VoiceState { get; internal set; }
 
         /// <summary>
         ///     Player's current volume.
@@ -99,49 +124,50 @@ namespace Victoria {
         }
 
         /// <summary>
-        ///     Plays the specified track.
+        /// Plays the specified track with provided arguments.
         /// </summary>
-        /// <param name="track">An instance of <see cref="LavaTrack" />.</param>
-        public async Task PlayAsync(LavaTrack track) {
-            if (track == null) {
-                throw new ArgumentNullException(nameof(track));
+        /// <param name="playArgsAction"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">Throws when <paramref name="playArgsAction"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Throws when the volume is out of range.</exception>
+        public async Task PlayAsync(Action<PlayArgs> playArgsAction) {
+            var playArgs = new PlayArgs();
+            playArgsAction.Invoke(playArgs);
+
+            Track = playArgs.Track ?? throw new NullReferenceException(nameof(playArgs));
+            PlayerState = playArgs.ShouldPause ? PlayerState.Paused : PlayerState.Playing;
+
+            if (playArgs.Volume < 0) {
+                throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
+                    "Volume must be greater than or equal to 0.");
             }
 
-            var payload = new PlayPayload(VoiceChannel.GuildId, track, false);
-            await _lavaSocket.SendAsync(payload)
-                .ConfigureAwait(false);
+            if (playArgs.Volume > 1000) {
+                throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
+                    "Volume must be less than or equal to 1000.");
+            }
 
-            Track = track;
-            PlayerState = PlayerState.Playing;
+            Volume = playArgs.Volume;
+            await _lavaSocket.SendAsync(new PlayPayload(VoiceChannel.GuildId, playArgs));
         }
 
         /// <summary>
-        ///     Plays the specified track with a custom start and end time.
+        /// 
         /// </summary>
-        /// <param name="track">An instance of <see cref="LavaTrack" />.</param>
-        /// <param name="startTime">Custom start time for track. Must be greater than 0.</param>
-        /// <param name="endTime">Custom end time for track. Must be less than <see cref="LavaTrack.Duration" />.</param>
-        /// <param name="noReplace">If true, this operation will be ignored if a track is already playing or paused.</param>
-        /// <exception cref="ArgumentOutOfRangeException">Throws when start or end time are out of range.</exception>
-        /// <exception cref="InvalidOperationException">Throws when star time is bigger than end time.</exception>
-        public async Task PlayAsync(LavaTrack track, TimeSpan startTime, TimeSpan endTime, bool noReplace = false) {
-            if (startTime.TotalMilliseconds < 0) {
-                throw new ArgumentOutOfRangeException(nameof(startTime), "Value must be greater than 0.");
+        /// <param name="lavaTrack"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public async Task PlayAsync(LavaTrack lavaTrack) {
+            if (lavaTrack == null) {
+                throw new ArgumentNullException(nameof(lavaTrack));
             }
 
-            if (endTime.TotalMilliseconds < 0) {
-                throw new ArgumentOutOfRangeException(nameof(endTime), "Value must be greater than 0.");
-            }
-
-            if (endTime <= startTime) {
-                throw new InvalidOperationException($"{nameof(endTime)} must be greather than {nameof(startTime)}.");
-            }
-
-            Track = track ?? throw new ArgumentNullException(nameof(track));
             PlayerState = PlayerState.Playing;
-
-            var payload = new PlayPayload(VoiceChannel.GuildId, track.Hash, startTime, endTime, noReplace);
-            await _lavaSocket.SendAsync(payload)
+            await _lavaSocket.SendAsync(new PlayPayload(VoiceChannel.GuildId, new PlayArgs {
+                    Track = lavaTrack,
+                    Volume = 100,
+                    ShouldPause = false
+                }))
                 .ConfigureAwait(false);
         }
 
