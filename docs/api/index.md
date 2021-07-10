@@ -4,7 +4,44 @@
 
 ---
 
-## `v5.x`
+## `v5.2`
+v5.2 can be considered an internal rewrite. The purpose is to prepare users for v6.0 whilst also keeping it close to < v5.1.
+
+### `Additions`
+- Added internal properties in `LavaConfig` for ws/http endpoints.
+- Added `SearchType` instead of individual methods for each search provider.
+- Added `ReadAsJson<T>` to deserialize JSON stream to type T.
+- Added `LavaTrackPropertyConverter` to convert tracks property in `SearchResult`.
+- Added rest endpoints for track decoding in `TrackDecoder`.
+- Added `LongToTimeSpanConverter` for converter long values to TimeSpan.
+- Added `Enqueue(IEnumerable<T>)` for enqueuing collection of T's.
+- Added `PlayArgs` for Lavalink, Lavalink added additional `PlayAsync` arguments.
+- Added `VoiceState` and `IDictionary<ulong, VoiceState>` to keep track of `SocketVoiceStates` in `LavaNode`.
+
+
+### `Removals`
+- Removed `HttpClient` from `LyricsResolver`, `ArtworkResolver`, `RoutePlanner` and `LavaNode`.
+- Removed `SearchResponseConverter` and `WebSocketResponseConverter`.
+- Removed `BaseWSResponse`.
+- Removed dupes of event args from websocket.
+- Removed `IVoiceState` and `SocketVoiceServer` properties from `LavaPlayer`.
+
+### `Modifications`
+- Updated `LyricsResolver` to better parse Genius's HTML/JSON and reuse `HttpClient`.
+- Updated `ArtworkResolver` to use System.Text.Json instead of Newtonsoft.Json.
+- Updated `SearchAsync` from `LavaNode` to use `SearchType`.
+- Modified `RoutePlanner` to use `HttpClient` from `VictoriaExtensions`.
+- Renamed `PlaylistInfo` to `SeachPlaylist`.
+- Renamed `RestException` to `SearchException`.
+- Renamed `LoadStatus` to `SearchStatus`.
+- Modified `SkipAsync` in `LavaPlayer` to return the skipped track and the current track.
+- Moved route and search responses into their respective directories.
+- Moved project to target `netcoreapp3.1`.
+- Moved player payloads into their respective directory.
+
+---
+
+## `v5.1.x`
 Version 5.x is a mix of v4 and v3. v4 was mostly flawed mainly because it separated Lavalink's WebSocket and Rest into 2 different classes known as `LavaSocketClient`/`LavaShardClient` and `LavaRestClient`. Overall this update focuses on performance and easier code readability.
 
 ### `Additions`
