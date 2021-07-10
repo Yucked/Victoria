@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Victoria.Responses.Search {
     /// <summary>
-    ///     Only available if LoadStatus was PlaylistLoaded.
+    ///     Only available if SearchStatus was PlaylistLoaded.
     /// </summary>
     public struct SearchPlaylist {
         /// <summary>
