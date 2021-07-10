@@ -11,7 +11,7 @@ namespace Victoria.Responses.Search {
         /// 
         /// </summary>
         [JsonPropertyName("loadType"), JsonInclude, JsonConverter(typeof(LoadStatusConverter))]
-        public LoadStatus Status { get; private set; }
+        public SearchStatus Status { get; private set; }
 
         /// <summary>
         /// 
@@ -23,7 +23,7 @@ namespace Victoria.Responses.Search {
         /// 
         /// </summary>
         [JsonPropertyName("exception"), JsonInclude]
-        public RestException Exception { get; private set; }
+        public SearchException Exception { get; private set; }
 
         /// <summary>
         /// 
