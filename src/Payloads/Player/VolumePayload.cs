@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 
-namespace Victoria.Payloads {
-    internal sealed class VolumePayload : PlayerPayload {
+namespace Victoria.Payloads.Player {
+    internal sealed class VolumePayload : AbstractPlayerPayload {
         [JsonPropertyName("volume")]
         public int Volume { get; }
 

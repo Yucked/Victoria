@@ -2,7 +2,7 @@ using System;
 using System.Text.Json.Serialization;
 
 namespace Victoria.Payloads {
-    internal sealed class ResumePayload : BaseLavaPayload {
+    internal sealed class ResumePayload : AbstractPayload {
         [JsonPropertyName("key")]
         public string Key { get; }
 

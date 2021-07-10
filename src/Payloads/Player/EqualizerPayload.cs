@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Victoria.Payloads {
-    internal sealed class EqualizerPayload : PlayerPayload {
+namespace Victoria.Payloads.Player {
+    internal sealed class EqualizerPayload : AbstractPlayerPayload {
         [JsonPropertyName("bands")]
         public IEnumerable<EqualizerBand> Bands { get; }
 
