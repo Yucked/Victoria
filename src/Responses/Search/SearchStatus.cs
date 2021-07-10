@@ -2,7 +2,7 @@ namespace Victoria.Responses.Search {
     /// <summary>
     /// Search status when searching for songs via Lavalink.
     /// </summary>
-    public enum LoadStatus : byte {
+    public enum SearchStatus : byte {
         /// <summary>
         ///     Returned when a single track is loaded.
         /// </summary>
