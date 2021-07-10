@@ -1,8 +1,8 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Victoria.Payloads {
-    internal sealed class SeekPayload : PlayerPayload {
+namespace Victoria.Payloads.Player {
+    internal sealed class SeekPayload : AbstractPlayerPayload {
         [JsonPropertyName("position")]
         public long Position { get; }
 
