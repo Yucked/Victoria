@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -73,13 +72,13 @@ namespace Victoria {
 
             async Task VerifyConnectionAsync(Task task) {
                 if (task.Exception != null) {
-                    await ReconnectAsync();
                     return;
                 }
 
                 _isConnected = true;
+                _connectionAttempts = 0;
                 _cancellationToken = new CancellationTokenSource();
-                await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync(), SendAsync());
+                await ReceiveAsync();
             }
 
             if (_connectionAttempts == _lavaConfig.ReconnectAttempts) {
@@ -87,7 +86,9 @@ namespace Victoria {
             }
 
             try {
-                await _webSocket.ConnectAsync(_url, CancellationToken.None).ContinueWith(VerifyConnectionAsync);
+                await _webSocket
+                    .ConnectAsync(_url, CancellationToken.None)
+                    .ContinueWith(VerifyConnectionAsync);
             }
             catch {
                 // IGNORE
@@ -130,20 +131,6 @@ namespace Victoria {
             _webSocket.Dispose();
         }
 
-        private async Task VerifyConnectionAsync(Task task) {
-            if (task.IsCanceled || task.IsFaulted || task.Exception != null) {
-                _isConnected = false;
-                await RetryConnectionAsync();
-            }
-            else {
-                _isConnected = true;
-                _connectionAttempts = 0;
-                OnConnected?.Invoke();
-                await ReceiveAsync()
-                    .ConfigureAwait(false);
-            }
-        }
-
         private async Task RetryConnectionAsync() {
             _cancellationToken.Cancel(false);
 
@@ -164,42 +151,42 @@ namespace Victoria {
 
         private async Task ReceiveAsync() {
             try {
-                while (_webSocket.State == WebSocketState.Open && !_cancellationToken.IsCancellationRequested) {
-                    var buffer = new byte[_lavaConfig.BufferSize];
-                    var result = await _webSocket.ReceiveAsync(buffer, _cancellationToken.Token)
-                        .ConfigureAwait(false);
+                var buffer = new byte[_lavaConfig.BufferSize];
+                var finalBuffer = default(byte[]);
+                var offset = 0;
+                do {
+                    var receiveResult = await _webSocket.ReceiveAsync(buffer, _cancellationToken.Token);
+                    if (!receiveResult.EndOfMessage) {
+                        finalBuffer = new byte[_lavaConfig.BufferSize * 2];
+                        buffer.CopyTo(finalBuffer, offset);
+                        offset += receiveResult.Count;
+                        buffer = new byte[_lavaConfig.BufferSize];
+                        continue;
+                    }
 
-                    switch (result.MessageType) {
-                        case WebSocketMessageType.Close:
-                            _isConnected = false;
-                            OnDisconnected?.Invoke("Server closed the connection!");
-
-                            await RetryConnectionAsync()
-                                .ConfigureAwait(false);
+                    switch (receiveResult.MessageType) {
+                        case WebSocketMessageType.Text:
+                            await OnReceive.Invoke(RemoveTrailingNulls(finalBuffer ?? buffer));
+                            finalBuffer = default;
+                            buffer = new byte[_lavaConfig.BufferSize];
+                            offset = 0;
                             break;
 
-                        case WebSocketMessageType.Text:
-                            if (!result.EndOfMessage) {
-                                continue;
-                            }
-
-                            var startLength = buffer.Length - 1;
-                            while (buffer[startLength] == 0) {
-                                --startLength;
-                            }
-
-                            var cleaned = new byte[startLength + 1];
-                            Array.Copy(buffer, cleaned, startLength + 1);
-                            OnReceive?.Invoke(cleaned);
+                        case WebSocketMessageType.Close:
+                            await DisconnectAsync();
                             break;
                     }
-                }
+                } while (_webSocket.State == WebSocketState.Open &&
+                         !_cancellationToken.IsCancellationRequested);
             }
-            catch (Exception ex) {
-                OnDisconnected?.Invoke(ex.Message);
-                await ConnectAsync()
-                    .ConfigureAwait(false);
+            catch (Exception exception) {
+                // Something about errors and exceptions
             }
+        }
+
+        internal static byte[] RemoveTrailingNulls(byte[] array) {
+            Array.Resize(ref array, Array.FindLastIndex(array, b => b != 0) + 1);
+            return array;
         }
 
         private void ResetWebSocket() {
