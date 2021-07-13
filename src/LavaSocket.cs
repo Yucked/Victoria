@@ -19,17 +19,27 @@ namespace Victoria {
         /// <summary>
         /// Fires when connection is established.
         /// </summary>
-        public event Func<Task> OnConnected;
+        public event Func<Task> OnOpenAsync;
 
         /// <summary>
         /// Fires when either client or server closes connection.
         /// </summary>
-        public event Func<string, Task> OnDisconnected;
+        public event Func<string, Task> OnCloseAsync;
 
         /// <summary>
         /// Fires when data is received from server.
         /// </summary>
-        public event Func<byte[], Task> OnReceive;
+        public event Func<byte[], Task> OnDataAsync;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<Exception, Task> OnErrorAsync;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event Func<int, bool, Task> OnRetryAsync;
 
         private readonly LavaConfig _lavaConfig;
         private readonly Uri _url;
@@ -166,7 +176,7 @@ namespace Victoria {
 
                     switch (receiveResult.MessageType) {
                         case WebSocketMessageType.Text:
-                            await OnReceive.Invoke(RemoveTrailingNulls(finalBuffer ?? buffer));
+                            await OnDataAsync.Invoke(RemoveTrailingNulls(finalBuffer ?? buffer));
                             finalBuffer = default;
                             buffer = new byte[_lavaConfig.BufferSize];
                             offset = 0;
