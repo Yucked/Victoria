@@ -112,9 +112,9 @@ namespace Victoria {
 
             _lavaSocket = new LavaSocket(config);
             _lavaSocket.OnRetry += OnRetryAsync;
-            _lavaSocket.OnReceive += OnReceiveAsync;
-            _lavaSocket.OnConnected += OnConnectedAsync;
-            _lavaSocket.OnDisconnected += OnDisconnectedAsync;
+            _lavaSocket.OnDataAsync += DataAsyncAsync;
+            _lavaSocket.OnOpenAsync += OpenAsyncAsync;
+            _lavaSocket.OnCloseAsync += CloseAsyncAsync;
             _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
             _voiceStates = new ConcurrentDictionary<ulong, VoiceState>();
         }
@@ -396,7 +396,7 @@ namespace Victoria {
             return Task.CompletedTask;
         }
 
-        private async Task OnConnectedAsync() {
+        private async Task OpenAsyncAsync() {
             Volatile.Write(ref _refConnected, true);
             Log(LogSeverity.Info, "Websocket connection established.");
 
@@ -407,14 +407,14 @@ namespace Victoria {
             }
         }
 
-        private Task OnDisconnectedAsync(string disconnectMessage) {
+        private Task CloseAsyncAsync(string disconnectMessage) {
             Volatile.Write(ref _refConnected, false);
             Log(LogSeverity.Error, disconnectMessage);
 
             return Task.CompletedTask;
         }
 
-        private async Task OnReceiveAsync(byte[] data) {
+        private async Task DataAsyncAsync(byte[] data) {
             if (data.Length == 0) {
                 Log(LogSeverity.Warning, "Didn't receive any data from websocket");
                 return;
