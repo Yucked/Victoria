@@ -152,16 +152,16 @@ namespace Victoria {
                 _                                  => 1
             };
 
-            _lavaSocket.SetHeader("User-Id", $"{_socketClient.CurrentUser.Id}");
-            _lavaSocket.SetHeader("Num-Shards", $"{shards}");
-            _lavaSocket.SetHeader("Authorization", _config.Authorization);
+            _lavaSocket.AddHeader("User-Id", $"{_socketClient.CurrentUser.Id}");
+            _lavaSocket.AddHeader("Num-Shards", $"{shards}");
+            _lavaSocket.AddHeader("Authorization", _config.Authorization);
 
             if (_config.EnableResume) {
-                _lavaSocket.SetHeader("Resume-Key", _config.ResumeKey);
+                _lavaSocket.AddHeader("Resume-Key", _config.ResumeKey);
             }
 
             if (!string.IsNullOrWhiteSpace(_config.UserAgent)) {
-                _lavaSocket.SetHeader("User-Agent", _config.UserAgent);
+                _lavaSocket.AddHeader("User-Agent", _config.UserAgent);
             }
 
             await _lavaSocket.ConnectAsync()
