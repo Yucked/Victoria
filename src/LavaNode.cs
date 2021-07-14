@@ -111,10 +111,11 @@ namespace Victoria {
             socketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
 
             _lavaSocket = new LavaSocket(config);
-            _lavaSocket.OnRetry += OnRetryAsync;
+            _lavaSocket.OnRetryAsync += OnRetryAsync;
             _lavaSocket.OnDataAsync += DataAsyncAsync;
             _lavaSocket.OnOpenAsync += OpenAsyncAsync;
             _lavaSocket.OnCloseAsync += CloseAsyncAsync;
+            _lavaSocket.OnErrorAsync += OnErrorAsync;
             _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
             _voiceStates = new ConcurrentDictionary<ulong, VoiceState>();
         }
@@ -391,11 +392,6 @@ namespace Victoria {
             return searchResponse;
         }
 
-        private Task OnRetryAsync(string retryMessage) {
-            Log(LogSeverity.Warning, retryMessage);
-            return Task.CompletedTask;
-        }
-
         private async Task OpenAsyncAsync() {
             Volatile.Write(ref _refConnected, true);
             Log(LogSeverity.Info, "Websocket connection established.");
@@ -411,6 +407,21 @@ namespace Victoria {
             Volatile.Write(ref _refConnected, false);
             Log(LogSeverity.Error, disconnectMessage);
 
+            return Task.CompletedTask;
+        }
+
+        private Task OnErrorAsync(Exception exception) {
+            Log(LogSeverity.Error, $"{exception}");
+            return Task.CompletedTask;
+        }
+
+        private Task OnRetryAsync(int count, bool isLastRetry) {
+            if (isLastRetry) {
+                Log(LogSeverity.Error, "This was the last try in establishing connection with Lavalink.");
+                return Task.CompletedTask;
+            }
+
+            Log(LogSeverity.Warning, $"Lavalink reconnect attempt #{count}");
             return Task.CompletedTask;
         }
 
