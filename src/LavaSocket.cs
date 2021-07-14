@@ -12,11 +12,6 @@ namespace Victoria {
     /// </summary>
     public sealed class LavaSocket : IAsyncDisposable {
         /// <summary>
-        /// Fires when connection is lost and a retry attempt is made.
-        /// </summary>
-        public event Func<string, Task> OnRetry;
-
-        /// <summary>
         /// Fires when connection is established.
         /// </summary>
         public event Func<Task> OnOpenAsync;
@@ -32,12 +27,12 @@ namespace Victoria {
         public event Func<byte[], Task> OnDataAsync;
 
         /// <summary>
-        /// 
+        /// Fires when a non-generic error is received.
         /// </summary>
         public event Func<Exception, Task> OnErrorAsync;
 
         /// <summary>
-        /// 
+        /// Fires when connection is lost and a retry attempt is made.
         /// </summary>
         public event Func<int, bool, Task> OnRetryAsync;
 
@@ -82,13 +77,14 @@ namespace Victoria {
 
             async Task VerifyConnectionAsync(Task task) {
                 if (task.Exception != null) {
+                    await OnErrorAsync.Invoke(task.Exception);
                     return;
                 }
 
                 _isConnected = true;
                 _connectionAttempts = 0;
                 _cancellationToken = new CancellationTokenSource();
-                await ReceiveAsync();
+                await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync());
             }
 
             if (_connectionAttempts == _lavaConfig.ReconnectAttempts) {
@@ -100,8 +96,13 @@ namespace Victoria {
                     .ConnectAsync(_url, CancellationToken.None)
                     .ContinueWith(VerifyConnectionAsync);
             }
-            catch {
-                // IGNORE
+            catch (Exception exception) {
+                if (!(exception is ObjectDisposedException)) {
+                    return;
+                }
+
+                ResetWebSocket();
+                await RetryConnectionAsync();
             }
         }
 
@@ -112,48 +113,70 @@ namespace Victoria {
         /// <typeparam name="T">Type of data to set.</typeparam>
         /// <exception cref="InvalidOperationException">Throws if not connected to websocket.</exception>
         public async Task SendAsync<T>(T value) {
-            if (_webSocket.State != WebSocketState.Open) {
-                throw new InvalidOperationException("WebSocket connection to server isn't in open state.");
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value), "Provided data was null.");
             }
 
-            var rawBytes = JsonSerializer.SerializeToUtf8Bytes(value);
-            await _webSocket.SendAsync(rawBytes, WebSocketMessageType.Text, true, _cancellationToken.Token)
-                .ConfigureAwait(false);
+            if (_webSocket.State != WebSocketState.Open) {
+                throw new InvalidOperationException(
+                    $"WebSocket is not in open state. Current state: {_webSocket.State}");
+            }
+
+            try {
+                var rawBytes = JsonSerializer.SerializeToUtf8Bytes(value);
+                await _webSocket.SendAsync(rawBytes, WebSocketMessageType.Text, true, _cancellationToken.Token)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception) {
+                await OnErrorAsync.Invoke(exception);
+            }
         }
 
         /// <summary>
         /// Closes connection to websocket server.
         /// </summary>
         /// <returns></returns>
-        public async Task DisconnectAsync() {
-            await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Requested.", _cancellationToken.Token)
-                .ConfigureAwait(false);
+        public async Task DisconnectAsync(WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure,
+                                          string closeReason = "Normal closure.") {
+            if (_webSocket.State != WebSocketState.Open) {
+                throw new InvalidOperationException(
+                    $"WebSocket is not in open state. Current state: {_webSocket.State}");
+            }
+
+            try {
+                await _webSocket.CloseAsync(closeStatus, closeReason, _cancellationToken.Token);
+            }
+            catch (Exception exception) {
+                await OnErrorAsync.Invoke(exception);
+            }
+            finally {
+                _isConnected = false;
+                _cancellationToken.Cancel(false);
+                await OnCloseAsync.Invoke(closeReason);
+            }
         }
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync() {
-            if (_webSocket.State == WebSocketState.Open) {
-                await _webSocket.CloseAsync(WebSocketCloseStatus.Empty, "", _cancellationToken.Token)
-                    .ConfigureAwait(false);
+            if (_isConnected) {
+                await DisconnectAsync();
             }
 
-            _cancellationToken.CancelAfter(TimeSpan.FromSeconds(5));
+            _cancellationToken?.Dispose();
             _webSocket.Dispose();
         }
 
         private async Task RetryConnectionAsync() {
             _cancellationToken.Cancel(false);
-
-            if (_connectionAttempts > _lavaConfig.ReconnectAttempts && _lavaConfig.ReconnectAttempts != -1) {
+            if (_lavaConfig.ReconnectAttempts <= 0 ||
+                _lavaConfig.ReconnectAttempts <= _connectionAttempts) {
+                await OnRetryAsync(0, true);
                 return;
             }
 
-            Interlocked.Increment(ref _connectionAttempts);
             _reconnectInterval += _lavaConfig.ReconnectDelay;
-            OnRetry?.Invoke(_connectionAttempts == _lavaConfig.ReconnectAttempts
-                ? "This was the last attempt at re-establishing websocket connection."
-                : $"Waiting {_reconnectInterval.TotalSeconds}s before attempt #{_connectionAttempts}.");
-
+            _connectionAttempts++;
+            await OnRetryAsync.Invoke(_connectionAttempts, false);
             await Task.Delay(_reconnectInterval)
                 .ContinueWith(_ => ConnectAsync())
                 .ConfigureAwait(false);
@@ -163,6 +186,7 @@ namespace Victoria {
             try {
                 var buffer = new byte[_lavaConfig.BufferSize];
                 var finalBuffer = default(byte[]);
+
                 var offset = 0;
                 do {
                     var receiveResult = await _webSocket.ReceiveAsync(buffer, _cancellationToken.Token);
@@ -190,7 +214,13 @@ namespace Victoria {
                          !_cancellationToken.IsCancellationRequested);
             }
             catch (Exception exception) {
-                // Something about errors and exceptions
+                if (exception is TaskCanceledException ||
+                    exception is OperationCanceledException ||
+                    exception is ObjectDisposedException) {
+                    return;
+                }
+
+                await OnErrorAsync.Invoke(exception);
             }
         }
 
