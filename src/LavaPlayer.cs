@@ -8,7 +8,7 @@ using Victoria.Payloads.Player;
 
 namespace Victoria {
     /// <summary>
-    /// Arguments for <see cref="LavaPlayer.PlayAsync{PlayArgs}"/>
+    /// Arguments for <see cref="o:LavaPlayer.PlayAsync"/>
     /// </summary>
     public struct PlayArgs {
         /// <summary>
@@ -103,24 +103,6 @@ namespace Victoria {
             TextChannel = textChannel;
             Queue = new DefaultQueue<LavaTrack>();
             _equalizer = new Dictionary<int, EqualizerBand>(15);
-        }
-
-        /// <inheritdoc />
-        public async ValueTask DisposeAsync() {
-            await StopAsync()
-                .ConfigureAwait(false);
-
-            var payload = new DestroyPayload(VoiceChannel.GuildId);
-            await _lavaSocket.SendAsync(payload)
-                .ConfigureAwait(false);
-
-            GC.SuppressFinalize(this);
-
-            Queue.Clear();
-            Queue = default;
-            Track = null;
-            VoiceChannel = null;
-            PlayerState = PlayerState.Disconnected;
         }
 
         /// <summary>
@@ -300,6 +282,65 @@ namespace Victoria {
             var payload = new EqualizerPayload(VoiceChannel.GuildId, bands);
             await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Apply a single filter
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="volume"></param>
+        /// <param name="equalizerBands"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public Task ApplyFilterAsync(IFilter filter, double volume = 1.0, params EqualizerBand[] equalizerBands) {
+            if (filter == null) {
+                throw new ArgumentNullException(nameof(filter));
+            }
+
+            Volume = (int)volume * 100;
+            return _lavaSocket.SendAsync(new FilterPayload(VoiceChannel.GuildId, filter, volume, equalizerBands));
+        }
+
+        /// <summary>
+        /// Apply multiple filters
+        /// </summary>
+        /// <param name="filters"></param>
+        /// <param name="volume"></param>
+        /// <param name="equalizerBands"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public Task ApplyFiltersAsync(IEnumerable<IFilter> filters, double volume = 1.0,
+                                      params EqualizerBand[] equalizerBands) {
+            if (filters == null) {
+                throw new ArgumentNullException(nameof(filters));
+            }
+
+            if (equalizerBands != null) {
+                foreach (var band in equalizerBands) {
+                    _equalizer[band.Band] = band;
+                }
+            }
+
+            Volume = (int)volume * 100;
+            return _lavaSocket.SendAsync(new FilterPayload(VoiceChannel.GuildId, filters, volume, equalizerBands));
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync() {
+            await StopAsync()
+                .ConfigureAwait(false);
+
+            var payload = new DestroyPayload(VoiceChannel.GuildId);
+            await _lavaSocket.SendAsync(payload)
+                .ConfigureAwait(false);
+
+            GC.SuppressFinalize(this);
+
+            Queue.Clear();
+            Queue = default;
+            Track = null;
+            VoiceChannel = null;
+            PlayerState = PlayerState.Disconnected;
         }
     }
 }
