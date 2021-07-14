@@ -110,6 +110,7 @@ namespace Victoria.WebSocket {
                 }
 
                 IsConnected = true;
+                _reconnectAttempts = 0;
                 _connectionTokenSource = new CancellationTokenSource();
                 await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync(), SendAsync());
             }
