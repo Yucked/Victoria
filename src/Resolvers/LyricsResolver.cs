@@ -74,9 +74,7 @@ namespace Victoria.Resolvers {
                 Span<byte> bytes = responseData;
                 bytes = bytes[bytes.LastIndexOf(start)..];
                 bytes = bytes[..(bytes.LastIndexOf(end) + end.Length)];
-                return Encoding.UTF8.GetString(bytes[28..^39])
-                    .Replace("\'", string.Empty)
-                    .Replace("\\", string.Empty);
+                return Regex.Unescape(Encoding.UTF8.GetString(bytes[28..^39]));
             }
 
             var jsonDocument = JsonDocument.Parse(ExtractJson());
