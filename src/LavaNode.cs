@@ -213,7 +213,7 @@ namespace Victoria {
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer)Activator.CreateInstance(typeof(TPlayer), _lavaSocket, voiceChannel, textChannel);
+            player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _lavaSocket, voiceChannel, textChannel);
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -384,7 +384,7 @@ namespace Victoria {
             using var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, $"{_config.HttpEndpoint}{urlPath}") {
                     Headers = {
-                        { "Authorization", _config.Authorization }
+                        {"Authorization", _config.Authorization}
                     }
                 };
 
@@ -415,13 +415,14 @@ namespace Victoria {
             return Task.CompletedTask;
         }
 
-        private Task OnRetryAsync(int count, bool isLastRetry) {
+        private Task OnRetryAsync(int count, TimeSpan delay, bool isLastRetry) {
             if (isLastRetry) {
                 Log(LogSeverity.Error, "This was the last try in establishing connection with Lavalink.");
                 return Task.CompletedTask;
             }
 
-            Log(LogSeverity.Warning, $"Lavalink reconnect attempt #{count}");
+            Log(LogSeverity.Warning,
+                $"Lavalink reconnect attempt #{count}. Waiting {delay.Seconds}s before next attempt.");
             return Task.CompletedTask;
         }
 
