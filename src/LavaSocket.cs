@@ -34,7 +34,7 @@ namespace Victoria {
         /// <summary>
         /// Fires when connection is lost and a retry attempt is made.
         /// </summary>
-        public event Func<int, bool, Task> OnRetryAsync;
+        public event Func<int, TimeSpan, bool, Task> OnRetryAsync;
 
         private readonly LavaConfig _lavaConfig;
         private readonly Uri _url;
@@ -79,17 +79,15 @@ namespace Victoria {
             async Task VerifyConnectionAsync(Task task) {
                 if (task.Exception != null) {
                     await OnErrorAsync.Invoke(task.Exception);
+                    await RetryConnectionAsync();
                     return;
                 }
 
                 _isConnected = true;
                 _connectionAttempts = 0;
+                _reconnectInterval = TimeSpan.Zero;
                 _cancellationToken = new CancellationTokenSource();
                 await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync());
-            }
-
-            if (_connectionAttempts == _lavaConfig.ReconnectAttempts) {
-                return;
             }
 
             try {
@@ -101,8 +99,7 @@ namespace Victoria {
                 if (!(exception is ObjectDisposedException)) {
                     return;
                 }
-
-                ResetWebSocket();
+                
                 await RetryConnectionAsync();
             }
         }
@@ -168,16 +165,17 @@ namespace Victoria {
         }
 
         private async Task RetryConnectionAsync() {
-            _cancellationToken.Cancel(false);
+            _cancellationToken?.Cancel(false);
             if (_lavaConfig.ReconnectAttempts <= 0 ||
                 _lavaConfig.ReconnectAttempts <= _connectionAttempts) {
-                await OnRetryAsync(0, true);
+                await OnRetryAsync(0, _reconnectInterval, true);
                 return;
             }
 
             _reconnectInterval += _lavaConfig.ReconnectDelay;
             _connectionAttempts++;
-            await OnRetryAsync.Invoke(_connectionAttempts, false);
+            await OnRetryAsync.Invoke(_connectionAttempts, _reconnectInterval, false);
+            ResetWebSocket();
             await Task.Delay(_reconnectInterval)
                 .ContinueWith(_ => ConnectAsync())
                 .ConfigureAwait(false);
@@ -238,6 +236,7 @@ namespace Victoria {
                     .GetValue(options, null)
                 as WebHeaderCollection;
 
+            _webSocket.Dispose();
             _webSocket = new ClientWebSocket();
             _cancellationToken = new CancellationTokenSource();
             foreach (var key in headerCollection.Keys) {
