@@ -11,19 +11,44 @@
 		<Version>5.2</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
-		<Copyright>2018 - 2020 Yucked. All rights reserved.</Copyright>
+		<Copyright>2018 - 2021 Yucked. All rights reserved.</Copyright>
 		<PackageIcon>Logo.png</PackageIcon>
 		<PackageTags>Lavalink, Wrapper, Discord, Discord.NET, Music, Yucked, Lavalink NET, Sharplink</PackageTags>
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Fixed bug in PlayPayload where specifying EndTime and StartTime was wrong.
+			- Added internal properties in LavaConfig for ws/http endpoints
+			- Added SearchType instead of individual methods for each search provider
+			- Added ReadAsJson{T} to deserialize JSON stream to type T
+			- Added LavaTrackPropertyConverter to convert tracks property in SearchResult
+			- Added rest endpoints for track decoding in TrackDecoder
+			- Added LongToTimeSpanConverter for converter long values to TimeSpan
+			- Added Enqueue(IEnumerable{T}) for enqueuing collection of T's
+			- Added PlayArgs for Lavalink, Lavalink added additional PlayAsync arguments
+			- Added VoiceState and IDictionary{ulong, VoiceState} to keep track of SocketVoiceStates in LavaNode
+			- Added Lavalink's beta Filters and filter related methods
+			- Removed HttpClient from LyricsResolver, ArtworkResolver, RoutePlanner and LavaNode
+			- Removed SearchResponseConverter and WebSocketResponseConverter
+			- Removed BaseWSResponse
+			- Removed dupes of event args from websocket
+			- Removed IVoiceState and SocketVoiceServer properties from LavaPlayer
+			- Updated LyricsResolver to better parse Genius's HTML/JSON and reuse HttpClient
+			- Updated ArtworkResolver to use System.Text.Json instead of Newtonsoft.Json
+			- Updated SearchAsync from LavaNode to use SearchType
+			- Modified RoutePlanner to use HttpClient from VictoriaExtensions
+			- Renamed PlaylistInfo to SearchPlaylist
+			- Renamed RestException to SearchException
+			- Renamed LoadStatus to SearchStatus
+			- Modified SkipAsync in LavaPlayer to return the skipped track and the current track
+			- Moved route and search responses into their respective directories
+			- Moved project to target netcoreapp3.1
+			- Moved player payloads into their respective directory
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Discord.Net.WebSocket" Version="2.4.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
 		<PackageReference Include="System.Text.Json" Version="5.0.2" />
 	</ItemGroup>
 
