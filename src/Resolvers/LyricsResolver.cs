@@ -72,7 +72,7 @@ namespace Victoria.Resolvers {
                 var end = Encoding.UTF8.GetBytes("\\\"\\\"],\\\"tag\\\":\\\"root\\\"}");
 
                 Span<byte> bytes = responseData;
-                bytes = bytes[bytes.LastIndexOf(start)..];
+                bytes = bytes[bytes.IndexOf(start)..];
                 bytes = bytes[..(bytes.LastIndexOf(end) + end.Length)];
                 return Encoding.UTF8.GetString(bytes[28..^39])
                     .Replace("\'", string.Empty)
