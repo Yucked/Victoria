@@ -46,6 +46,7 @@ namespace Victoria {
 
         internal LavaSocket(LavaConfig lavaConfig) {
             _lavaConfig = lavaConfig;
+            _webSocket = new ClientWebSocket();
             _url = new Uri($"{(_lavaConfig.IsSsl ? "wss" : "ws")}://{_lavaConfig.Hostname}:{_lavaConfig.Port}");
         }
 
@@ -221,6 +222,7 @@ namespace Victoria {
                 }
 
                 await OnErrorAsync.Invoke(exception);
+                await RetryConnectionAsync();
             }
         }
 
