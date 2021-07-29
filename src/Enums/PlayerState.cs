@@ -4,28 +4,23 @@ namespace Victoria.Enums {
     /// </summary>
     public enum PlayerState {
         /// <summary>
-        /// Connected to a voice channel.
+        /// Player isn't conencted to a voice channel
         /// </summary>
-        Connected,
+        None = 0,
 
         /// <summary>
-        /// Currently playing in connected voice channel.
+        /// Currently playing a track
         /// </summary>
-        Playing,
+        Playing = 1,
 
         /// <summary>
-        /// Not playing anything currently and <see cref="LavaPlayer.Track"/> set to null.
+        /// Not playing anything
         /// </summary>
-        Stopped,
+        Stopped = 2,
 
         /// <summary>
-        /// <see cref="LavaPlayer.Track"/> isn't null and currently paused.
+        /// Playing a track but paused
         /// </summary>
-        Paused,
-
-        /// <summary>
-        /// Not connected to any voice channel.
-        /// </summary>
-        Disconnected
+        Paused = 3
     }
 }
