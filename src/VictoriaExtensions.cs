@@ -145,14 +145,6 @@ namespace Victoria {
         }
 
         /// <summary>
-        ///     Whether the next track should be played or not.
-        /// </summary>
-        /// <param name="trackEndReason">Track end reason given by Lavalink.</param>
-        public static bool ShouldPlayNext(this TrackEndReason trackEndReason) {
-            return trackEndReason == TrackEndReason.Finished || trackEndReason == TrackEndReason.LoadFailed;
-        }
-
-        /// <summary>
         ///     Fetches artwork for Youtube, Twitch, SoundCloud and Vimeo.
         /// </summary>
         /// <param name="track"></param>
@@ -193,12 +185,6 @@ namespace Victoria {
                 value = default;
                 return false;
             }
-        }
-
-        internal static bool EnsureState(this PlayerState state) {
-            return state == PlayerState.Connected
-                   || state == PlayerState.Playing
-                   || state == PlayerState.Paused;
         }
     }
 }
