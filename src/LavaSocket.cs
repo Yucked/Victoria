@@ -121,7 +121,7 @@ namespace Victoria {
             }
 
             try {
-                var rawBytes = JsonSerializer.SerializeToUtf8Bytes(value);
+                var rawBytes = JsonSerializer.SerializeToUtf8Bytes(value, VictoriaExtensions.JsonOptions);
                 await _webSocket.SendAsync(rawBytes, WebSocketMessageType.Text, true, _cancellationToken.Token)
                     .ConfigureAwait(false);
             }
