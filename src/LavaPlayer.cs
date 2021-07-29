@@ -167,9 +167,9 @@ namespace Victoria {
         ///     Pauses the current track if any is playing.
         /// </summary>
         public async Task PauseAsync() {
-            if (!PlayerState.EnsureState()) {
+            if (PlayerState == PlayerState.None) {
                 throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
+                    "Player's current state is set to None. Please make sure Player is connected to a voice channel.");
             }
 
             PlayerState = Track is null
@@ -185,9 +185,9 @@ namespace Victoria {
         ///     Resumes the current track if any is playing.
         /// </summary>
         public async Task ResumeAsync() {
-            if (!PlayerState.EnsureState()) {
+            if (PlayerState == PlayerState.None) {
                 throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
+                    "Player's current state is set to None. Please make sure Player is connected to a voice channel.");
             }
 
             PlayerState = Track is null
@@ -207,9 +207,9 @@ namespace Victoria {
         ///     The next <see cref="LavaTrack" />.
         /// </returns>
         public async Task<(LavaTrack Skipped, LavaTrack Current)> SkipAsync(TimeSpan? delay = default) {
-            if (!PlayerState.EnsureState()) {
+            if (PlayerState == PlayerState.None) {
                 throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
+                    "Player's current state is set to None. Please make sure Player is connected to a voice channel.");
             }
 
             if (!Queue.TryDequeue(out var lavaTrack)) {
@@ -238,9 +238,9 @@ namespace Victoria {
                 throw new ArgumentNullException(nameof(position));
             }
 
-            if (!PlayerState.EnsureState()) {
+            if (PlayerState == PlayerState.None) {
                 throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
+                    "Player's current state is set to None. Please make sure Player is connected to a voice channel.");
             }
 
             if (position.Value.TotalMilliseconds > Track.Duration.TotalMilliseconds) {
@@ -270,9 +270,9 @@ namespace Victoria {
         ///     <see cref="EqualizerBand" />
         /// </param>
         public async Task EqualizerAsync(params EqualizerBand[] bands) {
-            if (!PlayerState.EnsureState()) {
+            if (PlayerState == PlayerState.None) {
                 throw new InvalidOperationException(
-                    "Player state doesn't match any of the following states: Connected, Playing, Paused.");
+                    "Player's current state is set to None. Please make sure Player is connected to a voice channel.");
             }
 
             foreach (var band in bands) {
@@ -340,7 +340,7 @@ namespace Victoria {
             Queue = default;
             Track = null;
             VoiceChannel = null;
-            PlayerState = PlayerState.Disconnected;
+            PlayerState = PlayerState.None;
         }
     }
 }
