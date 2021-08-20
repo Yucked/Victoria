@@ -38,4 +38,4 @@ With the release of Version 5, Victoria has now features from all previous versi
 
 Getting started with Victoria is fairly simple and quick:
 
-> #### 👉 If you'd like a complete example, head over to https://victoria.yucked.wtf/
+> #### 👉 If you'd like a complete example, head over to https://yucked.github.io/Victoria/
