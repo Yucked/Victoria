@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.2</Version>
+		<Version>5.2.1</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2021 Yucked. All rights reserved.</Copyright>
@@ -17,32 +17,16 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Added internal properties in LavaConfig for ws/http endpoints
-			- Added SearchType instead of individual methods for each search provider
-			- Added ReadAsJson{T} to deserialize JSON stream to type T
-			- Added LavaTrackPropertyConverter to convert tracks property in SearchResult
-			- Added rest endpoints for track decoding in TrackDecoder
-			- Added LongToTimeSpanConverter for converter long values to TimeSpan
-			- Added Enqueue(IEnumerable{T}) for enqueuing collection of T's
-			- Added PlayArgs for Lavalink, Lavalink added additional PlayAsync arguments
-			- Added VoiceState and IDictionary{ulong, VoiceState} to keep track of SocketVoiceStates in LavaNode
-			- Added Lavalink's beta Filters and filter related methods
-			- Removed HttpClient from LyricsResolver, ArtworkResolver, RoutePlanner and LavaNode
-			- Removed SearchResponseConverter and WebSocketResponseConverter
-			- Removed BaseWSResponse
-			- Removed dupes of event args from websocket
-			- Removed IVoiceState and SocketVoiceServer properties from LavaPlayer
-			- Updated LyricsResolver to better parse Genius's HTML/JSON and reuse HttpClient
-			- Updated ArtworkResolver to use System.Text.Json instead of Newtonsoft.Json
-			- Updated SearchAsync from LavaNode to use SearchType
-			- Modified RoutePlanner to use HttpClient from VictoriaExtensions
-			- Renamed PlaylistInfo to SearchPlaylist
-			- Renamed RestException to SearchException
-			- Renamed LoadStatus to SearchStatus
-			- Modified SkipAsync in LavaPlayer to return the skipped track and the current track
-			- Moved route and search responses into their respective directories
-			- Moved project to target netcoreapp3.1
-			- Moved player payloads into their respective directory
+			- WebSocket JSON serialization will ignore null or default values
+			- Removed Connected and Disconnected PlayerStates
+			- Added PlayerState.None
+			- LavaPlayer methods will only check whether the PlayerState is None
+			- Unsealed DefaultQueue{T}
+			- Created single instance of Random and removed random instance from DefaultQueue
+			- Access modifier for List field in DefaultQueue has been changed to protected internal
+			- Removed old JSON reading methods from VictoriaExtension
+			- LavaNode now checks whether state object contains position and time keys
+			- Removed Task.WhenAll which hopefully fixes OnOpenAsync spam
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
