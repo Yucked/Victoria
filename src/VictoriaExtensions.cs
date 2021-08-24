@@ -31,6 +31,8 @@ namespace Victoria {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
         };
 
+        internal static readonly Random Random = new Random();
+
         /// <summary>
         /// 
         /// </summary>
