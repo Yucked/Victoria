@@ -453,16 +453,19 @@ namespace Victoria {
 
                 case "playerUpdate": {
                     var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
-                    var stateElement = root.GetProperty("state");
-                    var position = stateElement.GetProperty("position").GetInt64();
-
                     if (!_playerCache.TryGetValue(guildId, out var player)) {
                         break;
                     }
-
-                    player.Track.UpdatePosition(position);
-                    player.LastUpdate = DateTimeOffset
-                        .FromUnixTimeMilliseconds(stateElement.GetProperty("time").GetInt64());
+                    
+                    var stateElement = root.GetProperty("state");
+                    if (stateElement.TryGetProperty("position", out var positionElement)) {
+                        player.Track.UpdatePosition(positionElement.GetInt64());
+                    }
+                    
+                    if (stateElement.TryGetProperty("time", out var timeElement)) {
+                        player.LastUpdate = DateTimeOffset
+                            .FromUnixTimeMilliseconds(timeElement.GetInt64());   
+                    }
 
                     if (OnPlayerUpdated == null) {
                         break;
