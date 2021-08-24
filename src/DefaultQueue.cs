@@ -10,7 +10,10 @@ namespace Victoria {
     ///     <see cref="LavaTrack" />
     /// </typeparam>
     public class DefaultQueue<T> : IEnumerable<T> where T : LavaTrack {
-        private readonly LinkedList<T> _list;
+        /// <summary>
+        /// 
+        /// </summary>
+        protected internal readonly LinkedList<T> List;
 
         /// <summary>
         ///     Returns the total count of items.
@@ -19,21 +22,21 @@ namespace Victoria {
         {
             get
             {
-                lock (_list) {
-                    return _list.Count;
+                lock (List) {
+                    return List.Count;
                 }
             }
         }
 
         /// <inheritdoc cref="DefaultQueue{T}" />
         public DefaultQueue() {
-            _list = new LinkedList<T>();
+            List = new LinkedList<T>();
         }
 
         /// <inheritdoc />
         public IEnumerator<T> GetEnumerator() {
-            lock (_list) {
-                for (var node = _list.First; node != null; node = node.Next) {
+            lock (List) {
+                for (var node = List.First; node != null; node = node.Next) {
                     yield return node.Value;
                 }
             }
@@ -54,8 +57,8 @@ namespace Victoria {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            lock (_list) {
-                _list.AddLast(value);
+            lock (List) {
+                List.AddLast(value);
             }
         }
 
@@ -71,9 +74,9 @@ namespace Victoria {
                 throw new ArgumentNullException(nameof(values));
             }
 
-            lock (_list) {
+            lock (List) {
                 foreach (var value in values) {
-                    _list.AddLast(value);
+                    List.AddLast(value);
                 }
             }
         }
@@ -86,24 +89,24 @@ namespace Victoria {
         ///     <see cref="bool" />
         /// </returns>
         public bool TryDequeue(out T value) {
-            lock (_list) {
-                if (_list.Count < 1) {
+            lock (List) {
+                if (List.Count < 1) {
                     value = default;
                     return false;
                 }
 
-                if (_list.First == null) {
+                if (List.First == null) {
                     value = default;
                     return true;
                 }
 
-                var result = _list.First.Value;
+                var result = List.First.Value;
                 if (result == null) {
                     value = default;
                     return false;
                 }
 
-                _list.RemoveFirst();
+                List.RemoveFirst();
                 value = result;
 
                 return true;
@@ -117,12 +120,12 @@ namespace Victoria {
         ///     Returns first item of type <typeparamref name="T"/>.
         /// </returns>
         public T Peek() {
-            lock (_list) {
-                if (_list.First == null) {
+            lock (List) {
+                if (List.First == null) {
                     throw new Exception("Returned value is null.");
                 }
 
-                return _list.First.Value;
+                return List.First.Value;
             }
         }
 
@@ -135,8 +138,8 @@ namespace Victoria {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            lock (_list) {
-                _list.Remove(value);
+            lock (List) {
+                List.Remove(value);
             }
         }
 
@@ -144,8 +147,8 @@ namespace Victoria {
         ///     Clears the queue.
         /// </summary>
         public void Clear() {
-            lock (_list) {
-                _list.Clear();
+            lock (List) {
+                List.Clear();
             }
         }
 
@@ -153,14 +156,14 @@ namespace Victoria {
         ///     Shuffles all the items in the queue.
         /// </summary>
         public void Shuffle() {
-            lock (_list) {
-                if (_list.Count < 2) {
+            lock (List) {
+                if (List.Count < 2) {
                     return;
                 }
 
-                var shadow = new T[_list.Count];
+                var shadow = new T[List.Count];
                 var i = 0;
-                for (var node = _list.First; !(node is null); node = node.Next) {
+                for (var node = List.First; !(node is null); node = node.Next) {
                     var j = VictoriaExtensions.Random.Next(i + 1);
                     if (i != j) {
                         shadow[i] = shadow[j];
@@ -170,9 +173,9 @@ namespace Victoria {
                     i++;
                 }
 
-                _list.Clear();
+                List.Clear();
                 foreach (var value in shadow) {
-                    _list.AddLast(value);
+                    List.AddLast(value);
                 }
             }
         }
@@ -185,8 +188,8 @@ namespace Victoria {
         ///     Returns the removed item.
         /// </returns>
         public T RemoveAt(int index) {
-            lock (_list) {
-                var currentNode = _list.First;
+            lock (List) {
+                var currentNode = List.First;
 
                 for (var i = 0; i <= index && currentNode != null; i++) {
                     if (i != index) {
@@ -194,7 +197,7 @@ namespace Victoria {
                         continue;
                     }
 
-                    _list.Remove(currentNode);
+                    List.Remove(currentNode);
                     break;
                 }
 
@@ -226,8 +229,8 @@ namespace Victoria {
 
             var tempIndex = 0;
             var removed = new T[count];
-            lock (_list) {
-                var currentNode = _list.First;
+            lock (List) {
+                var currentNode = List.First;
                 while (tempIndex != index && currentNode != null) {
                     tempIndex++;
                     currentNode = currentNode.Next;
@@ -238,7 +241,7 @@ namespace Victoria {
                     var tempValue = currentNode.Value;
                     removed[i] = tempValue;
 
-                    _list.Remove(currentNode);
+                    List.Remove(currentNode);
                     currentNode = nextNode;
                     nextNode = nextNode?.Next;
                 }
