@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
@@ -140,10 +140,7 @@ namespace Victoria {
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public async Task PlayAsync(LavaTrack lavaTrack) {
-            if (lavaTrack == null) {
-                throw new ArgumentNullException(nameof(lavaTrack));
-            }
-
+            Track = lavaTrack ?? throw new NullReferenceException(nameof(lavaTrack));
             PlayerState = PlayerState.Playing;
             await _lavaSocket.SendAsync(new PlayPayload(VoiceChannel.GuildId, new PlayArgs {
                     Track = lavaTrack,
