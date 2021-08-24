@@ -172,21 +172,5 @@ namespace Victoria {
         public static ValueTask<string> FetchLyricsFromOvhAsync(this LavaTrack track) {
             return LyricsResolver.SearchOvhAsync(track);
         }
-
-        internal static bool TryRead(this ref Utf8JsonReader reader, string content) {
-            return reader.TokenType == JsonTokenType.PropertyName && reader.ValueTextEquals(content) && reader.Read();
-        }
-
-        internal static bool TryDeserialize<T>(this byte[] data, out T value,
-                                               JsonSerializerOptions serializerOptions = default) {
-            try {
-                value = JsonSerializer.Deserialize<T>(data, serializerOptions);
-                return true;
-            }
-            catch {
-                value = default;
-                return false;
-            }
-        }
     }
 }
