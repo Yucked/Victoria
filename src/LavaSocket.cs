@@ -87,7 +87,8 @@ namespace Victoria {
                 _connectionAttempts = 0;
                 _reconnectInterval = TimeSpan.Zero;
                 _cancellationToken = new CancellationTokenSource();
-                await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync());
+                await OnOpenAsync.Invoke();
+                await ReceiveAsync();
             }
 
             try {
