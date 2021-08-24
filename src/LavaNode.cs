@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -488,9 +488,6 @@ namespace Victoria {
 
                     switch ($"{root.GetProperty("type")}") {
                         case "TrackStartEvent":
-                            player.Track = lavaTrack;
-                            player.PlayerState = PlayerState.Playing;
-
                             if (OnTrackStarted == null) {
                                 break;
                             }
