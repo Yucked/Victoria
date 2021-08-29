@@ -17,6 +17,7 @@ using Victoria.Player.Decoder;
 using Victoria.Responses.Search;
 using Victoria.WebSocket;
 using Victoria.WebSocket.EventArgs;
+using ErrorEventArgs = Victoria.WebSocket.EventArgs.ErrorEventArgs;
 
 // ReSharper disable SuggestBaseTypeForParameter
 

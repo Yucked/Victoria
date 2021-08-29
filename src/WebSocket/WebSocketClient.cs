@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Victoria.WebSocket.EventArgs;
+using ErrorEventArgs = Victoria.WebSocket.EventArgs.ErrorEventArgs;
 
 namespace Victoria.WebSocket {
     using System.Net.WebSockets;
