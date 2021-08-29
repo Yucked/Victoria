@@ -166,7 +166,7 @@ namespace Victoria.Node {
                     $"You must call {nameof(DisconnectAsync)} or {nameof(DisposeAsync)} before calling {nameof(ConnectAsync)}.");
             }
 
-            if (_baseSocketClient?.CurrentUser == null || _baseSocketClient.CurrentUser.Id == 0) {
+            if (_baseSocketClient.CurrentUser == null || _baseSocketClient.CurrentUser.Id == 0) {
                 throw new InvalidOperationException($"{nameof(_baseSocketClient)} is not in ready state.");
             }
 
