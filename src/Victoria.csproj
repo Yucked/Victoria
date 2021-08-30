@@ -5,6 +5,7 @@
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
 	</PropertyGroup>
 
 	<PropertyGroup>
