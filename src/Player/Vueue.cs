@@ -10,8 +10,10 @@ namespace Victoria.Player {
     ///     <see cref="LavaTrack" />
     /// </typeparam>
     public class Vueue<T> : IEnumerable<T> where T : LavaTrack {
-        private readonly LinkedList<T> _list;
-        private readonly Random _random;
+        /// <summary>
+        /// 
+        /// </summary>
+        protected readonly LinkedList<T> List;
 
         /// <summary>
         ///     Returns the total count of items.
@@ -20,22 +22,21 @@ namespace Victoria.Player {
         {
             get
             {
-                lock (_list) {
-                    return _list.Count;
+                lock (List) {
+                    return List.Count;
                 }
             }
         }
 
         /// <inheritdoc cref="Vueue{T}" />
         public Vueue() {
-            _list = new LinkedList<T>();
-            _random = new Random();
+            List = new LinkedList<T>();
         }
 
         /// <inheritdoc />
         public IEnumerator<T> GetEnumerator() {
-            lock (_list) {
-                for (var node = _list.First; node != null; node = node.Next) {
+            lock (List) {
+                for (var node = List.First; node != null; node = node.Next) {
                     yield return node.Value;
                 }
             }
@@ -56,8 +57,27 @@ namespace Victoria.Player {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            lock (_list) {
-                _list.AddLast(value);
+            lock (List) {
+                List.AddLast(value);
+            }
+        }
+
+        /// <summary>
+        /// Adds several objects of <typeparamref name="T"/>.
+        /// </summary>
+        /// <param name="values">
+        /// Any object that inherits <typeparamref name="T"/> />.
+        /// </param>
+        /// <exception cref="ArgumentNullException">Throws <see cref="ArgumentNullException"/> if <paramref name="values"/> is null.</exception>
+        public void Enqueue(IEnumerable<T> values) {
+            if (values == null) {
+                throw new ArgumentNullException(nameof(values));
+            }
+
+            lock (List) {
+                foreach (var value in values) {
+                    List.AddLast(value);
+                }
             }
         }
 
@@ -69,24 +89,24 @@ namespace Victoria.Player {
         ///     <see cref="bool" />
         /// </returns>
         public bool TryDequeue(out T value) {
-            lock (_list) {
-                if (_list.Count < 1) {
+            lock (List) {
+                if (List.Count < 1) {
                     value = default;
                     return false;
                 }
 
-                if (_list.First == null) {
+                if (List.First == null) {
                     value = default;
                     return true;
                 }
 
-                var result = _list.First.Value;
+                var result = List.First.Value;
                 if (result == null) {
                     value = default;
                     return false;
                 }
 
-                _list.RemoveFirst();
+                List.RemoveFirst();
                 value = result;
 
                 return true;
@@ -100,12 +120,12 @@ namespace Victoria.Player {
         ///     Returns first item of type <see cref="LavaTrack" />.
         /// </returns>
         public T Peek() {
-            lock (_list) {
-                if (_list.First == null) {
+            lock (List) {
+                if (List.First == null) {
                     throw new Exception("Returned value is null.");
                 }
 
-                return _list.First.Value;
+                return List.First.Value;
             }
         }
 
@@ -118,8 +138,8 @@ namespace Victoria.Player {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            lock (_list) {
-                _list.Remove(value);
+            lock (List) {
+                List.Remove(value);
             }
         }
 
@@ -127,8 +147,8 @@ namespace Victoria.Player {
         ///     Clears the queue.
         /// </summary>
         public void Clear() {
-            lock (_list) {
-                _list.Clear();
+            lock (List) {
+                List.Clear();
             }
         }
 
@@ -136,15 +156,15 @@ namespace Victoria.Player {
         ///     Shuffles all the items in the queue.
         /// </summary>
         public void Shuffle() {
-            lock (_list) {
-                if (_list.Count < 2) {
+            lock (List) {
+                if (List.Count < 2) {
                     return;
                 }
 
-                var shadow = new T[_list.Count];
+                var shadow = new T[List.Count];
                 var i = 0;
-                for (var node = _list.First; node is not null; node = node.Next) {
-                    var j = _random.Next(i + 1);
+                for (var node = List.First; node is not null; node = node.Next) {
+                    var j = VictoriaExtensions.Random.Next(i + 1);
                     if (i != j) {
                         shadow[i] = shadow[j];
                     }
@@ -153,9 +173,9 @@ namespace Victoria.Player {
                     i++;
                 }
 
-                _list.Clear();
+                List.Clear();
                 foreach (var value in shadow) {
-                    _list.AddLast(value);
+                    List.AddLast(value);
                 }
             }
         }
@@ -168,8 +188,8 @@ namespace Victoria.Player {
         ///     Returns the removed item.
         /// </returns>
         public T RemoveAt(int index) {
-            lock (_list) {
-                var currentNode = _list.First;
+            lock (List) {
+                var currentNode = List.First;
 
                 for (var i = 0; i <= index && currentNode != null; i++) {
                     if (i != index) {
@@ -177,7 +197,7 @@ namespace Victoria.Player {
                         continue;
                     }
 
-                    _list.Remove(currentNode);
+                    List.Remove(currentNode);
                     break;
                 }
 
@@ -209,8 +229,8 @@ namespace Victoria.Player {
 
             var tempIndex = 0;
             var removed = new T[count];
-            lock (_list) {
-                var currentNode = _list.First;
+            lock (List) {
+                var currentNode = List.First;
                 while (tempIndex != index && currentNode != null) {
                     tempIndex++;
                     currentNode = currentNode.Next;
@@ -221,7 +241,7 @@ namespace Victoria.Player {
                     var tempValue = currentNode.Value;
                     removed[i] = tempValue;
 
-                    _list.Remove(currentNode);
+                    List.Remove(currentNode);
                     currentNode = nextNode;
                     nextNode = nextNode?.Next;
                 }

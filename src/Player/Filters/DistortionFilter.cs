@@ -7,37 +7,37 @@ namespace Victoria.Player.Filters {
         /// 
         /// </summary>
         public int SinOffset { get; init; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int SinScale { get; init; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int CosOffset { get; init; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int CosScale { get; init; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int TanOffset { get; init; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int TanScale { get; init; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int Offset { get; init; }
-        
+
         /// <summary>
         /// 
         /// </summary>

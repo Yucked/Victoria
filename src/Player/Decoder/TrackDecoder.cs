@@ -111,7 +111,8 @@ namespace Victoria.Player.Decoder {
                     Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(trackHashes))
                 };
 
-            return VictoriaExtensions.ReadAsJsonAsync<IEnumerable<LavaTrack>>(requestMessage, VictoriaExtensions.LavaTrackConverter);
+            return VictoriaExtensions.ReadAsJsonAsync<IEnumerable<LavaTrack>>(requestMessage,
+                VictoriaExtensions.LavaTrackConverter);
         }
     }
 }

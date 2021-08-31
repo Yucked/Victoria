@@ -1,6 +1,5 @@
 namespace Victoria.Payloads.Player {
     internal sealed class StopPayload : AbstractPlayerPayload {
-        public StopPayload(ulong guildId) : base(guildId, "stop") {
-        }
+        public StopPayload(ulong guildId) : base(guildId, "stop") { }
     }
 }

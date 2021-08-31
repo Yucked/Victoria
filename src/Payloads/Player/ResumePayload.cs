@@ -11,7 +11,7 @@ namespace Victoria.Payloads.Player {
 
         public ResumePayload(string key, TimeSpan timeout) : base("configureResuming") {
             Key = key;
-            Timeout = (long)timeout.TotalSeconds;
+            Timeout = (long) timeout.TotalSeconds;
         }
     }
 }

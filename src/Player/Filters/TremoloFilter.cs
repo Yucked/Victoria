@@ -7,7 +7,7 @@ namespace Victoria.Player.Filters {
         /// 
         /// </summary>
         public double Frequency { get; init; }
-        
+
         /// <summary>
         /// 
         /// </summary>
