@@ -101,10 +101,7 @@ namespace Victoria.Player {
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public Task PlayAsync(LavaTrack lavaTrack) {
-            if (lavaTrack == null) {
-                throw new ArgumentNullException(nameof(lavaTrack));
-            }
-
+            Track = lavaTrack ?? throw new NullReferenceException(nameof(lavaTrack));
             PlayerState = PlayerState.Playing;
             return _socketClient.SendAsync(new PlayPayload(_guildId, new PlayArgs {
                 Track = lavaTrack,
