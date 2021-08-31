@@ -7,12 +7,12 @@ namespace Victoria.Filters {
         /// 
         /// </summary>
         public double Speed { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public double Pitch { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
