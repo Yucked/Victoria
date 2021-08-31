@@ -9,7 +9,7 @@ namespace Victoria.Player {
     /// <typeparam name="T">
     ///     <see cref="LavaTrack" />
     /// </typeparam>
-    public sealed class Vueue<T> : IEnumerable<T> where T : LavaTrack {
+    public class Vueue<T> : IEnumerable<T> where T : LavaTrack {
         private readonly LinkedList<T> _list;
         private readonly Random _random;
 
