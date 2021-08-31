@@ -46,7 +46,7 @@ namespace Victoria.Resolvers {
 
             using var content = responseMessage.Content;
             await using var stream = await content.ReadAsStreamAsync();
-            
+
             var document = await JsonDocument.ParseAsync(stream);
             return document.RootElement.TryGetProperty("thumbnail_url", out var url)
                 ? $"{url}"

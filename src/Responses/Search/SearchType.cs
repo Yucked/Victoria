@@ -7,7 +7,7 @@ namespace Victoria.Responses.Search {
         /// 
         /// </summary>
         YouTube,
-        
+
         /// <summary>
         /// 
         /// </summary>

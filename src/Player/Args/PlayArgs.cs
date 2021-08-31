@@ -2,7 +2,7 @@ using System;
 
 namespace Victoria.Player.Args {
     /// <summary>
-    /// Arguments for <see cref="LavaPlayer.PlayAsync"/>
+    /// Arguments for <see cref="LavaPlayer.PlayAsync(Action&lt;PlayArgs&gt;)"/>
     /// </summary>
     public struct PlayArgs {
         /// <summary>

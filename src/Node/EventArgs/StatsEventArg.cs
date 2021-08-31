@@ -107,13 +107,13 @@ namespace Victoria.Node.EventArgs {
         /// </summary>
         [JsonPropertyName("sent"), JsonInclude]
         public int Sent { get; private set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         [JsonPropertyName("nulled"), JsonInclude]
         public int Nulled { get; private set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
