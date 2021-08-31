@@ -7,7 +7,7 @@ namespace Victoria.Payloads.Player {
         public long Position { get; }
 
         public SeekPayload(ulong guildId, TimeSpan position) : base(guildId, "seek") {
-            Position = (long)position.TotalMilliseconds;
+            Position = (long) position.TotalMilliseconds;
         }
     }
 }
