@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.2.1</Version>
+		<Version>5.2.2</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2021 Yucked. All rights reserved.</Copyright>
@@ -17,16 +17,8 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- WebSocket JSON serialization will ignore null or default values
-			- Removed Connected and Disconnected PlayerStates
-			- Added PlayerState.None
-			- LavaPlayer methods will only check whether the PlayerState is None
-			- Unsealed DefaultQueue{T}
-			- Created single instance of Random and removed random instance from DefaultQueue
-			- Access modifier for List field in DefaultQueue has been changed to protected internal
-			- Removed old JSON reading methods from VictoriaExtension
-			- LavaNode now checks whether state object contains position and time keys
-			- Removed Task.WhenAll which hopefully fixes OnOpenAsync spam
+			- TrackStartEvent no longer sets PlayerState and Track
+			- PlayAsync wasn't setting Track to lavaTrack leading to exceptions being thrown
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
