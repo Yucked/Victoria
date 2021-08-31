@@ -26,7 +26,7 @@ namespace Victoria.Decoder {
 
             // Reading header
             var header = javaReader.Read<int>();
-            var flags = (int)((header & 0xC0000000L) >> 30);
+            var flags = (int) ((header & 0xC0000000L) >> 30);
             var hasVersion = (flags & 1) != 0;
             var _ = hasVersion
                 ? javaReader.Read<sbyte>()
@@ -68,7 +68,7 @@ namespace Victoria.Decoder {
             var requestMessage = new HttpRequestMessage(HttpMethod.Get,
                 $"{lavaConfig.HttpEndpoint}/decodetrack?track={trackHash}") {
                 Headers = {
-                    { "Authorization", lavaConfig.Authorization }
+                    {"Authorization", lavaConfig.Authorization}
                 }
             };
 
@@ -86,7 +86,7 @@ namespace Victoria.Decoder {
         /// <returns></returns>
         public static Task<IEnumerable<LavaTrack>> DecodeAsync(LavaConfig lavaConfig,
                                                                params string[] trackHashes) {
-            return DecodeAsync(lavaConfig, (IEnumerable<string>)trackHashes);
+            return DecodeAsync(lavaConfig, (IEnumerable<string>) trackHashes);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace Victoria.Decoder {
             var requestMessage =
                 new HttpRequestMessage(HttpMethod.Post, $"{lavaConfig.HttpEndpoint}/decodetracks") {
                     Headers = {
-                        { "Authorization", lavaConfig.Authorization }
+                        {"Authorization", lavaConfig.Authorization}
                     },
                     Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(trackHashes))
                 };

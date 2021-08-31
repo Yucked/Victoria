@@ -22,7 +22,7 @@ namespace Victoria {
             var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, $"{lavaConfig.HttpEndpoint}/routeplanner/status") {
                     Headers = {
-                        { "Authorization", lavaConfig.Authorization }
+                        {"Authorization", lavaConfig.Authorization}
                     }
                 };
 
@@ -54,7 +54,7 @@ namespace Victoria {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post,
                 $"{lavaConfig.HttpEndpoint}/routeplanner/free/address") {
                 Headers = {
-                    { "Authorization", lavaConfig.Authorization }
+                    {"Authorization", lavaConfig.Authorization}
                 },
                 Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(new {
                     address
@@ -78,7 +78,7 @@ namespace Victoria {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post,
                 $"{lavaConfig.HttpEndpoint}/routeplanner/free/all") {
                 Headers = {
-                    { "Authorization", lavaConfig.Authorization }
+                    {"Authorization", lavaConfig.Authorization}
                 }
             };
 

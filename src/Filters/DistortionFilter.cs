@@ -7,37 +7,37 @@ namespace Victoria.Filters {
         /// 
         /// </summary>
         public int SinOffset { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int SinScale { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int CosOffset { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int CosScale { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int TanOffset { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int TanScale { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         public int Offset { get; set; }
-        
+
         /// <summary>
         /// 
         /// </summary>

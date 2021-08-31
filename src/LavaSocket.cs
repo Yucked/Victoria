@@ -100,7 +100,7 @@ namespace Victoria {
                 if (!(exception is ObjectDisposedException)) {
                     return;
                 }
-                
+
                 await RetryConnectionAsync();
             }
         }

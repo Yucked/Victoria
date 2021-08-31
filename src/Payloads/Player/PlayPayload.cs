@@ -27,11 +27,11 @@ namespace Victoria.Payloads.Player {
             Volume = playArgs.Volume;
             Pause = playArgs.ShouldPause;
             if (playArgs.StartTime.HasValue) {
-                StartTime = (int)playArgs.StartTime.Value.TotalMilliseconds;
+                StartTime = (int) playArgs.StartTime.Value.TotalMilliseconds;
             }
 
             if (playArgs.EndTime.HasValue) {
-                EndTime = (int)playArgs.EndTime.Value.TotalMilliseconds;
+                EndTime = (int) playArgs.EndTime.Value.TotalMilliseconds;
             }
         }
     }

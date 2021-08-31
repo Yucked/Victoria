@@ -23,7 +23,7 @@ namespace Victoria.EventArgs {
         internal TrackEndedEventArgs(LavaPlayer player, LavaTrack lavaTrack, string reason) {
             Player = player;
             Track = lavaTrack;
-            Reason = (TrackEndReason)(byte)reason[0];
+            Reason = (TrackEndReason) (byte) reason[0];
         }
     }
 }
