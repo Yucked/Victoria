@@ -237,7 +237,7 @@ namespace Victoria.Node {
             await voiceChannel.ConnectAsync(_nodeConfiguration.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer)Activator
+            player = (TPlayer) Activator
                 .CreateInstance(typeof(TPlayer), _webSocketClient, voiceChannel, textChannel);
 
             _playerCache.TryAdd(voiceChannel.GuildId, player);
@@ -290,7 +290,7 @@ namespace Victoria.Node {
             using var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, $"{_nodeConfiguration.HttpEndpoint}{urlPath}") {
                     Headers = {
-                        { "Authorization", _nodeConfiguration.Authorization }
+                        {"Authorization", _nodeConfiguration.Authorization}
                     }
                 };
 
@@ -341,13 +341,13 @@ namespace Victoria.Node {
             _logger.LogError(arg.Exception, arg.Message);
             return Task.CompletedTask;
         }
-        
+
         private Task OnRetryAsync(RetryEventArgs arg) {
             if (arg.IsLastRetry) {
                 _logger.LogError("This was the last try in establishing connection with Lavalink");
                 return Task.CompletedTask;
             }
-            
+
             _logger.LogWarning($"Lavalink reconnect attempt #{arg.Count}");
             return Task.CompletedTask;
         }
@@ -429,7 +429,7 @@ namespace Victoria.Node {
                             await OnTrackEnd.Invoke(new TrackEndEventArg<TPlayer> {
                                 Player = player,
                                 Track = lavaTrack,
-                                Reason = (TrackEndReason)(byte)$"{root.GetProperty("reason")}"[0]
+                                Reason = (TrackEndReason) (byte) $"{root.GetProperty("reason")}"[0]
                             });
                             break;
 
