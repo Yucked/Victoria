@@ -456,15 +456,15 @@ namespace Victoria {
                     if (!_playerCache.TryGetValue(guildId, out var player)) {
                         break;
                     }
-                    
+
                     var stateElement = root.GetProperty("state");
                     if (stateElement.TryGetProperty("position", out var positionElement)) {
                         player.Track.UpdatePosition(positionElement.GetInt64());
                     }
-                    
+
                     if (stateElement.TryGetProperty("time", out var timeElement)) {
                         player.LastUpdate = DateTimeOffset
-                            .FromUnixTimeMilliseconds(timeElement.GetInt64());   
+                            .FromUnixTimeMilliseconds(timeElement.GetInt64());
                     }
 
                     if (OnPlayerUpdated == null) {
@@ -487,15 +487,18 @@ namespace Victoria {
                     }
 
                     switch ($"{root.GetProperty("type")}") {
-                        case "TrackStartEvent":
+                        case "TrackStartEvent": {
+                            player.Track = lavaTrack;
+                            player.PlayerState = PlayerState.Playing;
                             if (OnTrackStarted == null) {
                                 break;
                             }
 
                             await OnTrackStarted.Invoke(new TrackStartEventArgs(player, lavaTrack));
                             break;
+                        }
 
-                        case "TrackEndEvent":
+                        case "TrackEndEvent": {
                             player.Track = default;
                             player.PlayerState = PlayerState.Stopped;
 
@@ -507,8 +510,9 @@ namespace Victoria {
                                 new TrackEndedEventArgs(player, lavaTrack,
                                     $"{root.GetProperty("reason")}"));
                             break;
+                        }
 
-                        case "TrackExceptionEvent":
+                        case "TrackExceptionEvent": {
                             player.Track = default;
                             player.PlayerState = PlayerState.Stopped;
 
@@ -520,8 +524,9 @@ namespace Victoria {
                                 new TrackExceptionEventArgs(player, lavaTrack,
                                     $"{root.GetProperty("error")}"));
                             break;
+                        }
 
-                        case "TrackStuckEvent":
+                        case "TrackStuckEvent": {
                             player.Track = default;
                             player.PlayerState = PlayerState.Stopped;
 
@@ -533,8 +538,9 @@ namespace Victoria {
                                 new TrackStuckEventArgs(player, lavaTrack,
                                     long.Parse($"{root.GetProperty("thresholdMs")}")));
                             break;
+                        }
 
-                        case "WebSocketClosedEvent":
+                        case "WebSocketClosedEvent": {
                             if (OnWebSocketClosed == null) {
                                 break;
                             }
@@ -546,6 +552,7 @@ namespace Victoria {
                                 ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
                             });
                             break;
+                        }
                     }
 
                     break;
