@@ -218,9 +218,8 @@ namespace Victoria {
             }
 
             var skippedTrack = Track;
-            await await Task.Delay(delay ?? TimeSpan.Zero)
-                .ContinueWith(_ => PlayAsync(lavaTrack))
-                .ConfigureAwait(false);
+            await Task.Delay(delay ?? TimeSpan.Zero);
+            await PlayAsync(lavaTrack);
 
             return (skippedTrack, lavaTrack);
         }
@@ -294,7 +293,7 @@ namespace Victoria {
                 throw new ArgumentNullException(nameof(filter));
             }
 
-            Volume = (int)volume * 100;
+            Volume = (int) volume * 100;
             return _lavaSocket.SendAsync(new FilterPayload(VoiceChannel.GuildId, filter, volume, equalizerBands));
         }
 
@@ -318,7 +317,7 @@ namespace Victoria {
                 }
             }
 
-            Volume = (int)volume * 100;
+            Volume = (int) volume * 100;
             return _lavaSocket.SendAsync(new FilterPayload(VoiceChannel.GuildId, filters, volume, equalizerBands));
         }
 
