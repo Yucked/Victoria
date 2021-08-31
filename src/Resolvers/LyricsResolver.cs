@@ -150,19 +150,22 @@ namespace Victoria.Resolvers {
 
         internal static (string Artist, string Title) GetArtistAndTitle(LavaTrack lavaTrack) {
             var title = ParanReg.Replace(lavaTrack.Title, string.Empty);
+            title = title.Replace("&", "and");
             var titleSplit = title.Split('-');
 
-            if (titleSplit.Length == 1) {
-                return (default, title.Trim());
+            var artistSplit = lavaTrack.Author.Split('-');
+
+            if (titleSplit.Length == 1 && artistSplit.Length > 1) {
+                return (artistSplit[0].Trim(), title.Trim());
             }
 
-            var artist = ArtistReg.Match(titleSplit[0]);
-            if (artist.Value.Equals(titleSplit[0], StringComparison.OrdinalIgnoreCase) ||
-                artist.Value.Equals(lavaTrack.Author, StringComparison.OrdinalIgnoreCase)) {
+            var artist = ArtistReg.Match(titleSplit[0]).Value;
+            if (artist.Equals(titleSplit[0], StringComparison.OrdinalIgnoreCase) ||
+                artist.Equals(lavaTrack.Author, StringComparison.OrdinalIgnoreCase)) {
                 return (titleSplit[0].Trim(), titleSplit[1].Trim());
             }
 
-            return (artist.Value, titleSplit[1].Trim());
+            return (artist, titleSplit[1].Trim());
         }
     }
 }
