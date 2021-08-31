@@ -118,5 +118,10 @@ namespace Victoria.Player {
         internal void UpdatePosition(long position) {
             Position = TimeSpan.FromMilliseconds(position);
         }
+
+        /// <inheritdoc />
+        public override string ToString() {
+            return $"{Author} {Title}";
+        }
     }
 }
