@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Victoria.Converters;
-using Victoria.Enums;
 using Victoria.Resolvers;
 
 namespace Victoria {
@@ -28,7 +27,7 @@ namespace Victoria {
             new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
 
         internal static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
         internal static readonly Random Random = new Random();
@@ -67,7 +66,7 @@ namespace Victoria {
                 jsonConverter == default
                     ? default
                     : new JsonSerializerOptions {
-                        Converters = {jsonConverter}
+                        Converters = { jsonConverter }
                     }, cancellationToken);
             return deserialized;
         }
@@ -104,7 +103,7 @@ namespace Victoria {
         }
 
         /// <summary>
-        ///     Shortcut method to add Victoria to <see cref="IServiceCollection" />.
+        ///     Shortcut method to add <see cref="LavaNode"/> to <see cref="IServiceCollection" />.
         /// </summary>
         /// <param name="serviceCollection">
         ///     <see cref="IServiceProvider" />
@@ -123,11 +122,34 @@ namespace Victoria {
         }
 
         /// <summary>
+        /// Shortcut method to add <see cref="LavaNode{TPlayer}"/> to <see cref="IServiceCollection" />.
+        /// </summary>
+        /// <param name="serviceCollection">
+        ///     <see cref="IServiceProvider" />
+        /// </param>
+        /// <param name="action">LavaConfig action.</param>
+        /// <typeparam name="T"><see cref="LavaPlayer"/></typeparam>
+        /// <returns>
+        ///     <see cref="IServiceCollection" />
+        /// </returns>
+        public static IServiceCollection AddLavaNode<T>(this IServiceCollection serviceCollection,
+                                                        Action<LavaConfig> action = default) where T : LavaPlayer {
+            var lavaConfig = new LavaConfig();
+            action?.Invoke(lavaConfig);
+            serviceCollection.AddSingleton(lavaConfig);
+            serviceCollection.AddSingleton<LavaNode<T>>();
+            return serviceCollection;
+        }
+
+        /// <summary>
         ///     Shortcut method to use <see cref="LavaNode" /> from <see cref="IServiceProvider" />.
         /// </summary>
         /// <param name="serviceProvider">
         ///     <see cref="IServiceProvider" />
         /// </param>
+        /// <returns>
+        ///     <see cref="IServiceCollection" />
+        /// </returns>
         /// <exception cref="NullReferenceException">
         ///     Throws if <see cref="LavaNode" /> is null in <see cref="IServiceProvider" />
         /// </exception>
@@ -137,6 +159,35 @@ namespace Victoria {
         public static Task UseLavaNodeAsync(this IServiceProvider serviceProvider) {
             if (!(serviceProvider.GetService(typeof(LavaNode)) is LavaNode lavaNode)) {
                 throw new NullReferenceException(nameof(LavaNode));
+            }
+
+            if (lavaNode.IsConnected) {
+                throw new InvalidOperationException("A connection is already established with Lavalink.");
+            }
+
+            return lavaNode.ConnectAsync();
+        }
+
+        /// <summary>
+        ///     Shortcut method to use <see cref="LavaNode{TPlayer}" /> from <see cref="IServiceProvider" />.
+        /// </summary>
+        /// <param name="serviceProvider">
+        ///     <see cref="IServiceProvider" />
+        /// </param>
+        /// <typeparam name="T"><see cref="LavaPlayer"/></typeparam>
+        /// <returns>
+        ///     <see cref="IServiceCollection" />
+        /// </returns>
+        /// <exception cref="NullReferenceException">
+        ///     Throws if <see cref="LavaNode" /> is null in <see cref="IServiceProvider" />
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Throws if <seealso cref="LavaNode{TPlayer}.IsConnected"/> is set to true.
+        /// </exception>
+        public static Task UseLavaNodeAsync<T>(this IServiceProvider serviceProvider)
+            where T : LavaPlayer {
+            if (!(serviceProvider.GetService(typeof(LavaNode<T>)) is LavaNode<T> lavaNode)) {
+                throw new NullReferenceException(nameof(LavaNode<T>));
             }
 
             if (lavaNode.IsConnected) {
