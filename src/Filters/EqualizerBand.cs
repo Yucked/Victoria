@@ -41,7 +41,7 @@ namespace Victoria.Filters {
 
         /// <inheritdoc />
         public override bool Equals(object? obj) {
-            if (!(obj is EqualizerBand equalizerBand)) {
+            if (obj is not EqualizerBand equalizerBand) {
                 return false;
             }
 
