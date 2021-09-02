@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Victoria.Filters {
     /// <summary>
     /// Mixes both channels (left and right), with a configurable factor on how much each channel affects the other.
@@ -8,21 +10,25 @@ namespace Victoria.Filters {
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("leftToLeft")]
         public double LeftToLeft { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("leftToRight")]
         public double LeftToRight { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("rightToLeft")]
         public double RightToLeft { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("rightToRight")]
         public double RightToRight { get; set; }
     }
 }

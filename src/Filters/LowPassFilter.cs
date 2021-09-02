@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Victoria.Filters {
     /// <summary>
     /// Higher frequencies get suppressed, while lower frequencies pass through this filter, thus the name low pass.
@@ -6,6 +8,7 @@ namespace Victoria.Filters {
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("smoothing")]
         public double Smoothing { get; set; }
     }
 }
