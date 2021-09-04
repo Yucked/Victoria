@@ -10,7 +10,7 @@ namespace Victoria {
     /// <summary>
     /// Arguments for <see cref="o:LavaPlayer.PlayAsync"/>
     /// </summary>
-    public struct PlayArgs {
+    public sealed class PlayArgs {
         /// <summary>
         /// Which track to play, <see cref="LavaTrack"/>
         /// </summary>
