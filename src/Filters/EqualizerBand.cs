@@ -19,7 +19,7 @@ namespace Victoria.Filters {
         ///     Gain is the multiplier for the given band. The default value is 0. Valid values range from -0.25 to 1.0,
         ///     where -0.25 means the given band is completely muted, and 0.25 means it is doubled.
         /// </summary>
-        [JsonPropertyName("gain")]
+        [JsonPropertyName("gain"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public double Gain { get; }
 
         /// <summary>
