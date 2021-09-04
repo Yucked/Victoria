@@ -5,19 +5,19 @@ namespace Victoria.Payloads.Player {
         [JsonPropertyName("track")]
         public string Hash { get; }
 
-        [JsonPropertyName("noReplace")]
+        [JsonPropertyName("noReplace"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool NoReplace { get; }
 
-        [JsonPropertyName("startTime")]
+        [JsonPropertyName("startTime"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int StartTime { get; }
 
-        [JsonPropertyName("endTime")]
+        [JsonPropertyName("endTime"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int EndTime { get; }
 
-        [JsonPropertyName("volume")]
+        [JsonPropertyName("volume"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Volume { get; }
 
-        [JsonPropertyName("pause")]
+        [JsonPropertyName("pause"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool Pause { get; }
 
         public PlayPayload(ulong guildId, PlayArgs playArgs)
