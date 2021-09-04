@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.2.2</Version>
+		<Version>5.2.3</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2021 Yucked. All rights reserved.</Copyright>
@@ -17,8 +17,8 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- TrackStartEvent no longer sets PlayerState and Track
-			- PlayAsync wasn't setting Track to lavaTrack leading to exceptions being thrown
+			- Added JsonPropertyName attribute to filter properties
+			- Json serialization only ignores null properties instead of defaults
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
