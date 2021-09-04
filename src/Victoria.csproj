@@ -19,6 +19,9 @@
 		<PackageReleaseNotes>
 			- Added JsonPropertyName attribute to filter properties
 			- Json serialization only ignores null properties instead of defaults
+			- RofLBotZ94: Defined ignore attributes on optional properties
+			- Added generic methods for AddLavaNode{T} and UseLavaNode{T}
+			- Fixed method names for websocket events
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
