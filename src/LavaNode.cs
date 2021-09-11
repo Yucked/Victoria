@@ -459,7 +459,7 @@ namespace Victoria {
 
                     var stateElement = root.GetProperty("state");
                     if (stateElement.TryGetProperty("position", out var positionElement)) {
-                        player.Track.UpdatePosition(positionElement.GetInt64());
+                        player.Track?.UpdatePosition(positionElement.GetInt64());
                     }
 
                     if (stateElement.TryGetProperty("time", out var timeElement)) {
