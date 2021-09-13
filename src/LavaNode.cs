@@ -458,14 +458,9 @@ namespace Victoria {
                     }
 
                     var stateElement = root.GetProperty("state");
-                    if (stateElement.TryGetProperty("position", out var positionElement)) {
-                        player.Track.UpdatePosition(positionElement.GetInt64());
-                    }
-
-                    if (stateElement.TryGetProperty("time", out var timeElement)) {
-                        player.LastUpdate = DateTimeOffset
-                            .FromUnixTimeMilliseconds(timeElement.GetInt64());
-                    }
+                    player.Track.UpdatePosition(stateElement.GetProperty("position").GetInt64());
+                    player.LastUpdate = DateTimeOffset
+                        .FromUnixTimeMilliseconds(stateElement.GetProperty("time").GetInt64());
 
                     if (OnPlayerUpdated == null) {
                         break;
@@ -490,6 +485,7 @@ namespace Victoria {
                         case "TrackStartEvent": {
                             player.Track = lavaTrack;
                             player.PlayerState = PlayerState.Playing;
+
                             if (OnTrackStarted == null) {
                                 break;
                             }
@@ -499,16 +495,18 @@ namespace Victoria {
                         }
 
                         case "TrackEndEvent": {
-                            player.Track = default;
-                            player.PlayerState = PlayerState.Stopped;
+                            var reason = $"{root.GetProperty("reason")}";
+                            if ((TrackEndReason) reason[0] != TrackEndReason.Replaced) {
+                                player.Track = default;
+                                player.PlayerState = PlayerState.Stopped;
+                            }
 
                             if (OnTrackEnded == null) {
                                 break;
                             }
 
                             await OnTrackEnded.Invoke(
-                                new TrackEndedEventArgs(player, lavaTrack,
-                                    $"{root.GetProperty("reason")}"));
+                                new TrackEndedEventArgs(player, lavaTrack, reason));
                             break;
                         }
 
