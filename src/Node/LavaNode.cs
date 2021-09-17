@@ -419,8 +419,11 @@ namespace Victoria.Node {
                             break;
 
                         case "TrackEndEvent":
-                            player.Track = default;
-                            player.PlayerState = PlayerState.Stopped;
+                            var trackEndReason = (TrackEndReason) (byte) $"{root.GetProperty("reason")}"[0];
+                            if (trackEndReason is not TrackEndReason.Replaced) {
+                                player.Track = default;
+                                player.PlayerState = PlayerState.Stopped;
+                            }
 
                             if (OnTrackEnd == null) {
                                 break;
@@ -429,7 +432,7 @@ namespace Victoria.Node {
                             await OnTrackEnd.Invoke(new TrackEndEventArg<TPlayer> {
                                 Player = player,
                                 Track = lavaTrack,
-                                Reason = (TrackEndReason) (byte) $"{root.GetProperty("reason")}"[0]
+                                Reason = trackEndReason
                             });
                             break;
 
