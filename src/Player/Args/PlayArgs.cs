@@ -2,13 +2,14 @@ using System;
 
 namespace Victoria.Player.Args {
     /// <summary>
-    /// Arguments for <see cref="LavaPlayer.PlayAsync(Action&lt;PlayArgs&gt;)"/>
+    /// Arguments for <see cref="LavaPlayer{TLavaTrack}.PlayAsync(Action&lt;PlayArgs&gt;)"/>
     /// </summary>
-    public struct PlayArgs {
+    public struct PlayArgs<TLavaTrack>
+        where TLavaTrack : LavaTrack {
         /// <summary>
         /// Which track to play, <see cref="LavaTrack"/>
         /// </summary>
-        public LavaTrack Track { get; set; }
+        public TLavaTrack Track { get; set; }
 
         /// <summary>
         /// Whether to replace the track. Returns <see cref="TrackEndReason.Replaced"/> when used.

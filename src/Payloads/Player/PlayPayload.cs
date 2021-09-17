@@ -1,8 +1,10 @@
 using System.Text.Json.Serialization;
+using Victoria.Player;
 using Victoria.Player.Args;
 
 namespace Victoria.Payloads.Player {
-    internal sealed class PlayPayload : AbstractPlayerPayload {
+    internal sealed class PlayPayload<TLavaTrack> : AbstractPlayerPayload
+        where TLavaTrack : LavaTrack {
         [JsonPropertyName("track")]
         public string Hash { get; }
 
@@ -21,7 +23,7 @@ namespace Victoria.Payloads.Player {
         [JsonPropertyName("pause")]
         public bool Pause { get; }
 
-        public PlayPayload(ulong guildId, PlayArgs playArgs) : base(guildId, "play") {
+        public PlayPayload(ulong guildId, PlayArgs<TLavaTrack> playArgs) : base(guildId, "play") {
             Hash = playArgs.Track.Hash;
             NoReplace = playArgs.NoReplace;
             Volume = playArgs.Volume;

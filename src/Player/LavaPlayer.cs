@@ -11,7 +11,8 @@ namespace Victoria.Player {
     /// <summary>
     /// Represents a <see cref="IVoiceChannel"/> connection.
     /// </summary>
-    public class LavaPlayer : IAsyncDisposable {
+    public class LavaPlayer<TLavaTrack>: IAsyncDisposable
+        where TLavaTrack : LavaTrack  {
         /// <summary>
         /// </summary>
         public IReadOnlyCollection<EqualizerBand> Bands
@@ -35,7 +36,7 @@ namespace Victoria.Player {
         /// <summary>
         ///     Default Vueue.
         /// </summary>
-        public Vueue<LavaTrack> Vueue { get; }
+        public Vueue<TLavaTrack> Vueue { get; }
 
         /// <summary>
         ///     Channel bound to this player.
@@ -45,7 +46,7 @@ namespace Victoria.Player {
         /// <summary>
         ///     Current track that is playing.
         /// </summary>
-        public LavaTrack Track { get; internal set; }
+        public TLavaTrack Track { get; internal set; }
 
         /// <summary>
         /// 
@@ -66,7 +67,7 @@ namespace Victoria.Player {
             _socketClient = socketClient;
             VoiceChannel = voiceChannel;
             TextChannel = textChannel;
-            Vueue = new Vueue<LavaTrack>();
+            Vueue = new Vueue<TLavaTrack>();
             _bands = new Dictionary<int, double>(15);
             _guildId = voiceChannel.GuildId;
         }
@@ -78,8 +79,8 @@ namespace Victoria.Player {
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">Throws when <paramref name="playArgsAction"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Throws when the volume is out of range.</exception>
-        public Task PlayAsync(Action<PlayArgs> playArgsAction) {
-            var playArgs = new PlayArgs();
+        public Task PlayAsync(Action<PlayArgs<TLavaTrack>> playArgsAction) {
+            var playArgs = new PlayArgs<TLavaTrack>();
             playArgsAction.Invoke(playArgs);
 
             Track = playArgs.Track ?? throw new NullReferenceException(nameof(playArgs));
@@ -90,7 +91,8 @@ namespace Victoria.Player {
                     "Volume must be greater than or equal to 0."),
                 > 1000 => throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
                     "Volume must be less than or equal to 1000."),
-                _ => _socketClient.SendAsync(new PlayPayload(_guildId, playArgs), false, VictoriaExtensions.JsonOptions)
+                _ => _socketClient.SendAsync(new PlayPayload<TLavaTrack>(_guildId, playArgs), false,
+                    VictoriaExtensions.JsonOptions)
             };
         }
 
@@ -100,10 +102,10 @@ namespace Victoria.Player {
         /// <param name="lavaTrack"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public Task PlayAsync(LavaTrack lavaTrack) {
+        public Task PlayAsync(TLavaTrack lavaTrack) {
             Track = lavaTrack ?? throw new NullReferenceException(nameof(lavaTrack));
             PlayerState = PlayerState.Playing;
-            return _socketClient.SendAsync(new PlayPayload(_guildId, new PlayArgs {
+            return _socketClient.SendAsync(new PlayPayload<TLavaTrack>(_guildId, new PlayArgs<TLavaTrack> {
                 Track = lavaTrack,
                 Volume = 100,
                 ShouldPause = false
@@ -246,7 +248,7 @@ namespace Victoria.Player {
                 throw new ArgumentNullException(nameof(filter));
             }
 
-            Volume = (int)volume * 100;
+            Volume = (int) volume * 100;
             return _socketClient.SendAsync(new FilterPayload(_guildId, filter, volume, equalizerBands));
         }
 
@@ -270,7 +272,7 @@ namespace Victoria.Player {
                 }
             }
 
-            Volume = (int)volume * 100;
+            Volume = (int) volume * 100;
             return _socketClient.SendAsync(new FilterPayload(_guildId, filters, volume, equalizerBands));
         }
 
