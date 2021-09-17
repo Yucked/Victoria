@@ -24,7 +24,7 @@ namespace Victoria.Node {
     /// <summary>
     /// Represents a single connection to a Lavalink server.
     /// </summary>
-    public class LavaNode : LavaNode<LavaPlayer> {
+    public class LavaNode : LavaNode<LavaPlayer<LavaTrack>, LavaTrack> {
         /// <inheritdoc />
         public LavaNode(DiscordSocketClient socketClient,
                         NodeConfiguration nodeConfiguration,
@@ -39,11 +39,14 @@ namespace Victoria.Node {
     }
 
     /// <summary>
-    ///     Represents a single connection to a Lavalink server with custom <typeparamref name="TPlayer"/>.
+    ///     Represents a single connection to a Lavalink server with custom <typeparamref name="TLavaPlayer"/>.
     /// </summary>
-    /// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer" /></typeparam>.
-    public class LavaNode<TPlayer> : IAsyncDisposable
-        where TPlayer : LavaPlayer {
+    /// <typeparam name="TLavaPlayer">Where TPlayer is inherited from <see cref="LavaPlayer" /></typeparam>
+    /// <typeparam name="TLavaTrack"></typeparam>
+    /// .
+    public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
+        where TLavaTrack : LavaTrack
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
         /// <summary>
         ///     Checks if the client has an active WebSocket connection.
         /// </summary>
@@ -51,9 +54,9 @@ namespace Victoria.Node {
             => Volatile.Read(ref _refConnected);
 
         /// <summary>
-        ///     Collection of <typeparamref name="TPlayer" />.
+        ///     Collection of <typeparamref name="TLavaPlayer" />.
         /// </summary>
-        public IEnumerable<TPlayer> Players
+        public IEnumerable<TLavaPlayer> Players
             => _playerCache.Values;
 
         /// <summary>
@@ -64,38 +67,38 @@ namespace Victoria.Node {
         /// <summary>
         /// 
         /// </summary>
-        public event Func<UpdateEventArg<TPlayer>, Task> OnUpdateReceived;
+        public event Func<UpdateEventArg<TLavaPlayer, TLavaTrack>, Task> OnUpdateReceived;
 
         /// <summary>
         /// 
         /// </summary>
-        public event Func<TrackStartEventArg<TPlayer>, Task> OnTrackStart;
+        public event Func<TrackStartEventArg<TLavaPlayer, TLavaTrack>, Task> OnTrackStart;
 
         /// <summary>
         /// 
         /// </summary>
-        public event Func<TrackEndEventArg<TPlayer>, Task> OnTrackEnd;
+        public event Func<TrackEndEventArg<TLavaPlayer, TLavaTrack>, Task> OnTrackEnd;
 
         /// <summary>
         /// 
         /// </summary>
-        public event Func<TrackExceptionEventArg<TPlayer>, Task> OnTrackException;
+        public event Func<TrackExceptionEventArg<TLavaPlayer, TLavaTrack>, Task> OnTrackException;
 
         /// <summary>
         /// 
         /// </summary>
-        public event Func<TrackStuckEventArg<TPlayer>, Task> OnTrackStuck;
+        public event Func<TrackStuckEventArg<TLavaPlayer, TLavaTrack>, Task> OnTrackStuck;
 
         /// <summary>
         /// 
         /// </summary>
         public event Func<WebSocketClosedEventArg, Task> OnWebSocketClosed;
 
-        private readonly ILogger<LavaNode<TPlayer>> _logger;
+        private readonly ILogger<LavaNode<TLavaPlayer, TLavaTrack>> _logger;
         private readonly NodeConfiguration _nodeConfiguration;
         private readonly WebSocketClient _webSocketClient;
         private readonly BaseSocketClient _baseSocketClient;
-        private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
+        private readonly ConcurrentDictionary<ulong, TLavaPlayer> _playerCache;
         private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
 
         private bool _refConnected;
@@ -103,13 +106,13 @@ namespace Victoria.Node {
         /// <inheritdoc />
         public LavaNode(DiscordSocketClient socketClient,
                         NodeConfiguration nodeConfiguration,
-                        ILogger<LavaNode<TPlayer>> logger)
+                        ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger)
             : this(socketClient as BaseSocketClient, nodeConfiguration, logger) { }
 
         /// <inheritdoc />
         public LavaNode(DiscordShardedClient shardedClient,
                         NodeConfiguration nodeConfiguration,
-                        ILogger<LavaNode<TPlayer>> logger)
+                        ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger)
             : this(shardedClient as BaseSocketClient, nodeConfiguration, logger) { }
 
         /// <summary>
@@ -118,11 +121,11 @@ namespace Victoria.Node {
         /// <param name="nodeConfiguration"></param>
         /// <param name="logger"></param>
         public LavaNode(NodeConfiguration nodeConfiguration,
-                        ILogger<LavaNode<TPlayer>> logger)
+                        ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger)
             : this(default(BaseSocketClient), nodeConfiguration, logger) { }
 
         private LavaNode(BaseSocketClient socketClient, NodeConfiguration nodeConfiguration,
-                         ILogger<LavaNode<TPlayer>> logger) {
+                         ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger) {
             _nodeConfiguration = nodeConfiguration;
             _logger = logger;
 
@@ -139,7 +142,7 @@ namespace Victoria.Node {
             _webSocketClient.OnDataAsync += OnDataAsync;
             _webSocketClient.OnRetryAsync += OnRetryAsync;
 
-            _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
+            _playerCache = new ConcurrentDictionary<ulong, TLavaPlayer>();
             _voiceStates = new ConcurrentDictionary<ulong, VoiceState>();
         }
 
@@ -213,14 +216,14 @@ namespace Victoria.Node {
         }
 
         /// <summary>
-        ///     Joins the specified voice channel and returns the connected <typeparamref name="TPlayer" />.
+        ///     Joins the specified voice channel and returns the connected <typeparamref name="TLavaPlayer" />.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <param name="textChannel">An instance of <see cref="ITextChannel" />.</param>
         /// <returns>
-        ///     <typeparamref name="TPlayer" />
+        ///     <typeparamref name="TLavaPlayer" />
         /// </returns>
-        public async Task<TPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default) {
+        public async Task<TLavaPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default) {
             if (!Volatile.Read(ref _refConnected)) {
                 throw new InvalidOperationException(
                     $"You must call {nameof(ConnectAsync)} before joining a voice channel.");
@@ -237,15 +240,15 @@ namespace Victoria.Node {
             await voiceChannel.ConnectAsync(_nodeConfiguration.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer) Activator
-                .CreateInstance(typeof(TPlayer), _webSocketClient, voiceChannel, textChannel);
+            player = (TLavaPlayer) Activator
+                .CreateInstance(typeof(TLavaPlayer), _webSocketClient, voiceChannel, textChannel);
 
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
 
         /// <summary>
-        ///     Leaves the specified channel only if <typeparamref name="TPlayer" /> is connected to it.
+        ///     Leaves the specified channel only if <typeparamref name="TLavaPlayer" /> is connected to it.
         /// </summary>
         /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
         /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
@@ -299,7 +302,7 @@ namespace Victoria.Node {
         }
 
         /// <summary>
-        ///     Checks if <typeparamref name="TPlayer" /> exists for specified guild.
+        ///     Checks if <typeparamref name="TLavaPlayer" /> exists for specified guild.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
         /// <returns>
@@ -313,11 +316,11 @@ namespace Victoria.Node {
         ///     Returns either an existing or null player.
         /// </summary>
         /// <param name="guild">An instance of <see cref="IGuild" />.</param>
-        /// <param name="player">An instance of <typeparamref name="TPlayer" /></param>
+        /// <param name="player">An instance of <typeparamref name="TLavaPlayer" /></param>
         /// <returns>
         ///     <see cref="bool" />
         /// </returns>
-        public bool TryGetPlayer(IGuild guild, out TPlayer player) {
+        public bool TryGetPlayer(IGuild guild, out TLavaPlayer player) {
             return _playerCache.TryGetValue(guild.Id, out player);
         }
 
@@ -384,7 +387,7 @@ namespace Victoria.Node {
                         return;
                     }
 
-                    await OnUpdateReceived.Invoke(new UpdateEventArg<TPlayer> {
+                    await OnUpdateReceived.Invoke(new UpdateEventArg<TLavaPlayer, TLavaTrack> {
                         Player = player,
                         Track = player.Track,
                         Position = player.Track.Position
@@ -405,14 +408,14 @@ namespace Victoria.Node {
                     var type = $"{root.GetProperty("type")}";
                     switch (type) {
                         case "TrackStartEvent":
-                            player.Track = lavaTrack;
+                            player.Track = (TLavaTrack) lavaTrack;
                             player.PlayerState = PlayerState.Playing;
 
                             if (OnTrackStart == null) {
                                 break;
                             }
 
-                            await OnTrackStart.Invoke(new TrackStartEventArg<TPlayer> {
+                            await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
                                 Player = player,
                                 Track = lavaTrack
                             });
@@ -429,7 +432,7 @@ namespace Victoria.Node {
                                 break;
                             }
 
-                            await OnTrackEnd.Invoke(new TrackEndEventArg<TPlayer> {
+                            await OnTrackEnd.Invoke(new TrackEndEventArg<TLavaPlayer, TLavaTrack> {
                                 Player = player,
                                 Track = lavaTrack,
                                 Reason = trackEndReason
@@ -444,7 +447,7 @@ namespace Victoria.Node {
                                 break;
                             }
 
-                            await OnTrackException.Invoke(new TrackExceptionEventArg<TPlayer> {
+                            await OnTrackException.Invoke(new TrackExceptionEventArg<TLavaPlayer, TLavaTrack> {
                                 Player = player,
                                 Track = lavaTrack,
                                 Exception = root.GetProperty("error").GetString()
@@ -459,7 +462,7 @@ namespace Victoria.Node {
                                 break;
                             }
 
-                            await OnTrackStuck.Invoke(new TrackStuckEventArg<TPlayer> {
+                            await OnTrackStuck.Invoke(new TrackStuckEventArg<TLavaPlayer, TLavaTrack> {
                                 Player = player,
                                 Track = lavaTrack,
                                 Threshold = long.Parse($"{root.GetProperty("thresholdMs")}")

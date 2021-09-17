@@ -4,12 +4,13 @@ namespace Victoria.Node.EventArgs {
     /// <summary>
     /// 
     /// </summary>
-    public readonly struct TrackEndEventArg<TPlayer>
-        where TPlayer : LavaPlayer {
+    public readonly struct TrackEndEventArg<TLavaPlayer, TLavaTrack>
+        where TLavaTrack : LavaTrack
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
         /// <summary>
         /// 
         /// </summary>
-        public TPlayer Player { get; internal init; }
+        public TLavaPlayer Player { get; internal init; }
 
         /// <summary>
         /// 
