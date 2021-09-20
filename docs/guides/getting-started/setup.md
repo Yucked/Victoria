@@ -9,7 +9,7 @@ title: 🧰 Setup
 Before we get to programming, we need to download the latest version of Lavalink and Application.yml.
 # [GitHub](#tab/tabid-lavagit)
 You can get an official release of Lavalink from their GitHub release section.
-https://github.com/Frederikam/Lavalink/releases
+https://github.com/freyacodes/Lavalink/releases
 
 # [CI Server](#tab/tabid-lavaci)
 If you believe Lavalink is misbehaving: tracks not playing, etc then you can check CI releases. Chances are there is a fix out already.
@@ -17,7 +17,7 @@ https://ci.fredboat.com/viewLog.html?buildId=lastSuccessful&buildTypeId=Lavalink
 
 # [Application.yml](#tab/tabid-lavaapp)
 Once you've Lavalink downloaded it's time to create a new file `application.yml`. This file holds Lavalink configuration.
-https://github.com/Frederikam/Lavalink/blob/master/LavalinkServer/application.yml.example
+https://github.com/freyacodes/Lavalink/blob/master/LavalinkServer/application.yml.example
 
 ***
 
