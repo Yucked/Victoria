@@ -9,10 +9,24 @@ using Victoria.WebSocket;
 
 namespace Victoria.Player {
     /// <summary>
+    /// 
+    /// </summary>
+    public class LavaPlayer : LavaPlayer<LavaTrack> {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="voiceChannel"></param>
+        /// <param name="textChannel"></param>
+        public LavaPlayer(WebSocketClient socketClient, IVoiceChannel voiceChannel, ITextChannel textChannel)
+            : base(socketClient, voiceChannel, textChannel) { }
+    }
+
+    /// <summary>
     /// Represents a <see cref="IVoiceChannel"/> connection.
     /// </summary>
-    public class LavaPlayer<TLavaTrack>: IAsyncDisposable
-        where TLavaTrack : LavaTrack  {
+    public class LavaPlayer<TLavaTrack> : IAsyncDisposable
+        where TLavaTrack : LavaTrack {
         /// <summary>
         /// </summary>
         public IReadOnlyCollection<EqualizerBand> Bands
