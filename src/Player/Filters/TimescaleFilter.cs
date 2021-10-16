@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Victoria.Player.Filters {
     /// <summary>
     /// Changes the speed, pitch, and rate. All default to 1.
@@ -6,16 +8,19 @@ namespace Victoria.Player.Filters {
         /// <summary>
         /// 
         /// </summary>
-        public double Speed { get; init; }
+        [JsonPropertyName("speed")]
+        public double Speed { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public double Pitch { get; init; }
+        [JsonPropertyName("pitch")]
+        public double Pitch { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public double Rate { get; init; }
+        [JsonPropertyName("rate")]
+        public double Rate { get; set; }
     }
 }

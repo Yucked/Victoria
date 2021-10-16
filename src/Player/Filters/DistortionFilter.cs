@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Victoria.Player.Filters {
     /// <summary>
     /// Distortion effect. It can generate some pretty unique audio effects.
@@ -6,41 +8,49 @@ namespace Victoria.Player.Filters {
         /// <summary>
         /// 
         /// </summary>
-        public int SinOffset { get; init; }
+        [JsonPropertyName("sinOffset")]
+        public int SinOffset { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int SinScale { get; init; }
+        [JsonPropertyName("sinScale")]
+        public int SinScale { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int CosOffset { get; init; }
+        [JsonPropertyName("cosOffset")]
+        public int CosOffset { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int CosScale { get; init; }
+        [JsonPropertyName("cosScale")]
+        public int CosScale { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int TanOffset { get; init; }
+        [JsonPropertyName("tanOffset")]
+        public int TanOffset { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int TanScale { get; init; }
+        [JsonPropertyName("tanScale")]
+        public int TanScale { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int Offset { get; init; }
+        [JsonPropertyName("offset")]
+        public int Offset { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int Scale { get; init; }
+        [JsonPropertyName("scale")]
+        public int Scale { get; set; }
     }
 }

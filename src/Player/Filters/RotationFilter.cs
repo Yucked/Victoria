@@ -10,6 +10,6 @@ namespace Victoria.Player.Filters {
         /// The frequency of the audio rotating around the listener in Hz. 0.2 is similar to the example video above.
         /// </summary>
         [JsonPropertyName("rotationHz")]
-        public double Hertz { get; init; }
+        public double Hertz { get; set; }
     }
 }

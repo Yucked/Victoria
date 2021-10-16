@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Victoria.Player.Filters {
     /// <summary>
     /// Uses equalization to eliminate part of a band, usually targeting vocals.
@@ -6,21 +8,25 @@ namespace Victoria.Player.Filters {
         /// <summary>
         /// 
         /// </summary>
-        public double Level { get; init; }
+        [JsonPropertyName("level")]
+        public double Level { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public double MonoLevel { get; init; }
+        [JsonPropertyName("monoLevel")]
+        public double MonoLevel { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public double FilterBand { get; init; }
+        [JsonPropertyName("filterBand")]
+        public double FilterBand { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public double FilterWidth { get; init; }
+        [JsonPropertyName("filterWidth")]
+        public double FilterWidth { get; set; }
     }
 }
