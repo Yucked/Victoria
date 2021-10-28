@@ -427,138 +427,146 @@ namespace Victoria {
         }
 
         private async Task OnDataAsync(byte[] data) {
-            if (data.Length == 0) {
-                Log(LogSeverity.Warning, "Didn't receive any data from websocket");
-                return;
-            }
-
-            Log(LogSeverity.Debug, Encoding.UTF8.GetString(data));
-
-            using var document = JsonDocument.Parse(data);
-            var root = document.RootElement;
-
-            if (!root.TryGetProperty("op", out var opElement)) {
-                Log(LogSeverity.Critical, "Didn't find OP code in payload.");
-                return;
-            }
-
-            switch ($"{opElement}") {
-                case "stats":
-                    if (OnStatsReceived == null) {
-                        break;
-                    }
-
-                    await OnStatsReceived.Invoke(JsonSerializer.Deserialize<StatsEventArgs>(data));
-                    break;
-
-                case "playerUpdate": {
-                    var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
-                    if (!_playerCache.TryGetValue(guildId, out var player)) {
-                        break;
-                    }
-
-                    var stateElement = root.GetProperty("state");
-                    player.Track.UpdatePosition(stateElement.GetProperty("position").GetInt64());
-                    player.LastUpdate = DateTimeOffset
-                        .FromUnixTimeMilliseconds(stateElement.GetProperty("time").GetInt64());
-
-                    if (OnPlayerUpdated == null) {
-                        break;
-                    }
-
-                    await OnPlayerUpdated.Invoke(new PlayerUpdateEventArgs(player));
-                    break;
+            try {
+                if (data.Length == 0) {
+                    Log(LogSeverity.Warning, "Didn't receive any data from websocket");
+                    return;
                 }
 
-                case "event": {
-                    var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
-                    if (!_playerCache.TryGetValue(guildId, out var player)) {
-                        break;
-                    }
+                Log(LogSeverity.Debug, Encoding.UTF8.GetString(data));
 
-                    LavaTrack lavaTrack = default;
-                    if (root.TryGetProperty("track", out var trackElement)) {
-                        lavaTrack = TrackDecoder.Decode($"{trackElement}");
-                    }
+                using var document = JsonDocument.Parse(data);
+                var root = document.RootElement;
 
-                    switch ($"{root.GetProperty("type")}") {
-                        case "TrackStartEvent": {
-                            player.Track = lavaTrack;
-                            player.PlayerState = PlayerState.Playing;
+                if (!root.TryGetProperty("op", out var opElement)) {
+                    Log(LogSeverity.Critical, "Didn't find OP code in payload.");
+                    return;
+                }
 
-                            if (OnTrackStarted == null) {
-                                break;
-                            }
-
-                            await OnTrackStarted.Invoke(new TrackStartEventArgs(player, lavaTrack));
+                switch ($"{opElement}") {
+                    case "stats": {
+                        if (OnStatsReceived == null) {
                             break;
                         }
 
-                        case "TrackEndEvent": {
-                            var reason = $"{root.GetProperty("reason")}";
-                            if ((TrackEndReason) reason[0] != TrackEndReason.Replaced) {
+                        await OnStatsReceived.Invoke(JsonSerializer.Deserialize<StatsEventArgs>(data));
+                        break;
+                    }
+
+                    case "playerUpdate": {
+                        var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
+                        if (!_playerCache.TryGetValue(guildId, out var player)) {
+                            break;
+                        }
+
+                        var stateElement = root.GetProperty("state");
+                        player.Track.UpdatePosition(stateElement.GetProperty("position").GetInt64());
+                        player.LastUpdate = DateTimeOffset
+                            .FromUnixTimeMilliseconds(stateElement.GetProperty("time").GetInt64());
+
+                        if (OnPlayerUpdated == null) {
+                            break;
+                        }
+
+                        await OnPlayerUpdated.Invoke(new PlayerUpdateEventArgs(player));
+                        break;
+                    }
+
+                    case "event": {
+                        var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
+                        if (!_playerCache.TryGetValue(guildId, out var player)) {
+                            break;
+                        }
+
+                        LavaTrack lavaTrack = default;
+                        if (root.TryGetProperty("track", out var trackElement)) {
+                            lavaTrack = TrackDecoder.Decode($"{trackElement}");
+                        }
+
+                        switch ($"{root.GetProperty("type")}") {
+                            case "TrackStartEvent": {
+                                player.Track = lavaTrack;
+                                player.PlayerState = PlayerState.Playing;
+
+                                if (OnTrackStarted == null) {
+                                    break;
+                                }
+
+                                await OnTrackStarted.Invoke(new TrackStartEventArgs(player, lavaTrack));
+                                break;
+                            }
+
+                            case "TrackEndEvent": {
+                                var reason = $"{root.GetProperty("reason")}";
+                                if ((TrackEndReason) reason[0] != TrackEndReason.Replaced) {
+                                    player.Track = default;
+                                    player.PlayerState = PlayerState.Stopped;
+                                }
+
+                                if (OnTrackEnded == null) {
+                                    break;
+                                }
+
+                                await OnTrackEnded.Invoke(
+                                    new TrackEndedEventArgs(player, lavaTrack, reason));
+                                break;
+                            }
+
+                            case "TrackExceptionEvent": {
                                 player.Track = default;
                                 player.PlayerState = PlayerState.Stopped;
-                            }
 
-                            if (OnTrackEnded == null) {
+                                if (OnTrackException == null) {
+                                    break;
+                                }
+
+                                await OnTrackException.Invoke(
+                                    new TrackExceptionEventArgs(player, lavaTrack,
+                                        $"{root.GetProperty("error")}"));
                                 break;
                             }
 
-                            await OnTrackEnded.Invoke(
-                                new TrackEndedEventArgs(player, lavaTrack, reason));
-                            break;
-                        }
+                            case "TrackStuckEvent": {
+                                player.Track = default;
+                                player.PlayerState = PlayerState.Stopped;
 
-                        case "TrackExceptionEvent": {
-                            player.Track = default;
-                            player.PlayerState = PlayerState.Stopped;
+                                if (OnTrackStuck == null) {
+                                    break;
+                                }
 
-                            if (OnTrackException == null) {
+                                await OnTrackStuck.Invoke(
+                                    new TrackStuckEventArgs(player, lavaTrack,
+                                        long.Parse($"{root.GetProperty("thresholdMs")}")));
                                 break;
                             }
 
-                            await OnTrackException.Invoke(
-                                new TrackExceptionEventArgs(player, lavaTrack,
-                                    $"{root.GetProperty("error")}"));
-                            break;
-                        }
+                            case "WebSocketClosedEvent": {
+                                if (OnWebSocketClosed == null) {
+                                    break;
+                                }
 
-                        case "TrackStuckEvent": {
-                            player.Track = default;
-                            player.PlayerState = PlayerState.Stopped;
-
-                            if (OnTrackStuck == null) {
+                                await OnWebSocketClosed.Invoke(new WebSocketClosedEventArgs {
+                                    GuildId = guildId,
+                                    Code = int.Parse($"{root.GetProperty("code")}"),
+                                    Reason = $"{root.GetProperty("reason")}",
+                                    ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
+                                });
                                 break;
                             }
-
-                            await OnTrackStuck.Invoke(
-                                new TrackStuckEventArgs(player, lavaTrack,
-                                    long.Parse($"{root.GetProperty("thresholdMs")}")));
-                            break;
                         }
 
-                        case "WebSocketClosedEvent": {
-                            if (OnWebSocketClosed == null) {
-                                break;
-                            }
-
-                            await OnWebSocketClosed.Invoke(new WebSocketClosedEventArgs {
-                                GuildId = guildId,
-                                Code = int.Parse($"{root.GetProperty("code")}"),
-                                Reason = $"{root.GetProperty("reason")}",
-                                ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
-                            });
-                            break;
-                        }
+                        break;
                     }
 
-                    break;
+                    default: {
+                        Log(LogSeverity.Error,
+                            $"Unknown OP code received ({opElement}), check Lavalink implementation.");
+                        break;
+                    }
                 }
-
-                default:
-                    Log(LogSeverity.Error, $"Unknown OP code received ({opElement}), check Lavalink implementation.");
-                    break;
+            }
+            catch (Exception exception) {
+                Log(LogSeverity.Error, exception.Message, exception);
             }
         }
 
