@@ -123,6 +123,42 @@ namespace Victoria {
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serviceCollection"></param>
+        /// <param name="action"></param>
+        /// <typeparam name="TPlayer"></typeparam>
+        /// <returns></returns>
+        public static IServiceCollection AddLavaNode<TPlayer>(this IServiceCollection serviceCollection,
+                                                              Action<NodeConfiguration> action = default)
+            where TPlayer : LavaPlayer {
+            var lavaConfig = new NodeConfiguration();
+            action?.Invoke(lavaConfig);
+            serviceCollection.AddSingleton(lavaConfig);
+            serviceCollection.AddSingleton<LavaNode<TPlayer, LavaTrack>>();
+            return serviceCollection;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serviceCollection"></param>
+        /// <param name="action"></param>
+        /// <typeparam name="TPlayer"></typeparam>
+        /// <typeparam name="TTrack"></typeparam>
+        /// <returns></returns>
+        public static IServiceCollection AddLavaNode<TPlayer, TTrack>(this IServiceCollection serviceCollection,
+                                                                      Action<NodeConfiguration> action = default)
+            where TPlayer : LavaPlayer<TTrack>
+            where TTrack : LavaTrack {
+            var lavaConfig = new NodeConfiguration();
+            action?.Invoke(lavaConfig);
+            serviceCollection.AddSingleton(lavaConfig);
+            serviceCollection.AddSingleton<LavaNode<TPlayer, TTrack>>();
+            return serviceCollection;
+        }
+
+        /// <summary>
         ///     Shortcut method to use <see cref="LavaNode" /> from <see cref="IServiceProvider" />.
         /// </summary>
         /// <param name="serviceProvider">
@@ -144,14 +180,6 @@ namespace Victoria {
             }
 
             return lavaNode.ConnectAsync();
-        }
-
-        /// <summary>
-        ///     Whether the next track should be played or not.
-        /// </summary>
-        /// <param name="trackEndReason">Track end reason given by Lavalink.</param>
-        public static bool ShouldPlayNext(this TrackEndReason trackEndReason) {
-            return trackEndReason is TrackEndReason.Finished or TrackEndReason.LoadFailed;
         }
 
         /// <summary>
