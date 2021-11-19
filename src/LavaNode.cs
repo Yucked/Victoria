@@ -148,6 +148,7 @@ namespace Victoria {
 
             _lavaSocket.AddHeader("User-Id", $"{_socketClient.CurrentUser.Id}");
             _lavaSocket.AddHeader("Authorization", _config.Authorization);
+            _lavaSocket.AddHeader("Client-Name", $"{nameof(Victoria)}/{typeof(LavaNode).Assembly.GetName().Version}");
 
             if (_config.EnableResume) {
                 _lavaSocket.AddHeader("Resume-Key", _config.ResumeKey);
