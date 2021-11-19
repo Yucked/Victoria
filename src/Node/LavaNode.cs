@@ -14,6 +14,7 @@ using Victoria.Payloads;
 using Victoria.Payloads.Player;
 using Victoria.Player;
 using Victoria.Player.Decoder;
+using Victoria.Responses;
 using Victoria.Responses.Search;
 using Victoria.WebSocket;
 using Victoria.WebSocket.EventArgs;
@@ -177,7 +178,7 @@ namespace Victoria.Node {
                 DiscordSocketClient socketClient => await socketClient.GetRecommendedShardCountAsync()
                     .ConfigureAwait(false),
                 DiscordShardedClient shardedClient => shardedClient.Shards.Count,
-                _                                  => 1
+                _ => 1
             };
 
             _webSocketClient.AddHeader("Authorization", _nodeConfiguration.Authorization);
@@ -205,12 +206,15 @@ namespace Victoria.Node {
                 throw new InvalidOperationException("Can't disconnect when client isn't connected.");
             }
 
-            foreach (var (_, value) in _playerCache) {
-                await value.DisposeAsync()
-                    .ConfigureAwait(false);
-            }
+            await Parallel.ForEachAsync(_playerCache, async (cache, CancellationToken) => {
+                _playerCache.TryRemove(cache.Key, out var player);
+                await LeaveAsync(player.VoiceChannel)
+                .ConfigureAwait(false);
 
-            _playerCache.Clear();
+                await player.DisposeAsync()
+                .ConfigureAwait(false);
+            });
+
             await _webSocketClient.DisconnectAsync()
                 .ConfigureAwait(false);
         }
@@ -240,7 +244,7 @@ namespace Victoria.Node {
             await voiceChannel.ConnectAsync(_nodeConfiguration.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TLavaPlayer) Activator
+            player = (TLavaPlayer)Activator
                 .CreateInstance(typeof(TLavaPlayer), _webSocketClient, voiceChannel, textChannel);
 
             _playerCache.TryAdd(voiceChannel.GuildId, player);
@@ -283,11 +287,11 @@ namespace Victoria.Node {
             }
 
             var urlPath = searchType switch {
-                SearchType.SoundCloud   => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
+                SearchType.SoundCloud => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
                 SearchType.YouTubeMusic => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytmsearch:{query}")}",
-                SearchType.YouTube      => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
-                SearchType.Direct       => $"/loadtracks?identifier={query}",
-                _                       => $"/loadtracks?identifier={query}"
+                SearchType.YouTube => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
+                SearchType.Direct => $"/loadtracks?identifier={query}",
+                _ => $"/loadtracks?identifier={query}"
             };
 
             using var requestMessage =
@@ -365,134 +369,142 @@ namespace Victoria.Node {
             using var document = JsonDocument.Parse(arg.Data);
             var root = document.RootElement;
 
-            switch (VictoriaExtensions.GetOp(root)) {
-                case "stats":
-                    if (OnStatsReceived == null) {
-                        return;
-                    }
+            try {
+                switch (VictoriaExtensions.GetOp(root)) {
+                    case "stats":
+                        if (OnStatsReceived == null) {
+                            return;
+                        }
 
-                    await OnStatsReceived.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
-                    break;
+                        await OnStatsReceived.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
+                        break;
 
-                case "playerUpdate":
-                    var (guildId, time, position) = VictoriaExtensions.GetPlayerUpdate(root);
-                    if (!_playerCache.TryGetValue(guildId, out var player)) {
-                        return;
-                    }
+                    case "playerUpdate":
+                        var (guildId, time, position) = VictoriaExtensions.GetPlayerUpdate(root);
+                        if (!_playerCache.TryGetValue(guildId, out var player)) {
+                            return;
+                        }
 
-                    player.Track.UpdatePosition(position);
-                    player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(time);
+                        player.Track.UpdatePosition(position);
+                        player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(time);
 
-                    if (OnUpdateReceived == null) {
-                        return;
-                    }
+                        if (OnUpdateReceived == null) {
+                            return;
+                        }
 
-                    await OnUpdateReceived.Invoke(new UpdateEventArg<TLavaPlayer, TLavaTrack> {
-                        Player = player,
-                        Track = player.Track,
-                        Position = player.Track.Position
-                    });
-                    break;
+                        await OnUpdateReceived.Invoke(new UpdateEventArg<TLavaPlayer, TLavaTrack> {
+                            Player = player,
+                            Track = player.Track,
+                            Position = player.Track.Position
+                        });
+                        break;
 
-                case "event": {
-                    guildId = ulong.Parse($"{root.GetProperty("guildId")}");
-                    if (!_playerCache.TryGetValue(guildId, out player)) {
-                        return;
-                    }
-
-                    LavaTrack lavaTrack = default;
-                    if (root.TryGetProperty("track", out var trackElement)) {
-                        lavaTrack = TrackDecoder.Decode($"{trackElement}");
-                    }
-
-                    var type = $"{root.GetProperty("type")}";
-                    switch (type) {
-                        case "TrackStartEvent":
-                            player.Track = (TLavaTrack) lavaTrack;
-                            player.PlayerState = PlayerState.Playing;
-
-                            if (OnTrackStart == null) {
-                                break;
+                    case "event": {
+                            guildId = ulong.Parse($"{root.GetProperty("guildId")}");
+                            if (!_playerCache.TryGetValue(guildId, out player)) {
+                                return;
                             }
 
-                            await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
-                                Player = player,
-                                Track = lavaTrack
-                            });
-                            break;
-
-                        case "TrackEndEvent":
-                            var trackEndReason = (TrackEndReason) (byte) $"{root.GetProperty("reason")}"[0];
-                            if (trackEndReason is not TrackEndReason.Replaced) {
-                                player.Track = default;
-                                player.PlayerState = PlayerState.Stopped;
+                            LavaTrack lavaTrack = default;
+                            if (root.TryGetProperty("track", out var trackElement)) {
+                                lavaTrack = TrackDecoder.Decode($"{trackElement}");
                             }
 
-                            if (OnTrackEnd == null) {
-                                break;
+                            var type = $"{root.GetProperty("type")}";
+                            switch (type) {
+                                case "TrackStartEvent":
+                                    player.Track = (TLavaTrack)lavaTrack;
+                                    player.PlayerState = PlayerState.Playing;
+
+                                    if (OnTrackStart == null) {
+                                        break;
+                                    }
+
+                                    await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
+                                        Player = player,
+                                        Track = lavaTrack
+                                    });
+                                    break;
+
+                                case "TrackEndEvent":
+                                    var trackEndReason = (TrackEndReason)(byte)$"{root.GetProperty("reason")}"[0];
+                                    if (trackEndReason is not TrackEndReason.Replaced) {
+                                        player.Track = default;
+                                        player.PlayerState = PlayerState.Stopped;
+                                    }
+
+                                    if (OnTrackEnd == null) {
+                                        break;
+                                    }
+
+                                    await OnTrackEnd.Invoke(new TrackEndEventArg<TLavaPlayer, TLavaTrack> {
+                                        Player = player,
+                                        Track = lavaTrack,
+                                        Reason = trackEndReason
+                                    });
+                                    break;
+
+                                case "TrackExceptionEvent":
+                                    player.Track = default;
+                                    player.PlayerState = PlayerState.Stopped;
+
+                                    if (OnTrackException == null) {
+                                        break;
+                                    }
+
+                                    await OnTrackException.Invoke(new TrackExceptionEventArg<TLavaPlayer, TLavaTrack> {
+                                        Player = player,
+                                        Track = lavaTrack,
+                                        Exception = new LavaException {
+                                            Message = root.GetProperty("message").GetString(),
+                                            Severity = root.GetProperty("severity").GetString(),
+                                        }
+                                    });
+                                    break;
+
+                                case "TrackStuckEvent":
+                                    player.Track = default;
+                                    player.PlayerState = PlayerState.Stopped;
+
+                                    if (OnTrackStuck == null) {
+                                        break;
+                                    }
+
+                                    await OnTrackStuck.Invoke(new TrackStuckEventArg<TLavaPlayer, TLavaTrack> {
+                                        Player = player,
+                                        Track = lavaTrack,
+                                        Threshold = long.Parse($"{root.GetProperty("thresholdMs")}")
+                                    });
+                                    break;
+
+                                case "WebSocketClosedEvent":
+                                    if (OnWebSocketClosed == null) {
+                                        break;
+                                    }
+
+                                    await OnWebSocketClosed.Invoke(new WebSocketClosedEventArg {
+                                        Guild = _baseSocketClient.GetGuild(guildId),
+                                        Code = int.Parse($"{root.GetProperty("code")}"),
+                                        Reason = $"{root.GetProperty("reason")}",
+                                        ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
+                                    });
+                                    break;
+
+                                default:
+                                    _logger.LogWarning(
+                                        $"Unknown event type received: {type}");
+                                    break;
                             }
+                        }
+                        break;
 
-                            await OnTrackEnd.Invoke(new TrackEndEventArg<TLavaPlayer, TLavaTrack> {
-                                Player = player,
-                                Track = lavaTrack,
-                                Reason = trackEndReason
-                            });
-                            break;
-
-                        case "TrackExceptionEvent":
-                            player.Track = default;
-                            player.PlayerState = PlayerState.Stopped;
-
-                            if (OnTrackException == null) {
-                                break;
-                            }
-
-                            await OnTrackException.Invoke(new TrackExceptionEventArg<TLavaPlayer, TLavaTrack> {
-                                Player = player,
-                                Track = lavaTrack,
-                                Exception = root.GetProperty("error").GetString()
-                            });
-                            break;
-
-                        case "TrackStuckEvent":
-                            player.Track = default;
-                            player.PlayerState = PlayerState.Stopped;
-
-                            if (OnTrackStuck == null) {
-                                break;
-                            }
-
-                            await OnTrackStuck.Invoke(new TrackStuckEventArg<TLavaPlayer, TLavaTrack> {
-                                Player = player,
-                                Track = lavaTrack,
-                                Threshold = long.Parse($"{root.GetProperty("thresholdMs")}")
-                            });
-                            break;
-
-                        case "WebSocketClosedEvent":
-                            if (OnWebSocketClosed == null) {
-                                break;
-                            }
-
-                            await OnWebSocketClosed.Invoke(new WebSocketClosedEventArg {
-                                Guild = _baseSocketClient.GetGuild(guildId),
-                                Code = int.Parse($"{root.GetProperty("code")}"),
-                                Reason = $"{root.GetProperty("reason")}",
-                                ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
-                            });
-                            break;
-
-                        default:
-                            _logger.LogWarning(
-                                $"Unknown event type received: {type}");
-                            break;
-                    }
+                    default:
+                        _logger.LogWarning("Unknown OP code received, check Lavalink implementation");
+                        break;
                 }
-                    break;
-
-                default:
-                    _logger.LogWarning("Unknown OP code received, check Lavalink implementation");
-                    break;
+            }
+            catch (Exception exception) {
+                _logger.LogError(exception.Message, exception);
             }
         }
 
