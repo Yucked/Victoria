@@ -67,6 +67,11 @@ namespace Victoria.Player {
         /// </summary>
         public IVoiceChannel VoiceChannel { get; }
 
+        /// <summary>
+        /// Is player connected to discord's websocket
+        /// </summary>
+        public bool IsConnected { get; internal set; }
+
         private readonly IDictionary<int, double> _bands;
         private readonly WebSocketClient _socketClient;
         private readonly ulong _guildId;
@@ -262,7 +267,7 @@ namespace Victoria.Player {
                 throw new ArgumentNullException(nameof(filter));
             }
 
-            Volume = (int) volume * 100;
+            Volume = (int)volume * 100;
             return _socketClient.SendAsync(new FilterPayload(_guildId, filter, volume, equalizerBands));
         }
 
@@ -286,7 +291,7 @@ namespace Victoria.Player {
                 }
             }
 
-            Volume = (int) volume * 100;
+            Volume = (int)volume * 100;
             return _socketClient.SendAsync(new FilterPayload(_guildId, filters, volume, equalizerBands));
         }
 
