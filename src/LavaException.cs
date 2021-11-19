@@ -1,10 +1,11 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Victoria.Responses.Search {
+namespace Victoria {
     /// <summary>
-    ///     If SearchStatus was LoadFailed then Exception is returned.
+    ///     Exception data given by Lavalink
     /// </summary>
-    public struct SearchException {
+    public struct LavaException {
         /// <summary>
         /// 
         /// </summary>
@@ -16,5 +17,9 @@ namespace Victoria.Responses.Search {
         /// </summary>
         [JsonPropertyName("severity"), JsonInclude]
         public string Severity { get; private set; }
+
+        internal static void Set(JsonElement element) {
+
+        }
     }
 }
