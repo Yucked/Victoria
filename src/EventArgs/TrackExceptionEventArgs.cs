@@ -1,4 +1,4 @@
-﻿namespace Victoria.EventArgs {
+namespace Victoria.EventArgs {
     /// <summary>
     ///     Information about track that threw an exception.
     /// </summary>
@@ -16,12 +16,12 @@
         /// <summary>
         ///     Reason for why track threw an exception.
         /// </summary>
-        public string ErrorMessage { get; }
+        public LavaException Exception { get; }
 
-        internal TrackExceptionEventArgs(LavaPlayer player, LavaTrack lavaTrack, string errorMessage) {
+        internal TrackExceptionEventArgs(LavaPlayer player, LavaTrack lavaTrack, LavaException exception) {
             Player = player;
             Track = lavaTrack;
-            ErrorMessage = errorMessage;
+            Exception = exception;
         }
     }
 }
