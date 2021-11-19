@@ -25,7 +25,8 @@ namespace Victoria.Converters {
                        id = null,
                        title = null,
                        author = null,
-                       url = default;
+                       url = default,
+                       source = default;
 
                 long duration = default;
                 bool isSeekable = false,
@@ -76,6 +77,9 @@ namespace Victoria.Converters {
                         else if (reader.ValueTextEquals("uri") && reader.Read()) {
                             url = reader.GetString();
                         }
+                        else if (reader.ValueTextEquals("sourceName") && reader.Read()) {
+                            source = reader.GetString();
+                        }
                     }
                 }
 
@@ -88,7 +92,8 @@ namespace Victoria.Converters {
                     default,
                     duration,
                     isSeekable,
-                    isLiveStream
+                    isLiveStream,
+                    source
                 );
 
                 lavaTracks.Add(lavaTrack);
