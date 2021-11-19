@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -44,7 +44,8 @@ namespace Victoria.Player.Decoder {
                     ? javaReader.ReadString()
                     : string.Empty,
                 position: default,
-                canSeek: true);
+                canSeek: true,
+                source: default);
 
             return track;
         }
