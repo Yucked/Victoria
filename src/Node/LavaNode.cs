@@ -174,16 +174,9 @@ namespace Victoria.Node {
                 throw new InvalidOperationException($"{nameof(_baseSocketClient)} is not in ready state.");
             }
 
-            var shards = _baseSocketClient switch {
-                DiscordSocketClient socketClient => await socketClient.GetRecommendedShardCountAsync()
-                    .ConfigureAwait(false),
-                DiscordShardedClient shardedClient => shardedClient.Shards.Count,
-                _ => 1
-            };
-
             _webSocketClient.AddHeader("Authorization", _nodeConfiguration.Authorization);
-            _webSocketClient.AddHeader("Num-Shards", $"{shards}");
             _webSocketClient.AddHeader("User-Id", $"{_baseSocketClient.CurrentUser.Id}");
+            _webSocketClient.AddHeader("Client-Name", $"{nameof(Victoria)}/{typeof(LavaNode).Assembly.GetName().Version}");
 
             if (_nodeConfiguration.EnableResume) {
                 _webSocketClient.AddHeader("Resume-Key", _nodeConfiguration.ResumeKey);
