@@ -61,6 +61,12 @@ namespace Victoria {
         public string Url { get; private set; }
 
         /// <summary>
+        /// Source of Track
+        /// </summary>
+        [JsonPropertyName("sourceName"), JsonInclude]
+        public string Source { get; private set; }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="hash"></param>
@@ -72,9 +78,10 @@ namespace Victoria {
         /// <param name="duration"></param>
         /// <param name="canSeek"></param>
         /// <param name="isStream"></param>
+        /// <param name="source"></param>
         public LavaTrack(string hash, string id, string title, string author,
                          string url, TimeSpan position, long duration,
-                         bool canSeek, bool isStream) {
+                         bool canSeek, bool isStream, string source) {
             Hash = hash ?? throw new ArgumentNullException(nameof(hash));
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Title = title ?? throw new ArgumentNullException(nameof(title));
@@ -86,6 +93,7 @@ namespace Victoria {
                 : TimeSpan.MaxValue;
             CanSeek = canSeek;
             IsStream = isStream;
+            Source = source;
         }
 
         /// <summary>
@@ -107,6 +115,7 @@ namespace Victoria {
             Duration = lavaTrack.Duration;
             CanSeek = lavaTrack.CanSeek;
             IsStream = lavaTrack.IsStream;
+            Source = lavaTrack.Source;
         }
 
         /// <summary>
