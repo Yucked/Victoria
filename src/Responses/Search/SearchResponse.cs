@@ -23,7 +23,7 @@ namespace Victoria.Responses.Search {
         /// 
         /// </summary>
         [JsonPropertyName("exception"), JsonInclude]
-        public SearchException Exception { get; private set; }
+        public LavaException Exception { get; private set; }
 
         /// <summary>
         /// 
