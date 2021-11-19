@@ -373,13 +373,14 @@ namespace Victoria.Node {
                         break;
 
                     case "playerUpdate":
-                        var (guildId, time, position) = VictoriaExtensions.GetPlayerUpdate(root);
+                        var (guildId, time, position, isConnected) = VictoriaExtensions.GetPlayerUpdate(root);
                         if (!_playerCache.TryGetValue(guildId, out var player)) {
                             return;
                         }
 
                         player.Track.UpdatePosition(position);
                         player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(time);
+                        player.IsConnected = isConnected;
 
                         if (OnUpdateReceived == null) {
                             return;

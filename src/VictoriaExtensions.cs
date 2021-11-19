@@ -67,7 +67,7 @@ namespace Victoria {
                 jsonConverter == default
                     ? default
                     : new JsonSerializerOptions {
-                        Converters = {jsonConverter}
+                        Converters = { jsonConverter }
                     }, cancellationToken);
             return deserialized;
         }
@@ -226,9 +226,11 @@ namespace Victoria {
             return !jsonElement.TryGetProperty("op", out var element) ? default : $"{element}";
         }
 
-        internal static (ulong GuildId, long Time, long Position) GetPlayerUpdate(JsonElement jsonElement) {
+        internal static (ulong GuildId, long Time, long Position, bool IsConnected)
+            GetPlayerUpdate(JsonElement jsonElement) {
             ulong guildId = 0;
             long time = 0, position = 0;
+            bool isConnected = false;
             if (jsonElement.TryGetProperty("guildId", out var guildElement)) {
                 guildId = ulong.Parse(guildElement.GetString()!);
             }
@@ -242,7 +244,11 @@ namespace Victoria {
                 position = positionElement.GetInt64();
             }
 
-            return (guildId, time, position);
+            if (stateElement.TryGetProperty("connected", out var connectedElement)) {
+                isConnected = connectedElement.GetBoolean();
+            }
+
+            return (guildId, time, position, isConnected);
         }
     }
 }
