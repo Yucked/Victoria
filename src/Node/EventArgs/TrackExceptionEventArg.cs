@@ -1,4 +1,5 @@
 using Victoria.Player;
+using Victoria.Responses;
 
 namespace Victoria.Node.EventArgs {
     /// <summary>
@@ -20,6 +21,6 @@ namespace Victoria.Node.EventArgs {
         /// <summary>
         /// 
         /// </summary>
-        public string Exception { get; internal init; }
+        public LavaException Exception { get; internal init; }
     }
 }
