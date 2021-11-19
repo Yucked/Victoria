@@ -86,6 +86,11 @@ namespace Victoria {
         /// </summary>
         public int Volume { get; private set; }
 
+        /// <summary>
+        /// Whether or not the player is conencted to voice gateway.
+        /// </summary>
+        public bool IsConnected { get; internal set; }
+
         private readonly IDictionary<int, EqualizerBand> _equalizer;
         private readonly LavaSocket _lavaSocket;
 
@@ -143,10 +148,10 @@ namespace Victoria {
             Track = lavaTrack ?? throw new NullReferenceException(nameof(lavaTrack));
             PlayerState = PlayerState.Playing;
             await _lavaSocket.SendAsync(new PlayPayload(VoiceChannel.GuildId, new PlayArgs {
-                    Track = lavaTrack,
-                    Volume = 100,
-                    ShouldPause = false
-                }))
+                Track = lavaTrack,
+                Volume = 100,
+                ShouldPause = false
+            }))
                 .ConfigureAwait(false);
         }
 
@@ -293,7 +298,7 @@ namespace Victoria {
                 throw new ArgumentNullException(nameof(filter));
             }
 
-            Volume = (int) volume * 100;
+            Volume = (int)volume * 100;
             return _lavaSocket.SendAsync(new FilterPayload(VoiceChannel.GuildId, filter, volume, equalizerBands));
         }
 
@@ -317,7 +322,7 @@ namespace Victoria {
                 }
             }
 
-            Volume = (int) volume * 100;
+            Volume = (int)volume * 100;
             return _lavaSocket.SendAsync(new FilterPayload(VoiceChannel.GuildId, filters, volume, equalizerBands));
         }
 
