@@ -516,7 +516,7 @@ namespace Victoria {
 
                                         await OnTrackException.Invoke(
                                             new TrackExceptionEventArgs(player, lavaTrack,
-                                                $"{root.GetProperty("error")}"));
+                                            new LavaException(root.GetProperty("exception"))));
                                         break;
                                     }
 
