@@ -20,6 +20,9 @@
 			- Updated for Lavalink 3.4
 			- Added connected property in PlayerUpdate event
 			- Added Source property to LavaTrack
+			- Renamed SearchException to LavaException
+			- Replaced string Message with LavaException
+			- Targetting netcore3.1, net5.0 and net6.0
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
