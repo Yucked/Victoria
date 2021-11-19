@@ -18,8 +18,9 @@ namespace Victoria {
         [JsonPropertyName("severity"), JsonInclude]
         public string Severity { get; private set; }
 
-        internal static void Set(JsonElement element) {
-
+        internal LavaException(JsonElement element) {
+            Message = element.GetProperty("message").GetString();
+            Severity = element.GetProperty("severity").GetString();
         }
     }
 }
