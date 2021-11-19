@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -26,7 +26,7 @@ namespace Victoria.Decoder {
 
             // Reading header
             var header = javaReader.Read<int>();
-            var flags = (int) ((header & 0xC0000000L) >> 30);
+            var flags = (int)((header & 0xC0000000L) >> 30);
             var hasVersion = (flags & 1) != 0;
             var _ = hasVersion
                 ? javaReader.Read<sbyte>()
@@ -43,7 +43,8 @@ namespace Victoria.Decoder {
                     ? javaReader.ReadString()
                     : string.Empty,
                 position: default,
-                canSeek: true);
+                canSeek: true,
+                source: default);
 
             return track;
         }
@@ -86,7 +87,7 @@ namespace Victoria.Decoder {
         /// <returns></returns>
         public static Task<IEnumerable<LavaTrack>> DecodeAsync(LavaConfig lavaConfig,
                                                                params string[] trackHashes) {
-            return DecodeAsync(lavaConfig, (IEnumerable<string>) trackHashes);
+            return DecodeAsync(lavaConfig, (IEnumerable<string>)trackHashes);
         }
 
         /// <summary>
