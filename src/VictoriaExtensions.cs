@@ -128,16 +128,17 @@ namespace Victoria {
         ///     <see cref="IServiceProvider" />
         /// </param>
         /// <param name="action">LavaConfig action.</param>
-        /// <typeparam name="T"><see cref="LavaPlayer"/></typeparam>
+        /// <typeparam name="TPlayer"></typeparam>
         /// <returns>
         ///     <see cref="IServiceCollection" />
         /// </returns>
-        public static IServiceCollection AddLavaNode<T>(this IServiceCollection serviceCollection,
-                                                        Action<LavaConfig> action = default) where T : LavaPlayer {
+        public static IServiceCollection AddLavaNode<TPlayer>(this IServiceCollection serviceCollection,
+                                                              Action<LavaConfig> action = default)
+            where TPlayer : LavaPlayer {
             var lavaConfig = new LavaConfig();
             action?.Invoke(lavaConfig);
             serviceCollection.AddSingleton(lavaConfig);
-            serviceCollection.AddSingleton<LavaNode<T>>();
+            serviceCollection.AddSingleton<LavaNode<TPlayer>>();
             return serviceCollection;
         }
 
@@ -174,7 +175,7 @@ namespace Victoria {
         /// <param name="serviceProvider">
         ///     <see cref="IServiceProvider" />
         /// </param>
-        /// <typeparam name="T"><see cref="LavaPlayer"/></typeparam>
+        /// <typeparam name="TPlayer"></typeparam>
         /// <returns>
         ///     <see cref="IServiceCollection" />
         /// </returns>
@@ -184,10 +185,11 @@ namespace Victoria {
         /// <exception cref="InvalidOperationException">
         /// Throws if <seealso cref="LavaNode{TPlayer}.IsConnected"/> is set to true.
         /// </exception>
-        public static Task UseLavaNodeAsync<T>(this IServiceProvider serviceProvider)
-            where T : LavaPlayer {
-            if (!(serviceProvider.GetService(typeof(LavaNode<T>)) is LavaNode<T> lavaNode)) {
-                throw new NullReferenceException(nameof(LavaNode<T>));
+        public static Task UseLavaNodeAsync<TPlayer>(this IServiceProvider serviceProvider)
+            where TPlayer : LavaPlayer {
+            if (!(serviceProvider.GetService(typeof(LavaNode<TPlayer>)) is
+                    LavaNode<TPlayer> lavaNode)) {
+                throw new NullReferenceException(nameof(LavaNode<TPlayer>));
             }
 
             if (lavaNode.IsConnected) {
