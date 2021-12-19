@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>5.2.4</Version>
+		<Version>5.2.5</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2021 Yucked. All rights reserved.</Copyright>
@@ -17,23 +17,28 @@
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
 		<Description>🌋 - Lavalink wrapper for Discord.NET. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
 		<PackageReleaseNotes>
-			- Updated for Lavalink 3.4
-			- Added connected property in PlayerUpdate event
-			- Added Source property to LavaTrack
-			- Renamed SearchException to LavaException
-			- Replaced string Message with LavaException
-			- Targetting netcore3.1, net5.0 and net6.0
+			- Removed GC.SupressFinalize
+			- Added GetPlayerUpdate method and updated ref
+			- updated TrackException exception prop
+			- non-generic lavanode ctor
+			- added cause property to LavaException
+			- Updated to disc 3 and stj 6.0.1
+			- Updated DisconnectAsync method and added argnull checks and removed ctors
+			- Added additional IsConnected setters and removed useless log severity check
+			- removed abstract modifier from LavaPlayer
+			- DiscordSocketClient only on LavaNode and fixed null ref bug
+			- Updated extensions methods UseLavaNodeAsync and AddLavaNodeAsync
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Discord.Net.WebSocket" Version="3.0.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-		<PackageReference Include="System.Text.Json" Version="6.0.1" />
+		<PackageReference Include="Discord.Net.WebSocket" Version="3.0.0"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0"/>
+		<PackageReference Include="System.Text.Json" Version="6.0.1"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="Logo.png" Pack="true" Visible="false" PackagePath="" />
+		<None Include="Logo.png" Pack="true" Visible="false" PackagePath=""/>
 	</ItemGroup>
 
 </Project>
