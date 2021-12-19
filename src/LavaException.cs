@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Victoria {
@@ -18,9 +17,10 @@ namespace Victoria {
         [JsonPropertyName("severity"), JsonInclude]
         public string Severity { get; private set; }
 
-        internal LavaException(JsonElement element) {
-            Message = element.GetProperty("message").GetString();
-            Severity = element.GetProperty("severity").GetString();
-        }
+        /// <summary>
+        /// 
+        /// </summary>
+        [JsonPropertyName("cause"), JsonInclude]
+        public string Cause { get; private set; }
     }
 }
