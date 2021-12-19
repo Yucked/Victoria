@@ -19,7 +19,11 @@ namespace Victoria {
     /// <summary>
     /// Represents a single connection to a Lavalink server.
     /// </summary>
-    public class LavaNode : LavaNode<LavaPlayer> { }
+    public class LavaNode : LavaNode<LavaPlayer> {
+        /// <inheritdoc />
+        public LavaNode(BaseSocketClient socketClient, LavaConfig config) 
+            : base(socketClient, config) { }
+    }
 
     /// <summary>
     ///     Represents a single connection to a Lavalink server with custom <typeparamref name="TPlayer"/>.
