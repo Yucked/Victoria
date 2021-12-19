@@ -21,7 +21,7 @@ namespace Victoria {
     /// </summary>
     public class LavaNode : LavaNode<LavaPlayer> {
         /// <inheritdoc />
-        public LavaNode(BaseSocketClient socketClient, LavaConfig config) 
+        public LavaNode(BaseSocketClient socketClient, LavaConfig config)
             : base(socketClient, config) { }
     }
 
@@ -514,7 +514,8 @@ namespace Victoria {
 
                                 await OnTrackException.Invoke(
                                     new TrackExceptionEventArgs(player, lavaTrack,
-                                        new LavaException(root.GetProperty("exception"))));
+                                        root.GetProperty("exception")
+                                            .Deserialize<LavaException>()));
                                 break;
                             }
 
