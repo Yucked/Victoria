@@ -45,7 +45,7 @@ namespace Victoria {
     /// <summary>
     /// Represents a <see cref="IVoiceChannel"/> connection.
     /// </summary>
-    public abstract class LavaPlayer : IAsyncDisposable {
+    public class LavaPlayer : IAsyncDisposable {
         /// <summary>
         /// </summary>
         public IReadOnlyCollection<EqualizerBand> Equalizer
