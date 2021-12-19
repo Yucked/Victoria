@@ -45,7 +45,7 @@ namespace Victoria {
     /// <summary>
     /// Represents a <see cref="IVoiceChannel"/> connection.
     /// </summary>
-    public class LavaPlayer : IAsyncDisposable {
+    public abstract class LavaPlayer : IAsyncDisposable {
         /// <summary>
         /// </summary>
         public IReadOnlyCollection<EqualizerBand> Equalizer
@@ -148,10 +148,10 @@ namespace Victoria {
             Track = lavaTrack ?? throw new NullReferenceException(nameof(lavaTrack));
             PlayerState = PlayerState.Playing;
             await _lavaSocket.SendAsync(new PlayPayload(VoiceChannel.GuildId, new PlayArgs {
-                Track = lavaTrack,
-                Volume = 100,
-                ShouldPause = false
-            }))
+                    Track = lavaTrack,
+                    Volume = 100,
+                    ShouldPause = false
+                }))
                 .ConfigureAwait(false);
         }
 
@@ -298,7 +298,7 @@ namespace Victoria {
                 throw new ArgumentNullException(nameof(filter));
             }
 
-            Volume = (int)volume * 100;
+            Volume = (int) volume * 100;
             return _lavaSocket.SendAsync(new FilterPayload(VoiceChannel.GuildId, filter, volume, equalizerBands));
         }
 
@@ -322,7 +322,7 @@ namespace Victoria {
                 }
             }
 
-            Volume = (int)volume * 100;
+            Volume = (int) volume * 100;
             return _lavaSocket.SendAsync(new FilterPayload(VoiceChannel.GuildId, filters, volume, equalizerBands));
         }
 
@@ -334,8 +334,6 @@ namespace Victoria {
             var payload = new DestroyPayload(VoiceChannel.GuildId);
             await _lavaSocket.SendAsync(payload)
                 .ConfigureAwait(false);
-
-            GC.SuppressFinalize(this);
 
             Queue.Clear();
             Queue = default;
