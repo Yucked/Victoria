@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
 using Victoria.Decoder;
 using Victoria.EventArgs;
@@ -402,6 +403,10 @@ namespace Victoria {
         }
 
         private Task OnErrorAsync(Exception exception) {
+            if (exception is WebSocketClosedException) {
+                Volatile.Write(ref _refConnected, false);
+            }
+
             Log(LogSeverity.Error, $"{exception}");
             return Task.CompletedTask;
         }
@@ -557,6 +562,10 @@ namespace Victoria {
                 }
             }
             catch (Exception exception) {
+                if (exception is WebSocketClosedException) {
+                    Volatile.Write(ref _refConnected, false);
+                }
+
                 Log(LogSeverity.Error, exception.Message, exception);
             }
         }
@@ -597,10 +606,6 @@ namespace Victoria {
         }
 
         private void Log(LogSeverity severity, string message, Exception exception = null) {
-            if (severity > _config.LogSeverity) {
-                return;
-            }
-
             var logMessage = new LogMessage(severity, nameof(Victoria), message, exception);
             OnLog?.Invoke(logMessage)
                 .ConfigureAwait(false);
