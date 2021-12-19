@@ -66,7 +66,7 @@ namespace Victoria {
                 jsonConverter == default
                     ? default
                     : new JsonSerializerOptions {
-                        Converters = { jsonConverter }
+                        Converters = {jsonConverter}
                     }, cancellationToken);
             return deserialized;
         }
@@ -222,6 +222,31 @@ namespace Victoria {
         /// <returns><see cref="string"/></returns>
         public static ValueTask<string> FetchLyricsFromOvhAsync(this LavaTrack track) {
             return LyricsResolver.SearchOvhAsync(track);
+        }
+
+        internal static (ulong GuildId, long Time, long Position, bool IsConnected)
+            GetPlayerUpdate(JsonElement jsonElement) {
+            ulong guildId = 0;
+            long time = 0, position = 0;
+            var isConnected = false;
+            if (jsonElement.TryGetProperty("guildId", out var guildElement)) {
+                guildId = ulong.Parse(guildElement.GetString()!);
+            }
+
+            var stateElement = jsonElement.GetProperty("state");
+            if (stateElement.TryGetProperty("time", out var timeElement)) {
+                time = timeElement.GetInt64();
+            }
+
+            if (stateElement.TryGetProperty("position", out var positionElement)) {
+                position = positionElement.GetInt64();
+            }
+
+            if (stateElement.TryGetProperty("connected", out var connectedElement)) {
+                isConnected = connectedElement.GetBoolean();
+            }
+
+            return (guildId, time, position, isConnected);
         }
     }
 }
