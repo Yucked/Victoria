@@ -18,18 +18,20 @@ using Victoria.Enums;
 
 namespace Victoria {
     /// <summary>
-    /// Represents a single connection to a Lavalink server.
+    /// Represents a single connection to a Lavalink server via <see cref="DiscordSocketClient"/>
     /// </summary>
     public class LavaNode : LavaNode<LavaPlayer> {
         /// <inheritdoc />
-        public LavaNode(BaseSocketClient socketClient, LavaConfig config)
+        public LavaNode(DiscordSocketClient socketClient, LavaConfig config)
             : base(socketClient, config) { }
     }
 
     /// <summary>
     ///     Represents a single connection to a Lavalink server with custom <typeparamref name="TPlayer"/>.
     /// </summary>
-    /// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer" /></typeparam>.
+    /// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer" /></typeparam>
+    /// <typeparam name="TDiscordClient"></typeparam>
+    /// .
     public class LavaNode<TPlayer> : IAsyncDisposable
         where TPlayer : LavaPlayer {
         /// <summary>
@@ -88,7 +90,7 @@ namespace Victoria {
         private readonly LavaSocket _lavaSocket;
         private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
         private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
-        private readonly BaseSocketClient _socketClient;
+        private readonly DiscordSocketClient _socketClient;
 
         private bool _refConnected;
 
@@ -97,7 +99,7 @@ namespace Victoria {
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="config"></param>
-        public LavaNode(BaseSocketClient socketClient, LavaConfig config) {
+        public LavaNode(DiscordSocketClient socketClient, LavaConfig config) {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
 
@@ -455,7 +457,7 @@ namespace Victoria {
                             break;
                         }
 
-                        player.Track.UpdatePosition(position);
+                        player.Track?.UpdatePosition(position);
                         player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(time);
                         player.IsConnected = isConnected;
 
