@@ -19,15 +19,7 @@ namespace Victoria {
     /// <summary>
     /// Represents a single connection to a Lavalink server.
     /// </summary>
-    public class LavaNode : LavaNode<LavaPlayer> {
-        /// <inheritdoc />
-        public LavaNode(DiscordSocketClient socketClient, LavaConfig config)
-            : base(socketClient, config) { }
-
-        /// <inheritdoc />
-        public LavaNode(DiscordShardedClient shardedClient, LavaConfig config)
-            : base(shardedClient, config) { }
-    }
+    public class LavaNode : LavaNode<LavaPlayer> { }
 
     /// <summary>
     ///     Represents a single connection to a Lavalink server with custom <typeparamref name="TPlayer"/>.
@@ -87,14 +79,6 @@ namespace Victoria {
         /// </summary>
         public event Func<LogMessage, Task> OnLog;
 
-        /// <inheritdoc />
-        public LavaNode(DiscordSocketClient socketClient, LavaConfig config)
-            : this(socketClient as BaseSocketClient, config) { }
-
-        /// <inheritdoc />
-        public LavaNode(DiscordShardedClient shardedClient, LavaConfig config)
-            : this(shardedClient as BaseSocketClient, config) { }
-
         private readonly LavaConfig _config;
         private readonly LavaSocket _lavaSocket;
         private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
@@ -103,10 +87,15 @@ namespace Victoria {
 
         private bool _refConnected;
 
-        private LavaNode(BaseSocketClient socketClient, LavaConfig config) {
-            _config = config;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="config"></param>
+        public LavaNode(BaseSocketClient socketClient, LavaConfig config) {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
 
-            _socketClient = socketClient;
             socketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdatedAsync;
             socketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
 
@@ -116,6 +105,7 @@ namespace Victoria {
             _lavaSocket.OnOpenAsync += OnOpenAsync;
             _lavaSocket.OnCloseAsync += OnCloseAsync;
             _lavaSocket.OnErrorAsync += OnErrorAsync;
+
             _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
             _voiceStates = new ConcurrentDictionary<ulong, VoiceState>();
         }
@@ -171,8 +161,12 @@ namespace Victoria {
                 throw new InvalidOperationException("Can't disconnect when client isn't connected.");
             }
 
-            foreach (var (_, value) in _playerCache) {
-                await value.DisposeAsync()
+            foreach (var (key, _) in _playerCache) {
+                _playerCache.TryRemove(key, out var player);
+                await LeaveAsync(player.VoiceChannel)
+                    .ConfigureAwait(false);
+
+                await player.DisposeAsync()
                     .ConfigureAwait(false);
             }
 
@@ -206,7 +200,7 @@ namespace Victoria {
             await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TPlayer)Activator.CreateInstance(typeof(TPlayer), _lavaSocket, voiceChannel, textChannel);
+            player = (TPlayer) Activator.CreateInstance(typeof(TPlayer), _lavaSocket, voiceChannel, textChannel);
             _playerCache.TryAdd(voiceChannel.GuildId, player);
             return player;
         }
@@ -282,52 +276,52 @@ namespace Victoria {
         public async Task MoveChannelAsync<T>(T channel) where T : IChannel {
             switch (channel) {
                 case IVoiceChannel voiceChannel: {
-                        if (!Volatile.Read(ref _refConnected)) {
-                            throw new InvalidOperationException(
-                                "Can't execute this operation when client isn't connected.");
-                        }
-
-                        if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player)) {
-                            throw new InvalidOperationException($"No player was found for {voiceChannel.Guild.Name}.");
-                        }
-
-                        if (player.VoiceChannel.Id == voiceChannel.Id) {
-                            throw new InvalidOperationException("Connected and new voice channel ids are the same.");
-                        }
-
-                        if (player.PlayerState == PlayerState.Playing) {
-                            await player.PauseAsync()
-                                .ConfigureAwait(false);
-                        }
-
-                        player.VoiceChannel = voiceChannel;
-                        await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
-                            .ConfigureAwait(false);
-
-                        if (player.PlayerState == PlayerState.Paused) {
-                            await player.ResumeAsync();
-                        }
-
-                        Log(LogSeverity.Info, $"Moved {voiceChannel.GuildId} player to {voiceChannel.Name}.");
-                        break;
+                    if (!Volatile.Read(ref _refConnected)) {
+                        throw new InvalidOperationException(
+                            "Can't execute this operation when client isn't connected.");
                     }
+
+                    if (!_playerCache.TryGetValue(voiceChannel.GuildId, out var player)) {
+                        throw new InvalidOperationException($"No player was found for {voiceChannel.Guild.Name}.");
+                    }
+
+                    if (player.VoiceChannel.Id == voiceChannel.Id) {
+                        throw new InvalidOperationException("Connected and new voice channel ids are the same.");
+                    }
+
+                    if (player.PlayerState == PlayerState.Playing) {
+                        await player.PauseAsync()
+                            .ConfigureAwait(false);
+                    }
+
+                    player.VoiceChannel = voiceChannel;
+                    await voiceChannel.ConnectAsync(_config.SelfDeaf, false, true)
+                        .ConfigureAwait(false);
+
+                    if (player.PlayerState == PlayerState.Paused) {
+                        await player.ResumeAsync();
+                    }
+
+                    Log(LogSeverity.Info, $"Moved {voiceChannel.GuildId} player to {voiceChannel.Name}.");
+                    break;
+                }
 
                 case ITextChannel textChannel: {
-                        if (!_playerCache.TryGetValue(textChannel.Guild.Id, out var player)) {
-                            throw new InvalidOperationException("Player doesn't exist in cache.");
-                        }
-
-                        player.TextChannel = textChannel;
-                        break;
+                    if (!_playerCache.TryGetValue(textChannel.Guild.Id, out var player)) {
+                        throw new InvalidOperationException("Player doesn't exist in cache.");
                     }
+
+                    player.TextChannel = textChannel;
+                    break;
+                }
 
                 case null: {
-                        throw new ArgumentNullException(nameof(channel), "Channel cannot be null.");
-                    }
+                    throw new ArgumentNullException(nameof(channel), "Channel cannot be null.");
+                }
 
                 default: {
-                        throw new ArgumentException("Channel must be an IVoiceChannel, ITextChannel.", nameof(channel));
-                    }
+                    throw new ArgumentException("Channel must be an IVoiceChannel, ITextChannel.", nameof(channel));
+                }
             }
         }
 
@@ -367,11 +361,11 @@ namespace Victoria {
             }
 
             var urlPath = searchType switch {
-                SearchType.SoundCloud => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
+                SearchType.SoundCloud   => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
                 SearchType.YouTubeMusic => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytmsearch:{query}")}",
-                SearchType.YouTube => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
-                SearchType.Direct => $"/loadtracks?identifier={query}",
-                _ => $"/loadtracks?identifier={query}"
+                SearchType.YouTube      => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
+                SearchType.Direct       => $"/loadtracks?identifier={query}",
+                _                       => $"/loadtracks?identifier={query}"
             };
 
             using var requestMessage =
@@ -438,125 +432,125 @@ namespace Victoria {
 
                 switch ($"{opElement}") {
                     case "stats": {
-                            if (OnStatsReceived == null) {
-                                break;
-                            }
-
-                            await OnStatsReceived.Invoke(JsonSerializer.Deserialize<StatsEventArgs>(data));
+                        if (OnStatsReceived == null) {
                             break;
                         }
+
+                        await OnStatsReceived.Invoke(JsonSerializer.Deserialize<StatsEventArgs>(data));
+                        break;
+                    }
 
                     case "playerUpdate": {
-                            var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
-                            if (!_playerCache.TryGetValue(guildId, out var player)) {
-                                break;
-                            }
-
-                            var stateElement = root.GetProperty("state");
-                            player.Track.UpdatePosition(stateElement.GetProperty("position").GetInt64());
-                            player.LastUpdate = DateTimeOffset
-                                .FromUnixTimeMilliseconds(stateElement.GetProperty("time").GetInt64());
-                            player.IsConnected = stateElement.GetProperty("connected").GetBoolean();
-
-                            if (OnPlayerUpdated == null) {
-                                break;
-                            }
-
-                            await OnPlayerUpdated.Invoke(new PlayerUpdateEventArgs(player));
+                        var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
+                        if (!_playerCache.TryGetValue(guildId, out var player)) {
                             break;
                         }
+
+                        var stateElement = root.GetProperty("state");
+                        player.Track.UpdatePosition(stateElement.GetProperty("position").GetInt64());
+                        player.LastUpdate = DateTimeOffset
+                            .FromUnixTimeMilliseconds(stateElement.GetProperty("time").GetInt64());
+                        player.IsConnected = stateElement.GetProperty("connected").GetBoolean();
+
+                        if (OnPlayerUpdated == null) {
+                            break;
+                        }
+
+                        await OnPlayerUpdated.Invoke(new PlayerUpdateEventArgs(player));
+                        break;
+                    }
 
                     case "event": {
-                            var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
-                            if (!_playerCache.TryGetValue(guildId, out var player)) {
+                        var guildId = ulong.Parse($"{root.GetProperty("guildId")}");
+                        if (!_playerCache.TryGetValue(guildId, out var player)) {
+                            break;
+                        }
+
+                        LavaTrack lavaTrack = default;
+                        if (root.TryGetProperty("track", out var trackElement)) {
+                            lavaTrack = TrackDecoder.Decode($"{trackElement}");
+                        }
+
+                        switch ($"{root.GetProperty("type")}") {
+                            case "TrackStartEvent": {
+                                player.Track = lavaTrack;
+                                player.PlayerState = PlayerState.Playing;
+
+                                if (OnTrackStarted == null) {
+                                    break;
+                                }
+
+                                await OnTrackStarted.Invoke(new TrackStartEventArgs(player, lavaTrack));
                                 break;
                             }
 
-                            LavaTrack lavaTrack = default;
-                            if (root.TryGetProperty("track", out var trackElement)) {
-                                lavaTrack = TrackDecoder.Decode($"{trackElement}");
+                            case "TrackEndEvent": {
+                                var reason = $"{root.GetProperty("reason")}";
+                                if ((TrackEndReason) reason[0] != TrackEndReason.Replaced) {
+                                    player.Track = default;
+                                    player.PlayerState = PlayerState.Stopped;
+                                }
+
+                                if (OnTrackEnded == null) {
+                                    break;
+                                }
+
+                                await OnTrackEnded.Invoke(
+                                    new TrackEndedEventArgs(player, lavaTrack, reason));
+                                break;
                             }
 
-                            switch ($"{root.GetProperty("type")}") {
-                                case "TrackStartEvent": {
-                                        player.Track = lavaTrack;
-                                        player.PlayerState = PlayerState.Playing;
+                            case "TrackExceptionEvent": {
+                                player.Track = default;
+                                player.PlayerState = PlayerState.Stopped;
 
-                                        if (OnTrackStarted == null) {
-                                            break;
-                                        }
+                                if (OnTrackException == null) {
+                                    break;
+                                }
 
-                                        await OnTrackStarted.Invoke(new TrackStartEventArgs(player, lavaTrack));
-                                        break;
-                                    }
-
-                                case "TrackEndEvent": {
-                                        var reason = $"{root.GetProperty("reason")}";
-                                        if ((TrackEndReason)reason[0] != TrackEndReason.Replaced) {
-                                            player.Track = default;
-                                            player.PlayerState = PlayerState.Stopped;
-                                        }
-
-                                        if (OnTrackEnded == null) {
-                                            break;
-                                        }
-
-                                        await OnTrackEnded.Invoke(
-                                            new TrackEndedEventArgs(player, lavaTrack, reason));
-                                        break;
-                                    }
-
-                                case "TrackExceptionEvent": {
-                                        player.Track = default;
-                                        player.PlayerState = PlayerState.Stopped;
-
-                                        if (OnTrackException == null) {
-                                            break;
-                                        }
-
-                                        await OnTrackException.Invoke(
-                                            new TrackExceptionEventArgs(player, lavaTrack,
-                                            new LavaException(root.GetProperty("exception"))));
-                                        break;
-                                    }
-
-                                case "TrackStuckEvent": {
-                                        player.Track = default;
-                                        player.PlayerState = PlayerState.Stopped;
-
-                                        if (OnTrackStuck == null) {
-                                            break;
-                                        }
-
-                                        await OnTrackStuck.Invoke(
-                                            new TrackStuckEventArgs(player, lavaTrack,
-                                                long.Parse($"{root.GetProperty("thresholdMs")}")));
-                                        break;
-                                    }
-
-                                case "WebSocketClosedEvent": {
-                                        if (OnWebSocketClosed == null) {
-                                            break;
-                                        }
-
-                                        await OnWebSocketClosed.Invoke(new WebSocketClosedEventArgs {
-                                            GuildId = guildId,
-                                            Code = int.Parse($"{root.GetProperty("code")}"),
-                                            Reason = $"{root.GetProperty("reason")}",
-                                            ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
-                                        });
-                                        break;
-                                    }
+                                await OnTrackException.Invoke(
+                                    new TrackExceptionEventArgs(player, lavaTrack,
+                                        new LavaException(root.GetProperty("exception"))));
+                                break;
                             }
 
-                            break;
+                            case "TrackStuckEvent": {
+                                player.Track = default;
+                                player.PlayerState = PlayerState.Stopped;
+
+                                if (OnTrackStuck == null) {
+                                    break;
+                                }
+
+                                await OnTrackStuck.Invoke(
+                                    new TrackStuckEventArgs(player, lavaTrack,
+                                        long.Parse($"{root.GetProperty("thresholdMs")}")));
+                                break;
+                            }
+
+                            case "WebSocketClosedEvent": {
+                                if (OnWebSocketClosed == null) {
+                                    break;
+                                }
+
+                                await OnWebSocketClosed.Invoke(new WebSocketClosedEventArgs {
+                                    GuildId = guildId,
+                                    Code = int.Parse($"{root.GetProperty("code")}"),
+                                    Reason = $"{root.GetProperty("reason")}",
+                                    ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
+                                });
+                                break;
+                            }
                         }
+
+                        break;
+                    }
 
                     default: {
-                            Log(LogSeverity.Error,
-                                $"Unknown OP code received ({opElement}), check Lavalink implementation.");
-                            break;
-                        }
+                        Log(LogSeverity.Error,
+                            $"Unknown OP code received ({opElement}), check Lavalink implementation.");
+                        break;
+                    }
                 }
             }
             catch (Exception exception) {
