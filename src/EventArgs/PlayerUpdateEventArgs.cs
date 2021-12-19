@@ -18,12 +18,12 @@ namespace Victoria.EventArgs {
         /// <summary>
         ///     Track's current position
         /// </summary>
-        public TimeSpan Position { get; }
+        public TimeSpan? Position { get; }
 
         internal PlayerUpdateEventArgs(LavaPlayer player) {
             Player = player;
-            Track = player.Track;
-            Position = player.Track.Position;
+            Track = player?.Track;
+            Position = player?.Track?.Position;
         }
     }
 }
