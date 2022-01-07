@@ -37,5 +37,5 @@ With the release of Version 5, Victoria has now features from all previous versi
 
 ## 🎒 Resources
 - Victoria discord server: https://discord.gg/TXz6sKA
-- Discord.NET documentation: https://docs.stillu.cc/index.html
+- Discord.NET documentation: https://discordnet.dev
 - Discord.NET discord channel: https://discordapp.com/invite/jkrBmQR
