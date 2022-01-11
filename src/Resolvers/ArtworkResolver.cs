@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace Victoria.Resolvers {
 
             var (shouldSearch, requestUrl) = track.Url.ToLower() switch {
                 var yt when yt.Contains("youtube")
-                    => (false, $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg"),
+                    => (false, await CheckYoutubeUrlAsync(track).ConfigureAwait(false)),
 
                 var twitch when twitch.Contains("twitch")
                     => (true, $"https://api.twitch.tv/v4/oembed?url={track.Url}"),
@@ -50,6 +51,15 @@ namespace Victoria.Resolvers {
             return document.RootElement.TryGetProperty("thumbnail_url", out var url)
                 ? $"{url}"
                 : requestUrl;
+        }
+
+        private static async Task<string> CheckYoutubeUrlAsync(LavaTrack track) {
+            var url = $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg";
+            var responseMessage = await VictoriaExtensions.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url), HttpCompletionOption.ResponseHeadersRead);
+
+            return responseMessage.IsSuccessStatusCode
+                ? url
+                : $"https://img.youtube.com/vi/{track.Id}/hqdefault.jpg";
         }
     }
 }
