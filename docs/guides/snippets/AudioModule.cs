@@ -313,9 +313,8 @@ namespace Bot.Modules {
                     await ReplyAsync($"```{stringBuilder}```");
                     stringBuilder.Clear();
                 }
-                else {
-                    stringBuilder.AppendLine(line);
-                }
+
+                stringBuilder.AppendLine(line);
             }
 
             await ReplyAsync($"```{stringBuilder}```");
@@ -346,9 +345,8 @@ namespace Bot.Modules {
                     await ReplyAsync($"```{stringBuilder}```");
                     stringBuilder.Clear();
                 }
-                else {
-                    stringBuilder.AppendLine(line);
-                }
+
+                stringBuilder.AppendLine(line);
             }
 
             await ReplyAsync($"```{stringBuilder}```");
