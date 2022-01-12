@@ -110,7 +110,7 @@ namespace Victoria.Interfaces {
         /// </summary>
         /// <param name="seekPosition"></param>
         /// <exception cref="InvalidOperationException">Throws when <see cref="PlayerState"/> is invalid.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Throws when <paramref name="seekPosition"/> is greater than <see cref="CurrentTrack"/> length.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Throws when <paramref name="seekPosition"/> is greater than <see cref="Track"/> length.</exception>
         ValueTask SeekAsync(TimeSpan seekPosition);
 
         /// <summary>

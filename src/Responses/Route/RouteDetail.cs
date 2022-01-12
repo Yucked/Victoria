@@ -1,5 +1,6 @@
 ﻿namespace Victoria.Responses.Route {
-    public class RouteDetail {
-        
-    }
+    /// <summary>
+    /// 
+    /// </summary>
+    public class RouteDetail { }
 }

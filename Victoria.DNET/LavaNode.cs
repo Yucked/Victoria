@@ -77,8 +77,8 @@ namespace Victoria.DNET {
             return player;
         }
 
-        public async ValueTask MoveAsync() {
-            throw new System.NotImplementedException();
+        public ValueTask MoveAsync() {
+            throw new NotImplementedException();
         }
 
         /// <summary>
