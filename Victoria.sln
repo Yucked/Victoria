@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Victoria.DNET", "Victoria.D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Victoria.DSP", "Victoria.DSP\Victoria.DSP.csproj", "{6CFDBD45-CD1E-4DFA-A9BD-B83FCF2E63B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Victoria.Addons", "Victoria.Addons\Victoria.Addons.csproj", "{3B461545-BC02-4D9F-BCCD-4A410E418428}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +74,17 @@ Global
 		{6CFDBD45-CD1E-4DFA-A9BD-B83FCF2E63B8}.Release|x64.Build.0 = Release|Any CPU
 		{6CFDBD45-CD1E-4DFA-A9BD-B83FCF2E63B8}.Release|x86.ActiveCfg = Release|Any CPU
 		{6CFDBD45-CD1E-4DFA-A9BD-B83FCF2E63B8}.Release|x86.Build.0 = Release|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Debug|x64.Build.0 = Debug|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Debug|x86.Build.0 = Debug|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Release|x64.ActiveCfg = Release|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Release|x64.Build.0 = Release|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Release|x86.ActiveCfg = Release|Any CPU
+		{3B461545-BC02-4D9F-BCCD-4A410E418428}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
