@@ -21,9 +21,7 @@ namespace Victoria {
     public class AbstractLavaNode : AbstractLavaNode<ILavaPlayer>, ILavaNode {
         /// <inheritdoc />
         public AbstractLavaNode(NodeConfiguration nodeConfiguration, ILogger<ILavaNode> logger)
-            : base(nodeConfiguration, logger) {
-            
-        }
+            : base(nodeConfiguration, logger) { }
     }
 
     /// <inheritdoc />
@@ -121,7 +119,8 @@ namespace Victoria {
             var path = searchType switch {
                 SearchType.YouTube    => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
                 SearchType.SoundCloud => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
-                SearchType.Direct     => $"/loadtracks?identifier={query}"
+                SearchType.Direct     => $"/loadtracks?identifier={query}",
+                _                     => throw new ArgumentOutOfRangeException(nameof(searchType), searchType, null)
             };
 
             using var requestMessage =
@@ -198,14 +197,14 @@ namespace Victoria {
             return ValueTask.CompletedTask;
         }
 
-        private async ValueTask OnMessageAsync(MessageEventArgs arg) {
+        private ValueTask OnMessageAsync(MessageEventArgs arg) {
             if (arg.Data.Length == 0) {
                 _logger.LogWarning("Received empty data from WebSocket.");
-                return;
+                return ValueTask.CompletedTask;
             }
-            
-            _logger.LogDebug(Encoding.UTF8.GetString(arg.Data));
-            
+
+            _logger.LogDebug("{Message}", Encoding.UTF8.GetString(arg.Data));
+            return ValueTask.CompletedTask;
         }
     }
 }
