@@ -21,7 +21,7 @@ namespace Victoria.Resolvers {
 
             var (shouldSearch, requestUrl) = track.Url.ToLower() switch {
                 var yt when yt.Contains("youtube")
-                    => (false, await CheckYoutubeUrlAsync(track).ConfigureAwait(false)),
+                    => (true, $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg"),
 
                 var twitch when twitch.Contains("twitch")
                     => (true, $"https://api.twitch.tv/v4/oembed?url={track.Url}"),
@@ -39,9 +39,21 @@ namespace Victoria.Resolvers {
                 return requestUrl;
             }
 
-            var responseMessage = await VictoriaExtensions.HttpClient.GetAsync(requestUrl);
+            var (httpMethod, httpCompletionOption, fallbackUrl) = track.Url.ToLower().Contains("youtube")
+                ? (HttpMethod.Head, HttpCompletionOption.ResponseHeadersRead, $"https://img.youtube.com/vi/{track.Id}/hqdefault.jpg")
+                : (HttpMethod.Get, HttpCompletionOption.ResponseContentRead, "https://raw.githubusercontent.com/Yucked/Victoria/v5/src/Logo.png");
+
+            var responseMessage = await VictoriaExtensions.HttpClient.SendAsync(new HttpRequestMessage {
+                Method = httpMethod,
+                RequestUri = new Uri(requestUrl)
+            }, httpCompletionOption);
+
             if (!responseMessage.IsSuccessStatusCode) {
-                throw new Exception(responseMessage.ReasonPhrase);
+                return fallbackUrl;
+            }
+            
+            if(track.Url.ToLower().Contains("youtube")) {
+                return requestUrl;
             }
 
             using var content = responseMessage.Content;
@@ -51,15 +63,6 @@ namespace Victoria.Resolvers {
             return document.RootElement.TryGetProperty("thumbnail_url", out var url)
                 ? $"{url}"
                 : requestUrl;
-        }
-
-        private static async Task<string> CheckYoutubeUrlAsync(LavaTrack track) {
-            var url = $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg";
-            var responseMessage = await VictoriaExtensions.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url), HttpCompletionOption.ResponseHeadersRead);
-
-            return responseMessage.IsSuccessStatusCode
-                ? url
-                : $"https://img.youtube.com/vi/{track.Id}/hqdefault.jpg";
         }
     }
 }
