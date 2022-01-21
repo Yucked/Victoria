@@ -1,62 +1,42 @@
 name: Bug Report
 description: File a bug report
 title: "[Bug]: "
-labels: ["bug", "triage"]
+labels: ["🐞Buggy Bug"]
 assignees:
-  - octocat
+  - Yucked
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to fill out this bug report!
-  - type: input
-    id: contact
-    attributes:
-      label: Contact Details
-      description: How can we get in touch with you if we need more info?
-      placeholder: ex. email@example.com
-    validations:
-      required: false
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
-      value: "A bug happened!"
+      label: Describe your issue in as much detail as possible
+      description: What have you tried? Have you checked recent issues? 
     validations:
       required: true
   - type: dropdown
-    id: version
+    id: vic_ver
     attributes:
       label: Version
-      description: What version of our software are you running?
+      description: Please specify Victoria's version:
       options:
-        - 1.0.2 (Default)
-        - 1.0.3 (Edge)
+        - v5 (Latest)
+        - v6 (MyGet)
+        - v7 (Dev)
     validations:
       required: true
   - type: dropdown
-    id: browsers
+    id: lava_ver
     attributes:
-      label: What browsers are you seeing the problem on?
-      multiple: true
+      label: Version
+      description: Please specify Lavalink's version:
       options:
-        - Firefox
-        - Chrome
-        - Safari
-        - Microsoft Edge
+        - v5 (Latest)
+        - v6 (MyGet)
+        - v7 (Dev)
+    validations:
+      required: true
   - type: textarea
     id: logs
     attributes:
       label: Relevant log output
       description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
       render: shell
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://example.com)
-      options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true
