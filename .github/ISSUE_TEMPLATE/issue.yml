@@ -16,7 +16,7 @@ body:
     id: vic_ver
     attributes:
       label: Version
-      description: Please specify Victoria's version:
+      description: Please specify Victoria's version
       options:
         - v5 (Latest)
         - v6 (MyGet)
@@ -27,7 +27,7 @@ body:
     id: lava_ver
     attributes:
       label: Version
-      description: Please specify Lavalink's version:
+      description: Please specify Lavalink's version
       options:
         - v5 (Latest)
         - v6 (MyGet)
