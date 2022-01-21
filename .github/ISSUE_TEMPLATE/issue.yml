@@ -29,9 +29,8 @@ body:
       label: Version
       description: Please specify Lavalink's version
       options:
-        - v5 (Latest)
-        - v6 (MyGet)
-        - v7 (Dev)
+        - GitHub's latest
+        - Dev Build
     validations:
       required: true
   - type: textarea
