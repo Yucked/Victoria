@@ -164,7 +164,7 @@ namespace Victoria.Player {
                 var shadow = new T[List.Count];
                 var i = 0;
                 for (var node = List.First; node is not null; node = node.Next) {
-                    var j = VictoriaExtensions.Random.Next(i + 1);
+                    var j = Random.Shared.Next(i + 1);
                     if (i != j) {
                         shadow[i] = shadow[j];
                     }
