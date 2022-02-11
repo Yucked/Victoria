@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace Victoria.Resolvers {
 
             var (shouldSearch, requestUrl) = track.Url.ToLower() switch {
                 var yt when yt.Contains("youtube")
-                    => (false, $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg"),
+                    => (true, $"https://img.youtube.com/vi/{track.Id}/maxresdefault.jpg"),
 
                 var twitch when twitch.Contains("twitch")
                     => (true, $"https://api.twitch.tv/v4/oembed?url={track.Url}"),
@@ -38,9 +39,21 @@ namespace Victoria.Resolvers {
                 return requestUrl;
             }
 
-            var responseMessage = await VictoriaExtensions.HttpClient.GetAsync(requestUrl);
+            var (httpMethod, httpCompletionOption, fallbackUrl) = track.Url.ToLower().Contains("youtube")
+                ? (HttpMethod.Head, HttpCompletionOption.ResponseHeadersRead, $"https://img.youtube.com/vi/{track.Id}/hqdefault.jpg")
+                : (HttpMethod.Get, HttpCompletionOption.ResponseContentRead, "https://raw.githubusercontent.com/Yucked/Victoria/v5/src/Logo.png");
+
+            var responseMessage = await VictoriaExtensions.HttpClient.SendAsync(new HttpRequestMessage {
+                Method = httpMethod,
+                RequestUri = new Uri(requestUrl)
+            }, httpCompletionOption);
+
             if (!responseMessage.IsSuccessStatusCode) {
-                throw new Exception(responseMessage.ReasonPhrase);
+                return fallbackUrl;
+            }
+            
+            if(track.Url.ToLower().Contains("youtube")) {
+                return requestUrl;
             }
 
             using var content = responseMessage.Content;
