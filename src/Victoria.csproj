@@ -2,14 +2,14 @@
 
 	<PropertyGroup>
 		<LangVersion>latest</LangVersion>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFramework>net6.0</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>6.0.1119</Version>
+		<Version>6.0.0211</Version>
 		<Title>Victoria</Title>
 		<Authors>Yucked</Authors>
 		<Copyright>2018 - 2021 Yucked. All rights reserved.</Copyright>
@@ -20,9 +20,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Discord.Net.WebSocket" Version="2.4.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Discord.Net.WebSocket" Version="3.3.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.2-mauipre.1.22054.8" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2-mauipre.1.22054.8" />
 	</ItemGroup>
 
 	<ItemGroup>
