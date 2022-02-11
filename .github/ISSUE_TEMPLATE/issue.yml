@@ -1,0 +1,41 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["🐞Buggy Bug"]
+assignees:
+  - Yucked
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Describe your issue in as much detail as possible
+      description: What have you tried? Have you checked recent issues? 
+    validations:
+      required: true
+  - type: dropdown
+    id: vic_ver
+    attributes:
+      label: Version
+      description: Please specify Victoria's version
+      options:
+        - v5 (Latest)
+        - v6 (MyGet)
+        - v7 (Dev)
+    validations:
+      required: true
+  - type: dropdown
+    id: lava_ver
+    attributes:
+      label: Version
+      description: Please specify Lavalink's version
+      options:
+        - GitHub's latest
+        - Dev Build
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell

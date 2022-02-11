@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/Yucked/Victoria/wiki
+    about: Please read the documentation before opening issues.
+  - name: Examples
+    url: https://github.com/Yucked/Victoria/tree/examples
+    about: Hate programming? Example code is written for you.
+  - name: Discord
+    url: https://discord.gg/ZJaVXK8
+    about: For general discussion
