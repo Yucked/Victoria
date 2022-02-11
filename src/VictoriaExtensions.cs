@@ -166,7 +166,7 @@ namespace Victoria {
         ///     Throws if <see cref="LavaNode" /> is null in <see cref="IServiceProvider" />
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Throws if <seealso cref="LavaNode{TPlayer}.IsConnected"/> is set to true.
+        /// Throws if <seealso cref="LavaNode.IsConnected"/> is set to true.
         /// </exception>
         public static Task UseLavaNodeAsync(this IServiceProvider serviceProvider) {
             if (serviceProvider.GetService(typeof(LavaNode)) is not LavaNode lavaNode) {

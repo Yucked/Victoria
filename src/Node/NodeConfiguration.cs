@@ -3,7 +3,7 @@ using Victoria.WebSocket;
 
 namespace Victoria.Node {
     /// <summary>
-    /// Configuration for <see cref="LavaNode{TPlayer}"/>
+    /// Configuration for <see cref="LavaNode"/>
     /// </summary>
     public sealed class NodeConfiguration {
         /// <summary>
