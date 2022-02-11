@@ -97,7 +97,7 @@ namespace Victoria {
                     .ContinueWith(VerifyConnectionAsync);
             }
             catch (Exception exception) {
-                if (!(exception is ObjectDisposedException)) {
+                if (exception is not ObjectDisposedException) {
                     return;
                 }
 
