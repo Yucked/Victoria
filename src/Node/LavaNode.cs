@@ -176,7 +176,8 @@ namespace Victoria.Node {
 
             _webSocketClient.AddHeader("Authorization", _nodeConfiguration.Authorization);
             _webSocketClient.AddHeader("User-Id", $"{_baseSocketClient.CurrentUser.Id}");
-            _webSocketClient.AddHeader("Client-Name", $"{nameof(Victoria)}/{typeof(LavaNode).Assembly.GetName().Version}");
+            _webSocketClient.AddHeader("Client-Name",
+                $"{nameof(Victoria)}/{typeof(LavaNode).Assembly.GetName().Version}");
 
             if (_nodeConfiguration.EnableResume) {
                 _webSocketClient.AddHeader("Resume-Key", _nodeConfiguration.ResumeKey);
@@ -199,14 +200,15 @@ namespace Victoria.Node {
                 throw new InvalidOperationException("Can't disconnect when client isn't connected.");
             }
 
-            await Parallel.ForEachAsync(_playerCache, async (cache, CancellationToken) => {
-                _playerCache.TryRemove(cache.Key, out var player);
-                await LeaveAsync(player.VoiceChannel)
-                .ConfigureAwait(false);
+            await Parallel.ForEachAsync(_playerCache,
+                async (cache, _) => {
+                    _playerCache.TryRemove(cache.Key, out var player);
+                    await LeaveAsync(player.VoiceChannel)
+                        .ConfigureAwait(false);
 
-                await player.DisposeAsync()
-                .ConfigureAwait(false);
-            });
+                    await player.DisposeAsync()
+                        .ConfigureAwait(false);
+                });
 
             await _webSocketClient.DisconnectAsync()
                 .ConfigureAwait(false);
@@ -237,7 +239,7 @@ namespace Victoria.Node {
             await voiceChannel.ConnectAsync(_nodeConfiguration.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TLavaPlayer)Activator
+            player = (TLavaPlayer) Activator
                 .CreateInstance(typeof(TLavaPlayer), _webSocketClient, voiceChannel, textChannel);
 
             _playerCache.TryAdd(voiceChannel.GuildId, player);
@@ -280,11 +282,10 @@ namespace Victoria.Node {
             }
 
             var urlPath = searchType switch {
-                SearchType.SoundCloud => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
+                SearchType.SoundCloud   => $"/loadtracks?identifier={WebUtility.UrlEncode($"scsearch:{query}")}",
                 SearchType.YouTubeMusic => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytmsearch:{query}")}",
-                SearchType.YouTube => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
-                SearchType.Direct => $"/loadtracks?identifier={query}",
-                _ => $"/loadtracks?identifier={query}"
+                SearchType.YouTube      => $"/loadtracks?identifier={WebUtility.UrlEncode($"ytsearch:{query}")}",
+                SearchType.Direct or _  => $"/loadtracks?identifier={query}"
             };
 
             using var requestMessage =
@@ -378,7 +379,7 @@ namespace Victoria.Node {
                             return;
                         }
 
-                        player.Track.UpdatePosition(position);
+                        player?.Track?.UpdatePosition(position);
                         player.LastUpdate = DateTimeOffset.FromUnixTimeMilliseconds(time);
                         player.IsConnected = isConnected;
 
@@ -389,107 +390,107 @@ namespace Victoria.Node {
                         await OnUpdateReceived.Invoke(new UpdateEventArg<TLavaPlayer, TLavaTrack> {
                             Player = player,
                             Track = player.Track,
-                            Position = player.Track.Position
+                            Position = player.Track?.Position ?? default
                         });
                         break;
 
                     case "event": {
-                            guildId = ulong.Parse($"{root.GetProperty("guildId")}");
-                            if (!_playerCache.TryGetValue(guildId, out player)) {
-                                return;
-                            }
-
-                            LavaTrack lavaTrack = default;
-                            if (root.TryGetProperty("track", out var trackElement)) {
-                                lavaTrack = TrackDecoder.Decode($"{trackElement}");
-                            }
-
-                            var type = $"{root.GetProperty("type")}";
-                            switch (type) {
-                                case "TrackStartEvent":
-                                    player.Track = (TLavaTrack)lavaTrack;
-                                    player.PlayerState = PlayerState.Playing;
-
-                                    if (OnTrackStart == null) {
-                                        break;
-                                    }
-
-                                    await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
-                                        Player = player,
-                                        Track = lavaTrack
-                                    });
-                                    break;
-
-                                case "TrackEndEvent":
-                                    var trackEndReason = (TrackEndReason)(byte)$"{root.GetProperty("reason")}"[0];
-                                    if (trackEndReason is not TrackEndReason.Replaced) {
-                                        player.Track = default;
-                                        player.PlayerState = PlayerState.Stopped;
-                                    }
-
-                                    if (OnTrackEnd == null) {
-                                        break;
-                                    }
-
-                                    await OnTrackEnd.Invoke(new TrackEndEventArg<TLavaPlayer, TLavaTrack> {
-                                        Player = player,
-                                        Track = lavaTrack,
-                                        Reason = trackEndReason
-                                    });
-                                    break;
-
-                                case "TrackExceptionEvent":
-                                    player.Track = default;
-                                    player.PlayerState = PlayerState.Stopped;
-
-                                    if (OnTrackException == null) {
-                                        break;
-                                    }
-
-                                    await OnTrackException.Invoke(new TrackExceptionEventArg<TLavaPlayer, TLavaTrack> {
-                                        Player = player,
-                                        Track = lavaTrack,
-                                        Exception = new LavaException {
-                                            Message = root.GetProperty("message").GetString(),
-                                            Severity = root.GetProperty("severity").GetString(),
-                                        }
-                                    });
-                                    break;
-
-                                case "TrackStuckEvent":
-                                    player.Track = default;
-                                    player.PlayerState = PlayerState.Stopped;
-
-                                    if (OnTrackStuck == null) {
-                                        break;
-                                    }
-
-                                    await OnTrackStuck.Invoke(new TrackStuckEventArg<TLavaPlayer, TLavaTrack> {
-                                        Player = player,
-                                        Track = lavaTrack,
-                                        Threshold = long.Parse($"{root.GetProperty("thresholdMs")}")
-                                    });
-                                    break;
-
-                                case "WebSocketClosedEvent":
-                                    if (OnWebSocketClosed == null) {
-                                        break;
-                                    }
-
-                                    await OnWebSocketClosed.Invoke(new WebSocketClosedEventArg {
-                                        Guild = _baseSocketClient.GetGuild(guildId),
-                                        Code = int.Parse($"{root.GetProperty("code")}"),
-                                        Reason = $"{root.GetProperty("reason")}",
-                                        ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
-                                    });
-                                    break;
-
-                                default:
-                                    _logger.LogWarning(
-                                        $"Unknown event type received: {type}");
-                                    break;
-                            }
+                        guildId = ulong.Parse($"{root.GetProperty("guildId")}");
+                        if (!_playerCache.TryGetValue(guildId, out player)) {
+                            return;
                         }
+
+                        LavaTrack lavaTrack = default;
+                        if (root.TryGetProperty("track", out var trackElement)) {
+                            lavaTrack = TrackDecoder.Decode($"{trackElement}");
+                        }
+
+                        var type = $"{root.GetProperty("type")}";
+                        switch (type) {
+                            case "TrackStartEvent":
+                                player.Track = (TLavaTrack) lavaTrack;
+                                player.PlayerState = PlayerState.Playing;
+
+                                if (OnTrackStart == null) {
+                                    break;
+                                }
+
+                                await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
+                                    Player = player,
+                                    Track = lavaTrack
+                                });
+                                break;
+
+                            case "TrackEndEvent":
+                                var trackEndReason = (TrackEndReason) (byte) $"{root.GetProperty("reason")}"[0];
+                                if (trackEndReason is not TrackEndReason.Replaced) {
+                                    player.Track = default;
+                                    player.PlayerState = PlayerState.Stopped;
+                                }
+
+                                if (OnTrackEnd == null) {
+                                    break;
+                                }
+
+                                await OnTrackEnd.Invoke(new TrackEndEventArg<TLavaPlayer, TLavaTrack> {
+                                    Player = player,
+                                    Track = lavaTrack,
+                                    Reason = trackEndReason
+                                });
+                                break;
+
+                            case "TrackExceptionEvent":
+                                player.Track = default;
+                                player.PlayerState = PlayerState.Stopped;
+
+                                if (OnTrackException == null) {
+                                    break;
+                                }
+
+                                await OnTrackException.Invoke(new TrackExceptionEventArg<TLavaPlayer, TLavaTrack> {
+                                    Player = player,
+                                    Track = lavaTrack,
+                                    Exception = new LavaException {
+                                        Message = root.GetProperty("message").GetString(),
+                                        Severity = root.GetProperty("severity").GetString(),
+                                    }
+                                });
+                                break;
+
+                            case "TrackStuckEvent":
+                                player.Track = default;
+                                player.PlayerState = PlayerState.Stopped;
+
+                                if (OnTrackStuck == null) {
+                                    break;
+                                }
+
+                                await OnTrackStuck.Invoke(new TrackStuckEventArg<TLavaPlayer, TLavaTrack> {
+                                    Player = player,
+                                    Track = lavaTrack,
+                                    Threshold = long.Parse($"{root.GetProperty("thresholdMs")}")
+                                });
+                                break;
+
+                            case "WebSocketClosedEvent":
+                                if (OnWebSocketClosed == null) {
+                                    break;
+                                }
+
+                                await OnWebSocketClosed.Invoke(new WebSocketClosedEventArg {
+                                    Guild = _baseSocketClient.GetGuild(guildId),
+                                    Code = int.Parse($"{root.GetProperty("code")}"),
+                                    Reason = $"{root.GetProperty("reason")}",
+                                    ByRemote = bool.Parse($"{root.GetProperty("byRemote")}")
+                                });
+                                break;
+
+                            default:
+                                _logger.LogWarning(
+                                    $"Unknown event type received: {type}");
+                                break;
+                        }
+                    }
                         break;
 
                     default:
