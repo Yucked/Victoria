@@ -31,8 +31,6 @@ namespace Victoria {
         internal static CancellationToken DefaultTimeout =
             new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
 
-        internal static readonly Random Random = new();
-
         /// <summary>
         /// 
         /// </summary>
@@ -67,7 +65,7 @@ namespace Victoria {
                 jsonConverter == default
                     ? default
                     : new JsonSerializerOptions {
-                        Converters = { jsonConverter }
+                        Converters = {jsonConverter}
                     }, cancellationToken);
             return deserialized;
         }
