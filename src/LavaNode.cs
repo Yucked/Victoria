@@ -15,6 +15,7 @@ using Victoria.EventArgs;
 using Victoria.Payloads;
 using Victoria.Responses.Search;
 using Victoria.Enums;
+using System.Net.WebSockets;
 
 namespace Victoria {
     /// <summary>
@@ -410,7 +411,7 @@ namespace Victoria {
         }
 
         private Task OnErrorAsync(Exception exception) {
-            if (exception is WebSocketClosedException) {
+            if (exception is WebSocketClosedException or WebSocketException) {
                 Volatile.Write(ref _refConnected, false);
             }
 
