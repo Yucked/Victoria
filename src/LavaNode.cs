@@ -24,14 +24,18 @@ namespace Victoria {
         /// <inheritdoc />
         public LavaNode(DiscordSocketClient socketClient, LavaConfig config)
             : base(socketClient, config) { }
+
+        
+        /// <inheritdoc />
+        public LavaNode(DiscordShardedClient shardedClient, LavaConfig config)
+            : base(shardedClient, config) { }
     }
 
     /// <summary>
     ///     Represents a single connection to a Lavalink server with custom <typeparamref name="TPlayer"/>.
     /// </summary>
     /// <typeparam name="TPlayer">Where TPlayer is inherited from <see cref="LavaPlayer" /></typeparam>
-    /// <typeparam name="TDiscordClient"></typeparam>
-    /// .
+    /// 
     public class LavaNode<TPlayer> : IAsyncDisposable
         where TPlayer : LavaPlayer {
         /// <summary>
@@ -90,7 +94,7 @@ namespace Victoria {
         private readonly LavaSocket _lavaSocket;
         private readonly ConcurrentDictionary<ulong, TPlayer> _playerCache;
         private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
-        private readonly DiscordSocketClient _socketClient;
+        private readonly BaseSocketClient _socketClient;
 
         private bool _refConnected;
 
@@ -99,7 +103,7 @@ namespace Victoria {
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="config"></param>
-        public LavaNode(DiscordSocketClient socketClient, LavaConfig config) {
+        protected LavaNode(BaseSocketClient socketClient, LavaConfig config) {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
 
@@ -126,6 +130,7 @@ namespace Victoria {
                 .ConfigureAwait(false);
 
             _playerCache.Clear();
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
