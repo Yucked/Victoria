@@ -26,7 +26,6 @@ namespace Victoria {
         public LavaNode(DiscordSocketClient socketClient, LavaConfig config)
             : base(socketClient, config) { }
 
-        
         /// <inheritdoc />
         public LavaNode(DiscordShardedClient shardedClient, LavaConfig config)
             : base(shardedClient, config) { }
@@ -100,11 +99,11 @@ namespace Victoria {
         private bool _refConnected;
 
         /// <summary>
-        /// 
+        /// Represents a single connection to a Lavalink server with custom <typeparamref name="TPlayer"/>.
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="config"></param>
-        protected LavaNode(BaseSocketClient socketClient, LavaConfig config) {
+        /// <param name="socketClient"><seealso cref="DiscordSocketClient"/> or <see cref="DiscordShardedClient"/></param>
+        /// <param name="config"><see cref="LavaConfig"/></param>
+        internal LavaNode(BaseSocketClient socketClient, LavaConfig config) {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
 
@@ -121,6 +120,14 @@ namespace Victoria {
             _playerCache = new ConcurrentDictionary<ulong, TPlayer>();
             _voiceStates = new ConcurrentDictionary<ulong, VoiceState>();
         }
+
+        /// <inheritdoc />
+        public LavaNode(DiscordSocketClient socketClient, LavaConfig config)
+            : this(socketClient as BaseSocketClient, config) { }
+
+        /// <inheritdoc />
+        public LavaNode(DiscordShardedClient shardedClient, LavaConfig config)
+            : this(shardedClient as BaseSocketClient, config) { }
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync() {
