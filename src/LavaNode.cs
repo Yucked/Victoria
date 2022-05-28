@@ -598,6 +598,11 @@ namespace Victoria {
                 ChannelId = (currentState.VoiceChannel ?? pastState.VoiceChannel).Id
             };
 
+            if (pastState.VoiceChannel?.Id != currentState.VoiceChannel?.Id &&
+                _playerCache.TryGetValue(voiceState.GuildId, out var player)) {
+                player.VoiceChannel = currentState.VoiceChannel;
+            }
+
             _voiceStates.AddOrUpdate(voiceState.GuildId, voiceState, (_, __) => voiceState);
             return Task.CompletedTask;
         }
