@@ -3,12 +3,20 @@ using System.Linq;
 using System.Text;
 
 namespace Victoria.Encoder {
+    /// <summary>
+    /// Helper class for decoding Lavalink's <see cref="LavaTrack"/> hash.
+    /// </summary>
     public readonly struct TrackEncoder {
-        // Stuff required for the encoding
         private const int TRACK_VERSIONED = 1;
         private const int TRACK_VERSION = 2;
 
-        // Takes in a Track and sets its hash property in place
+        /// <summary>
+        ///     Decodes the hash for the specified track.
+        /// </summary>
+        /// <param name="track">The <see cref="LavaTrack"/> to encode.</param>
+        /// <remarks>
+        /// This method sets the track's hash in place.
+        /// </remarks>
         public static void Encode(LavaTrack track) {
             Span<byte> bytes = stackalloc byte[GetByteCount(track)];
 
@@ -27,16 +35,7 @@ namespace Victoria.Encoder {
             track.Hash = Convert.ToBase64String(bytes);
         }
 
-        // Calculate the number of bytes needed to encode the track
-        // in part to make sure we allocate just the right amount of bytes
         private static int GetByteCount(LavaTrack track) {
-            // The value 23 was derived from:
-            // 8 (a long for position) + 8 (a long for duration) + 4 (an int representing the "versioned")
-            // + 1 (a byte for the version) + 1 (a bool indicating if it's a stream) + 1 (a bool that will be written before the url)
-            // = 23 bytes.
-            //
-            // After that we need to calculate the number of bytes needed for the string properties (except of course the "Hash" property)
-            // plus 2 for each of them, since every string has its length prepended to it encoded as a short (2 bytes)
             return 23 + typeof(LavaTrack).GetProperties()
                 .Where(p => p.PropertyType == typeof(string) && p.Name != "Hash")
                 .Sum(p => 2 + Encoding.UTF8.GetByteCount(p.GetValue(track).ToString()));
