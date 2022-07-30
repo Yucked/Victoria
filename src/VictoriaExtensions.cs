@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Victoria.Converters;
+using Victoria.Encoder;
 using Victoria.Resolvers;
 
 namespace Victoria {
@@ -249,6 +250,23 @@ namespace Victoria {
             }
 
             return (guildId, time, position, isConnected);
+        }
+
+        internal static void WriteNullableText(this ref JavaBinaryWriter writer, string value) {
+            var isValidString = !string.IsNullOrWhiteSpace(value);
+
+            writer.Write(isValidString);
+
+            if (isValidString) {
+                writer.Write(value);
+            }
+        }
+
+        internal static void WriteVersioned(this ref JavaBinaryWriter writer, int flags) {
+            var value = writer.Length | flags << 30;
+            writer.Seek(0, System.IO.SeekOrigin.Begin);
+            writer.Write(value);
+            writer.Seek(0, System.IO.SeekOrigin.End);
         }
     }
 }
