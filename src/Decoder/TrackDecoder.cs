@@ -42,9 +42,9 @@ namespace Victoria.Decoder {
                 url: javaReader.Read<bool>()
                     ? javaReader.ReadString()
                     : string.Empty,
-                position: default,
-                canSeek: true,
-                source: default);
+                source: javaReader.ReadString(),
+                position: javaReader.Read<long>(),
+                canSeek: true);
 
             return track;
         }

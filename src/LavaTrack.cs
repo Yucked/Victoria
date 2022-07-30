@@ -80,14 +80,16 @@ namespace Victoria {
         /// <param name="isStream"></param>
         /// <param name="source"></param>
         public LavaTrack(string hash, string id, string title, string author,
-                         string url, TimeSpan position, long duration,
+                         string url, long position, long duration,
                          bool canSeek, bool isStream, string source) {
             Hash = hash ?? throw new ArgumentNullException(nameof(hash));
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Title = title ?? throw new ArgumentNullException(nameof(title));
             Author = author ?? throw new ArgumentNullException(nameof(author));
             Url = url ?? throw new ArgumentNullException(nameof(url));
-            Position = position;
+            Position = position < TimeSpan.MaxValue.Ticks
+                ? TimeSpan.FromMilliseconds(position)
+                : TimeSpan.MaxValue;
             Duration = duration < TimeSpan.MaxValue.Ticks
                 ? TimeSpan.FromMilliseconds(duration)
                 : TimeSpan.MaxValue;
