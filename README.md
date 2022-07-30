@@ -118,4 +118,4 @@ public sealed class MusicModule : SocketCommandContext {
 }
 ```
 
-> #### 👉 If you'd like a complete example, head over to https://yucked.github.io/Victoria/
+> #### 👉 If you'd like a complete example, head over to https://github.com/Yucked/Victoria/wiki
