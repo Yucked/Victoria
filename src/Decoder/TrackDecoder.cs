@@ -43,7 +43,7 @@ namespace Victoria.Decoder {
                     ? javaReader.ReadString()
                     : string.Empty,
                 source: javaReader.ReadString(),
-                position: javaReader.Read<long>(),
+                position: (javaReader.ReadString(), javaReader.Read<long>()).Item2,
                 canSeek: true);
 
             return track;
