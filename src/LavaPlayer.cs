@@ -124,18 +124,18 @@ namespace Victoria {
             Track = playArgs.Track ?? throw new NullReferenceException(nameof(playArgs));
             PlayerState = playArgs.ShouldPause ? PlayerState.Paused : PlayerState.Playing;
 
-            if (playArgs.Volume < 0) {
-                throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
-                    "Volume must be greater than or equal to 0.");
+            switch (playArgs.Volume) {
+                case < 0:
+                    throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
+                        "Volume must be greater than or equal to 0.");
+                case > 1000:
+                    throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
+                        "Volume must be less than or equal to 1000.");
+                default:
+                    Volume = playArgs.Volume;
+                    await _lavaSocket.SendAsync(new PlayPayload(VoiceChannel.GuildId, playArgs));
+                    break;
             }
-
-            if (playArgs.Volume > 1000) {
-                throw new ArgumentOutOfRangeException(nameof(playArgs.Volume),
-                    "Volume must be less than or equal to 1000.");
-            }
-
-            Volume = playArgs.Volume;
-            await _lavaSocket.SendAsync(new PlayPayload(VoiceChannel.GuildId, playArgs));
         }
 
         /// <summary>
@@ -218,7 +218,8 @@ namespace Victoria {
                 throw new InvalidOperationException("Can't skip to the next item in queue.");
             }
 
-            if (lavaTrack.GetType() != typeof(LavaTrack)) {
+            // ReSharper disable once ConvertTypeCheckPatternToNullCheck
+            if (lavaTrack is not LavaTrack) {
                 throw new InvalidCastException($"Couldn't cast {lavaTrack.GetType()} to {typeof(LavaTrack)}.");
             }
 
