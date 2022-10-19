@@ -33,7 +33,15 @@ namespace Victoria.Encoder {
         public void Write(string value) {
             var bytesToWrite = Encoding.UTF8.GetByteCount(value);
 
-            Write((short)bytesToWrite);
+            if(bytesToWrite > ushort.MaxValue) {
+                throw new Exception($"String length exceeded max length ({ushort.MaxValue} bytes).");
+            }
+
+            Write((ushort)bytesToWrite);
+
+            if (Length + bytesToWrite > _bytes.Length) {
+                throw new Exception("Buffer length was exceeded.");
+            }
 
             if (Position < Length) {
                 _bytes.Slice(Position, Length - Position).CopyTo(_bytes.Slice(Position + bytesToWrite, Length - Position));
@@ -55,6 +63,10 @@ namespace Victoria.Encoder {
         }
 
         public void Write(Span<byte> bytes) {
+            if (Length + bytes.Length > _bytes.Length) {
+                throw new Exception("Buffer length was exceeded.");
+            }
+
             if (Position < Length) {
                 _bytes.Slice(Position, Length - Position).CopyTo(_bytes.Slice(Position + bytes.Length, Length - Position));
             }
