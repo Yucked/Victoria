@@ -31,6 +31,7 @@ namespace Victoria.Decoder {
             var _ = hasVersion
                 ? javaReader.Read<sbyte>()
                 : 1;
+            var source = string.Empty;
 
             var track = new LavaTrack(
                 trackHash,
@@ -42,8 +43,10 @@ namespace Victoria.Decoder {
                 url: javaReader.Read<bool>()
                     ? javaReader.ReadString()
                     : string.Empty,
-                source: javaReader.ReadString(),
-                position: javaReader.Read<long>(),
+                source: source = javaReader.ReadString(),
+                position: source == "local" || source == "http"
+                    ? (javaReader.ReadString(), javaReader.Read<long>()).Item2
+                    : javaReader.Read<long>(),
                 canSeek: true);
 
             return track;
