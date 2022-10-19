@@ -22,5 +22,15 @@ namespace Victoria.Node.EventArgs {
         /// 
         /// </summary>
         public TimeSpan Position { get; internal init; }
+        
+        /// <summary>
+        /// Returns true when connected to voice gateway
+        /// </summary>
+        public bool IsConnected { get; internal init; }
+        
+        /// <summary>
+        /// Milliseconds between heartbeat and ack
+        /// </summary>
+        public long Ping { get; internal init; }
     }
 }
