@@ -28,7 +28,7 @@ namespace Victoria {
                 };
 
             var routeStatus = await VictoriaExtensions.ReadAsJsonAsync<RouteStatus>(requestMessage);
-            if (!routeStatus.Equals(default)) {
+            if (routeStatus is not null) {
                 return routeStatus;
             }
 

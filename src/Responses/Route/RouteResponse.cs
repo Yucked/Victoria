@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 
 namespace Victoria.Responses.Route {
-    internal struct RouteResponse {
+    internal record RouteResponse {
         [JsonPropertyName("error"), JsonInclude]
         public string Error { get; private set; }
 

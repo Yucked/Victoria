@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 
 namespace Victoria.Payloads {
-    internal struct VoiceServerPayload {
+    internal record VoiceServerPayload {
         [JsonPropertyName("token")]
         public string Token { get; init; }
 
