@@ -21,8 +21,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Discord.Net.WebSocket" Version="3.8.1" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.2-mauipre.1.22054.8" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2-mauipre.1.22054.8" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
