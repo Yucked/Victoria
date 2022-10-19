@@ -228,7 +228,7 @@ namespace Victoria {
             GetPlayerUpdate(JsonElement jsonElement) {
             ulong guildId = 0;
             long time = 0, position = 0;
-            bool isConnected = false;
+            var isConnected = false;
             if (jsonElement.TryGetProperty("guildId", out var guildElement)) {
                 guildId = ulong.Parse(guildElement.GetString()!);
             }

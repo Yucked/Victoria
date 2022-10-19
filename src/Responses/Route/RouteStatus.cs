@@ -4,7 +4,7 @@ namespace Victoria.Responses.Route {
     /// <summary>
     ///     Contains information about route planner class and details.
     /// </summary>
-    public struct RouteStatus {
+    public record RouteStatus {
         /// <summary>
         ///     Which planner class is being used.
         /// </summary>

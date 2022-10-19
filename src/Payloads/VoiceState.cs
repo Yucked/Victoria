@@ -1,5 +1,5 @@
 ﻿namespace Victoria.Payloads {
-    internal struct VoiceState {
+    internal record VoiceState {
         /// <summary>
         /// 
         /// </summary>
