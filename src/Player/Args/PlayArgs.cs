@@ -4,7 +4,7 @@ namespace Victoria.Player.Args {
     /// <summary>
     /// Arguments for <see cref="LavaPlayer.PlayAsync"/>
     /// </summary>
-    public struct PlayArgs<TLavaTrack>
+    public class PlayArgs<TLavaTrack>
         where TLavaTrack : LavaTrack {
         /// <summary>
         /// Which track to play, <see cref="LavaTrack"/>
