@@ -128,19 +128,6 @@ namespace Victoria.Player {
             Position = TimeSpan.FromMilliseconds(position);
         }
 
-        internal void Update(LavaTrack lavaTrack) {
-            Hash = lavaTrack.Hash;
-            Id = lavaTrack.Id;
-            Title = lavaTrack.Title;
-            Author = lavaTrack.Author;
-            Url = lavaTrack.Url;
-            Position = lavaTrack.Position;
-            Duration = lavaTrack.Duration;
-            CanSeek = lavaTrack.CanSeek;
-            IsStream = lavaTrack.IsStream;
-            Source = lavaTrack.Source;
-        }
-
         /// <inheritdoc />
         public override string ToString() {
             return $"{Author} {Title}";
