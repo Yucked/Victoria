@@ -408,8 +408,7 @@ namespace Victoria.Node {
 
                         var type = $"{root.GetProperty("type")}";
                         switch (type) {
-                            case "TrackStartEvent":
-                                playerTrack.Update(lavaTrack);
+                            case "TrackStartEvent":                                
                                 player.PlayerState = PlayerState.Playing;
 
                                 if (OnTrackStart == null) {
