@@ -134,10 +134,9 @@ namespace Victoria.Node {
             _baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdatedAsync;
             _baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
 
-            _webSocketClient = new WebSocketClient(new WebSocketConfiguration {
-                Endpoint = (_nodeConfiguration.IsSecure ? "wss" : "ws") + _nodeConfiguration.Endpoint,
-                BufferSize = 1024
-            });
+            _nodeConfiguration.SocketConfiguration.Endpoint = (_nodeConfiguration.IsSecure ? "wss" : "ws") + _nodeConfiguration.Endpoint;
+            _webSocketClient = new WebSocketClient(_nodeConfiguration.SocketConfiguration);
+
             _webSocketClient.OnOpenAsync += OnOpenAsync;
             _webSocketClient.OnErrorAsync += OnErrorAsync;
             _webSocketClient.OnCloseAsync += OnCloseAsync;
