@@ -134,9 +134,9 @@ namespace Victoria.Node {
             _baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdatedAsync;
             _baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
 
-            _webSocketClient = new WebSocketClient(new WebSocketConfiguration {
-                Endpoint = (_nodeConfiguration.IsSecure ? "wss" : "ws") + _nodeConfiguration.Endpoint
-            });
+            nodeConfiguration.SocketConfiguration.Endpoint =
+                (_nodeConfiguration.IsSecure ? "wss" : "ws") + _nodeConfiguration.Endpoint;
+            _webSocketClient = new WebSocketClient(_nodeConfiguration.SocketConfiguration);
             _webSocketClient.OnOpenAsync += OnOpenAsync;
             _webSocketClient.OnErrorAsync += OnErrorAsync;
             _webSocketClient.OnCloseAsync += OnCloseAsync;
@@ -239,7 +239,7 @@ namespace Victoria.Node {
             await voiceChannel.ConnectAsync(_nodeConfiguration.SelfDeaf, false, true)
                 .ConfigureAwait(false);
 
-            player = (TLavaPlayer) Activator
+            player = (TLavaPlayer)Activator
                 .CreateInstance(typeof(TLavaPlayer), _webSocketClient, voiceChannel, textChannel);
 
             _playerCache.TryAdd(voiceChannel.GuildId, player);
@@ -291,7 +291,7 @@ namespace Victoria.Node {
             using var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, $"{_nodeConfiguration.HttpEndpoint}{urlPath}") {
                     Headers = {
-                        {"Authorization", _nodeConfiguration.Authorization}
+                        { "Authorization", _nodeConfiguration.Authorization }
                     }
                 };
 
@@ -408,21 +408,21 @@ namespace Victoria.Node {
 
                         var type = $"{root.GetProperty("type")}";
                         switch (type) {
-                            case "TrackStartEvent":                                
+                            case "TrackStartEvent":
                                 player.PlayerState = PlayerState.Playing;
 
                                 if (OnTrackStart == null) {
                                     break;
                                 }
 
-                            await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
-                                Player = player,
-                                Track = playerTrack
-                            });
+                                await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
+                                    Player = player,
+                                    Track = playerTrack
+                                });
                                 break;
 
                             case "TrackEndEvent":
-                                var trackEndReason = (TrackEndReason) (byte) $"{root.GetProperty("reason")}"[0];
+                                var trackEndReason = (TrackEndReason)(byte)$"{root.GetProperty("reason")}"[0];
                                 if (trackEndReason is not TrackEndReason.Replaced) {
                                     player.Track = default;
                                     player.PlayerState = PlayerState.Stopped;
