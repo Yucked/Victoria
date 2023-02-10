@@ -65,7 +65,7 @@ namespace Victoria {
                 jsonConverter == default
                     ? default
                     : new JsonSerializerOptions {
-                        Converters = {jsonConverter}
+                        Converters = { jsonConverter }
                     }, cancellationToken);
             return deserialized;
         }
