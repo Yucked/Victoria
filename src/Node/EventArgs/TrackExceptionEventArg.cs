@@ -16,7 +16,7 @@ namespace Victoria.Node.EventArgs {
         /// <summary>
         /// 
         /// </summary>
-        public LavaTrack Track { get; internal init; }
+        public TLavaTrack Track { get; internal init; }
 
         /// <summary>
         /// 
