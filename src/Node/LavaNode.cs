@@ -400,6 +400,7 @@ namespace Victoria.Node {
                             return;
                         }
 
+                        var playerTrack = player.Track;
                         LavaTrack lavaTrack = default;
                         if (root.TryGetProperty("track", out var trackElement)) {
                             lavaTrack = TrackDecoder.Decode($"{trackElement}");
@@ -407,18 +408,17 @@ namespace Victoria.Node {
 
                         var type = $"{root.GetProperty("type")}";
                         switch (type) {
-                            case "TrackStartEvent":
-                                player.Track = (TLavaTrack) lavaTrack;
+                            case "TrackStartEvent":                                
                                 player.PlayerState = PlayerState.Playing;
 
                                 if (OnTrackStart == null) {
                                     break;
                                 }
 
-                                await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
-                                    Player = player,
-                                    Track = lavaTrack
-                                });
+                            await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
+                                Player = player,
+                                Track = playerTrack
+                            });
                                 break;
 
                             case "TrackEndEvent":
@@ -434,7 +434,7 @@ namespace Victoria.Node {
 
                                 await OnTrackEnd.Invoke(new TrackEndEventArg<TLavaPlayer, TLavaTrack> {
                                     Player = player,
-                                    Track = lavaTrack,
+                                    Track = playerTrack,
                                     Reason = trackEndReason
                                 });
                                 break;
@@ -449,7 +449,7 @@ namespace Victoria.Node {
 
                                 await OnTrackException.Invoke(new TrackExceptionEventArg<TLavaPlayer, TLavaTrack> {
                                     Player = player,
-                                    Track = lavaTrack,
+                                    Track = playerTrack,
                                     Exception = new LavaException {
                                         Message = root.GetProperty("message").GetString(),
                                         Severity = root.GetProperty("severity").GetString(),
@@ -467,7 +467,7 @@ namespace Victoria.Node {
 
                                 await OnTrackStuck.Invoke(new TrackStuckEventArg<TLavaPlayer, TLavaTrack> {
                                     Player = player,
-                                    Track = lavaTrack,
+                                    Track = playerTrack,
                                     Threshold = long.Parse($"{root.GetProperty("thresholdMs")}")
                                 });
                                 break;
