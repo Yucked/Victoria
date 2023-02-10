@@ -400,10 +400,9 @@ namespace Victoria.Node {
                             return;
                         }
 
-                        var playerTrack = player.Track;
-                        LavaTrack lavaTrack = default;
+                        var lavaTrack = default(TLavaTrack);
                         if (root.TryGetProperty("track", out var trackElement)) {
-                            lavaTrack = TrackDecoder.Decode($"{trackElement}");
+                            lavaTrack = (TLavaTrack)TrackDecoder.Decode($"{trackElement}");
                         }
 
                         var type = $"{root.GetProperty("type")}";
@@ -417,7 +416,7 @@ namespace Victoria.Node {
 
                                 await OnTrackStart.Invoke(new TrackStartEventArg<TLavaPlayer, TLavaTrack> {
                                     Player = player,
-                                    Track = playerTrack
+                                    Track = lavaTrack
                                 });
                                 break;
 
@@ -434,7 +433,7 @@ namespace Victoria.Node {
 
                                 await OnTrackEnd.Invoke(new TrackEndEventArg<TLavaPlayer, TLavaTrack> {
                                     Player = player,
-                                    Track = playerTrack,
+                                    Track = lavaTrack,
                                     Reason = trackEndReason
                                 });
                                 break;
@@ -449,7 +448,7 @@ namespace Victoria.Node {
 
                                 await OnTrackException.Invoke(new TrackExceptionEventArg<TLavaPlayer, TLavaTrack> {
                                     Player = player,
-                                    Track = playerTrack,
+                                    Track = lavaTrack,
                                     Exception = new LavaException {
                                         Message = root.GetProperty("message").GetString(),
                                         Severity = root.GetProperty("severity").GetString(),
@@ -467,7 +466,7 @@ namespace Victoria.Node {
 
                                 await OnTrackStuck.Invoke(new TrackStuckEventArg<TLavaPlayer, TLavaTrack> {
                                     Player = player,
-                                    Track = playerTrack,
+                                    Track = lavaTrack,
                                     Threshold = long.Parse($"{root.GetProperty("thresholdMs")}")
                                 });
                                 break;
@@ -487,7 +486,7 @@ namespace Victoria.Node {
 
                             default:
                                 _logger.LogWarning(
-                                    $"Unknown event type received: {type}");
+                                    "Unknown event type received: {type}", type);
                                 break;
                         }
                     }
