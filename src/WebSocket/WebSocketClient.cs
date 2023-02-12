@@ -208,11 +208,13 @@ namespace Victoria.WebSocket {
                     switch (receiveResult.MessageType) {
                         case WebSocketMessageType.Text:
                             await OnDataAsync.Invoke(new DataEventArgs(message.ToArray()));
+                            message.Clear();
                             break;
 
                         case WebSocketMessageType.Close:
                             await DisconnectAsync();
                             await ReconnectAsync();
+                            message.Clear();
                             break;
                     }
                 } while (_webSocket.State == WebSocketState.Open &&
