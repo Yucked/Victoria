@@ -64,7 +64,6 @@ namespace Victoria.Node {
             = new() {
                 ReconnectAttempts = 10,
                 ReconnectDelay = TimeSpan.FromSeconds(3),
-                BufferSize = 512
             };
 
         internal string HttpEndpoint

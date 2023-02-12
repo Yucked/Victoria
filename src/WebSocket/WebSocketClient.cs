@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Victoria.WebSocket.EventArgs;
 
 namespace Victoria.WebSocket {
+    using System.Collections.Generic;
     using System.Net.WebSockets;
 
     /// <summary>
@@ -194,26 +195,19 @@ namespace Victoria.WebSocket {
 
         private async Task ReceiveAsync() {
             try {
-                var buffer = new byte[_webSocketConfiguration.BufferSize];
-                var finalBuffer = default(byte[]);
-                var offset = 0;
+                var buffer = new byte[512];
+                var message = new List<byte>();
+
                 do {
                     var receiveResult = await _webSocket.ReceiveAsync(buffer, _connectionTokenSource.Token);
+                    message.AddRange(buffer[receiveResult.Count..]);
                     if (!receiveResult.EndOfMessage) {
-                        finalBuffer = new byte[_webSocketConfiguration.BufferSize * 2];
-                        buffer.CopyTo(finalBuffer, offset);
-                        offset += receiveResult.Count;
-                        buffer = new byte[_webSocketConfiguration.BufferSize];
                         continue;
                     }
 
                     switch (receiveResult.MessageType) {
                         case WebSocketMessageType.Text:
-                            await OnDataAsync.Invoke(new DataEventArgs((finalBuffer ?? buffer).RemoveTrailingNulls()));
-
-                            finalBuffer = default;
-                            buffer = new byte[_webSocketConfiguration.BufferSize];
-                            offset = 0;
+                            await OnDataAsync.Invoke(new DataEventArgs(message.ToArray()));
                             break;
 
                         case WebSocketMessageType.Close:

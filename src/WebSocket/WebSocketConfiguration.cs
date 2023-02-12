@@ -1,16 +1,10 @@
-﻿using System;
+using System;
 
 namespace Victoria.WebSocket {
     /// <summary>
     /// 
     /// </summary>
     public sealed class WebSocketConfiguration {
-        /// <summary>
-        ///     Max buffer size for receiving websocket message.
-        /// </summary>
-        public ushort BufferSize { get; set; }
-            = 512;
-
         /// <summary>
         ///     How many reconnect attempts are allowed.
         /// </summary>
