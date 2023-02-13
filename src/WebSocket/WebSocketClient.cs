@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Victoria.WebSocket.EventArgs;
 
 namespace Victoria.WebSocket {
-    using System.Collections.Generic;
     using System.Net.WebSockets;
 
     /// <summary>
@@ -196,27 +195,27 @@ namespace Victoria.WebSocket {
         private async Task ReceiveAsync() {
             try {
                 var buffer = new byte[512];
-                var message = new List<byte>();
+                var memoryStream = new System.IO.MemoryStream(); // Namespace conflict with ErrorEventArgs
 
                 do {
                     var receiveResult = await _webSocket.ReceiveAsync(buffer, _connectionTokenSource.Token);
-                    message.AddRange(buffer[receiveResult.Count..]);
-                    if (!receiveResult.EndOfMessage) {
+                    await memoryStream.WriteAsync(buffer.AsMemory()[receiveResult.Count..]);
+                    
+                    if(!receiveResult.EndOfMessage) {
                         continue;
                     }
 
                     switch (receiveResult.MessageType) {
                         case WebSocketMessageType.Text:
-                            await OnDataAsync.Invoke(new DataEventArgs(message.ToArray()));
-                            message.Clear();
+                            await OnDataAsync.Invoke(new DataEventArgs(memoryStream.ToArray()));
                             break;
 
                         case WebSocketMessageType.Close:
                             await DisconnectAsync();
                             await ReconnectAsync();
-                            message.Clear();
                             break;
                     }
+                    memoryStream.SetLength(0);
                 } while (_webSocket.State == WebSocketState.Open &&
                          !_connectionTokenSource.IsCancellationRequested);
             }
