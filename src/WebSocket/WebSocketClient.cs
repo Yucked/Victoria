@@ -199,11 +199,12 @@ namespace Victoria.WebSocket {
 
                 do {
                     var receiveResult = await _webSocket.ReceiveAsync(buffer, _connectionTokenSource.Token);
-                    await memoryStream.WriteAsync(buffer.AsMemory()[receiveResult.Count..]);
                     
                     if(!receiveResult.EndOfMessage) {
+                        await memoryStream.WriteAsync(buffer);
                         continue;
                     }
+                    await memoryStream.WriteAsync(buffer.AsMemory(0, receiveResult.Count));
 
                     switch (receiveResult.MessageType) {
                         case WebSocketMessageType.Text:
