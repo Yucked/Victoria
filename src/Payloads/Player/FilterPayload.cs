@@ -4,34 +4,34 @@ using Victoria.Player.Filters;
 
 namespace Victoria.Payloads.Player {
     internal sealed class FilterPayload : AbstractPlayerPayload {
-        [JsonPropertyName("volume")]
+        [JsonPropertyName("volume"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public double Volume { get; }
 
-        [JsonPropertyName("equalizer")]
+        [JsonPropertyName("equalizer"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public IEnumerable<EqualizerBand> Bands { get; }
 
-        [JsonPropertyName("karoke")]
+        [JsonPropertyName("karoke"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public KarokeFilter Karoke { get; set; }
 
-        [JsonPropertyName("timescale")]
+        [JsonPropertyName("timescale"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public TimescaleFilter Timescale { get; set; }
 
-        [JsonPropertyName("tremolo")]
+        [JsonPropertyName("tremolo"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public TremoloFilter Tremolo { get; set; }
 
-        [JsonPropertyName("vibrato")]
+        [JsonPropertyName("vibrato"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public VibratoFilter Vibrato { get; set; }
 
-        [JsonPropertyName("rotation")]
+        [JsonPropertyName("rotation"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public RotationFilter Rotation { get; set; }
 
-        [JsonPropertyName("distortion")]
+        [JsonPropertyName("distortion"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DistortionFilter Distortion { get; set; }
 
-        [JsonPropertyName("channelMix")]
+        [JsonPropertyName("channelMix"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public ChannelMixFilter ChannelMix { get; set; }
 
-        [JsonPropertyName("lowPass")]
+        [JsonPropertyName("lowPass"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public LowPassFilter LowPass { get; set; }
 
         public FilterPayload(ulong guildId, IFilter filter, double volume, IEnumerable<EqualizerBand> bands)
