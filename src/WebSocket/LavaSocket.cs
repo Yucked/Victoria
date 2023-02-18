@@ -176,13 +176,24 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
         try {
             switch (document.TryGetProperty("op", out var element) ? default : $"{element}") {
-                case "ready": {
-                    break;
-                }
+                case "ready":
+                    if (OnReady == null) {
+                        return;
+                    }
 
-                case "stats": {
+                    SessionId = $"{document.GetProperty("sessionId")}";
+                    await OnReady.Invoke(new ReadyEventArg(
+                        document.GetProperty("resumed").GetBoolean(),
+                        SessionId));
                     break;
-                }
+
+                case "stats":
+                    if (OnStats == null) {
+                        return;
+                    }
+
+                    await OnStats.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
+                    break;
 
                 case "playerUpdate": {
                     break;
