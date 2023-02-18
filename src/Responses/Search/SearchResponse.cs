@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using Victoria.Converters;
-using Victoria.Interfaces;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 namespace Victoria.Responses.Search {
@@ -12,7 +10,7 @@ namespace Victoria.Responses.Search {
         /// <summary>
         /// 
         /// </summary>
-        [JsonPropertyName("loadType"), JsonInclude, JsonConverter(typeof(SearchStatusConverter))]
+        [JsonPropertyName("loadType"), JsonInclude]
         public SearchStatus Status { get; private set; }
 
         /// <summary>
@@ -30,7 +28,7 @@ namespace Victoria.Responses.Search {
         /// <summary>
         /// 
         /// </summary>
-        [JsonPropertyName("tracks"), JsonInclude, JsonConverter(typeof(LavaTracksPropertyConverter))]
-        public IReadOnlyCollection<ILavaTrack> Tracks { get; private set; }
+        [JsonPropertyName("tracks"), JsonInclude]
+        public IReadOnlyCollection<object> Tracks { get; private set; }
     }
 }

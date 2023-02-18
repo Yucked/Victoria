@@ -8,7 +8,9 @@ namespace Victoria {
     /// 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LavaQueue<T> : IEnumerable<T> where T : ILavaTrack {
+    // ReSharper disable once ClassNeverInstantiated.Global
+    public class LavaQueue<T> : IEnumerable<T>
+        where T : ILavaTrack {
         private readonly LinkedList<T> _list;
 
         /// <summary>

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Victoria.Enums;
 using Victoria.Payloads.Player;
-using Victoria.Wrappers;
 
 namespace Victoria.Interfaces {
     /// <inheritdoc />
@@ -13,7 +12,8 @@ namespace Victoria.Interfaces {
     /// 
     /// </summary>
     /// <typeparam name="TLavaTrack"></typeparam>
-    public interface ILavaPlayer<TLavaTrack> : IAsyncDisposable where TLavaTrack : ILavaTrack {
+    public interface ILavaPlayer<TLavaTrack> : IAsyncDisposable
+        where TLavaTrack : ILavaTrack {
         /// <summary>
         /// 
         /// </summary>
