@@ -1,4 +1,4 @@
-﻿namespace Victoria.Responses.Search {
+﻿namespace Victoria.Rest.Search {
     /// <summary>
     /// Search status when searching for songs via Lavalink.
     /// </summary>
