@@ -1,26 +1,37 @@
 using System;
-using System.Threading;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Victoria.Interfaces;
 using Victoria.WebSocket.EventArgs;
 using Victoria.WebSocket.Internal;
+using Victoria.WebSocket.Internal.EventArgs;
 
 namespace Victoria.WebSocket;
 
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="TLavaPlayer"></typeparam>
+/// <typeparam name="TLavaTrack"></typeparam>
 public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     where TLavaTrack : ILavaTrack
     where TLavaPlayer : ILavaPlayer<TLavaTrack> {
     /// <summary>
     /// 
     /// </summary>
-    public event Func<StatsEventArg, Task> OnStatsReceived;
+    public event Func<ReadyEventArg, Task> OnReady;
 
     /// <summary>
     /// 
     /// </summary>
-    public event Func<PlayerUpdateEventArg<TLavaPlayer, TLavaTrack>, Task> OnUpdateReceived;
+    public event Func<StatsEventArg, Task> OnStats;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public event Func<PlayerUpdateEventArg<TLavaPlayer, TLavaTrack>, Task> OnPlayerUpdate;
 
     /// <summary>
     /// 
@@ -47,19 +58,27 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// </summary>
     public event Func<WebSocketClosedEventArg, Task> OnWebSocketClosed;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public string SessionId { get; internal set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool IsConnected { get; internal set; }
+
     private readonly Configuration _configuration;
     private readonly ILogger<LavaSocket<TLavaPlayer, TLavaTrack>> _logger;
     private readonly WebSocketClient _webSocketClient;
     private readonly BaseSocketClient _baseSocketClient;
 
-    private bool _refConnected;
-
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="socketClient"></param>
     /// <param name="configuration"></param>
     /// <param name="logger"></param>
-    /// <param name="webSocketClient"></param>
     public LavaSocket(BaseSocketClient socketClient,
                       Configuration configuration,
                       ILogger<LavaSocket<TLavaPlayer, TLavaTrack>> logger) {
@@ -76,12 +95,12 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     }
 
     /// <summary>
-    ///     Starts a WebSocket connection to the specified <see cref="NodeConfiguration.Hostname" />:<see cref="NodeConfiguration.Port" />
+    ///     Starts a WebSocket connection to the specified <see cref="Configuration.Hostname" />:<see cref="Configuration.Port" />
     ///     and hooks into <see cref="BaseSocketClient" /> events.
     /// </summary>
     /// <exception cref="InvalidOperationException">Throws if client is already connected.</exception>
     public async Task ConnectAsync() {
-        if (Volatile.Read(ref _refConnected)) {
+        if (IsConnected) {
             throw new InvalidOperationException(
                 $"You must call {nameof(DisconnectAsync)} or {nameof(DisposeAsync)} before calling {nameof(ConnectAsync)}.");
         }
@@ -104,7 +123,7 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// </summary>
     /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
     public async Task DisconnectAsync() {
-        if (!Volatile.Read(ref _refConnected)) {
+        if (!IsConnected) {
             throw new InvalidOperationException("Can't disconnect when client isn't connected.");
         }
 
@@ -116,5 +135,71 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     public async ValueTask DisposeAsync() {
         await _webSocketClient.DisposeAsync()
             .ConfigureAwait(false);
+    }
+
+    private Task OnOpenAsync() {
+        IsConnected = true;
+
+        // TODO: Handle resume?
+        return Task.CompletedTask;
+    }
+
+    private Task OnCloseAsync(CloseEventArgs arg) {
+        IsConnected = false;
+        _logger.LogWarning("WebSocket connection closed");
+        return Task.CompletedTask;
+    }
+
+    private Task OnErrorAsync(ErrorEventArgs arg) {
+        _logger.LogError("{exception}, {message}", arg.Exception, arg.Message);
+        return Task.CompletedTask;
+    }
+
+    private Task OnRetryAsync(RetryEventArgs arg) {
+        if (arg.IsLastRetry) {
+            _logger.LogError("This was the last try in establishing connection with Lavalink");
+            return Task.CompletedTask;
+        }
+
+        _logger.LogWarning("Lavalink reconnect attempt #{attempts}", arg.Count);
+        return Task.CompletedTask;
+    }
+
+    private async Task OnDataAsync(DataEventArgs arg) {
+        if (arg.Data.Length == 0) {
+            _logger.LogWarning("Didn't receive any data from websocket");
+            return;
+        }
+
+        _logger.LogDebug("{data}", JsonSerializer.Serialize(arg.Data));
+        var document = JsonDocument.Parse(arg.Data).RootElement;
+
+        try {
+            switch (document.TryGetProperty("op", out var element) ? default : $"{element}") {
+                case "ready": {
+                    break;
+                }
+
+                case "stats": {
+                    break;
+                }
+
+                case "playerUpdate": {
+                    break;
+                }
+
+                case "event": {
+                    break;
+                }
+
+                default: {
+                    _logger.LogCritical("Unknown OP code encountered, please check lavalink implementation.");
+                    break;
+                }
+            }
+        }
+        catch (Exception exception) {
+            _logger.LogError("{message} {exception}", exception.Message, exception);
+        }
     }
 }
