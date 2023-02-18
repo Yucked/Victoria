@@ -1,3 +1,4 @@
+using Victoria.Enums;
 using Victoria.Interfaces;
 
 namespace Victoria.WebSocket.EventArgs;

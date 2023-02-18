@@ -1,3 +1,4 @@
+using Victoria.Enums;
 using Victoria.Interfaces;
 
 namespace Victoria.WebSocket.EventArgs;
@@ -18,5 +19,16 @@ public struct TrackExceptionEventArg<TLavaPlayer, TLavaTrack>
     /// <summary>
     /// 
     /// </summary>
-    public LavaException Exception { get; internal init; }
+    public TrackException Exception { get; internal init; }
 }
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Message"></param>
+/// <param name="Severity"></param>
+/// <param name="Cause"></param>
+public readonly record struct TrackException(
+    string Message,
+    ExceptionSeverity Severity,
+    string Cause);
