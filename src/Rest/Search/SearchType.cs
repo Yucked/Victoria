@@ -1,4 +1,4 @@
-﻿namespace Victoria.Responses.Search {
+﻿namespace Victoria.Rest.Search {
     /// <summary>
     /// 
     /// </summary>

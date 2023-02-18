@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
-namespace Victoria.Responses.Search {
+namespace Victoria.Rest.Search {
     /// <summary>
     /// 
     /// </summary>
