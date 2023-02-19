@@ -49,5 +49,15 @@ namespace Victoria.Interfaces {
         /// 
         /// </summary>
         bool IsLiveStream { get; }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        string Artwork { get; }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        string ISRC { get; }
     }
 }
