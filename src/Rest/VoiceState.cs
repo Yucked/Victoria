@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Victoria.Rest;
 
 /// <summary>
@@ -9,8 +11,13 @@ namespace Victoria.Rest;
 /// <param name="IsConnected"></param>
 /// <param name="Ping"></param>
 public readonly record struct VoiceState(
+    [property: JsonPropertyName("token")]
     string Token,
+    [property: JsonPropertyName("endpoint")]
     string Endpoint,
+    [property: JsonPropertyName("sessionId")]
     string SessionId,
+    [property: JsonPropertyName("connected")]
     bool IsConnected,
+    [property: JsonPropertyName("ping")]
     int Ping);
