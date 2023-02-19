@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Victoria.Enums;
 using Victoria.Rest;
@@ -18,31 +19,37 @@ namespace Victoria.Interfaces {
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("guildId")]
         public ulong GuildId { get; }
 
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("track")]
         TLavaTrack Track { get; }
 
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("volume")]
         int Volume { get; }
 
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("paused")]
         bool IsPaused { get; }
 
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("filters")]
         IFilters Filters { get; }
 
         /// <summary>
         /// 
         /// </summary>
+        [JsonPropertyName("voice")]
         VoiceState State { get; }
 
         /// <summary>
