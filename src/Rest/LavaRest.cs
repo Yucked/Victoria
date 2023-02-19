@@ -4,6 +4,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Victoria.Interfaces;
+using Victoria.Rest.Route;
+using Victoria.Rest.Search;
 
 namespace Victoria.Rest;
 
@@ -60,6 +62,79 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<TLavaPlayer> UpdatePlayerAsync(ulong guildId, bool replaceTrack = false) {
         return default;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="guildId"></param>
+    public async Task DestroyPlayerAsync(ulong guildId) { }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sessionId"></param>
+    public async Task UpdateSessionAsync(string sessionId) { }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="identifier"></param>
+    /// <returns></returns>
+    public async Task<SearchResponse> LoadTrackAsync(string identifier) {
+        return default;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="trackHash"></param>
+    /// <returns></returns>
+    public async Task<TLavaTrack> DecodeTrackAsync(string trackHash) {
+        return default;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public async Task GetLavalinkInfoAsync() {
+        
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public async Task GetLavalinkStatsAsync() {
+        
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public async Task GetLavalinkVersion() {
+        
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public async Task<RouteStatus> GetRoutePlannerStatusAsync() {
+        return default;
+    }
+
+    /// <summary>
+    /// /
+    /// </summary>
+    public async Task UnmarkFailedAddressAsync() {
+        
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public async Task UnmarkAllFailedAddressAsync() {
+        
     }
 
     public ValueTask DisposeAsync() {
