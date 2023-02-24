@@ -118,6 +118,32 @@ namespace Victoria.Player {
             Source = lavaTrack.Source;
         }
 
+        internal static TLavaTrack Initialize<TLavaTrack>(TLavaTrack? lavaTrack,
+            string hash, string id, string title, string author,
+            string url, TimeSpan position, long duration,
+            bool canSeek, bool isStream, string source) where TLavaTrack : LavaTrack
+        {
+            if (lavaTrack is null)
+                return (TLavaTrack)Activator.CreateInstance(
+                    typeof(TLavaTrack),
+                    new LavaTrack(hash, id, title, author, url, position, duration, canSeek, isStream, source));
+
+            lavaTrack.Hash = hash ?? throw new ArgumentNullException(nameof(hash));
+            lavaTrack.Id = id ?? throw new ArgumentNullException(nameof(id));
+            lavaTrack.Title = title ?? throw new ArgumentNullException(nameof(title));
+            lavaTrack.Author = author ?? throw new ArgumentNullException(nameof(author));
+            lavaTrack.Url = url ?? throw new ArgumentNullException(nameof(url));
+            lavaTrack.Position = position;
+            lavaTrack.Duration = duration < TimeSpan.MaxValue.Ticks
+                ? TimeSpan.FromMilliseconds(duration)
+                : TimeSpan.MaxValue;
+            lavaTrack.CanSeek = canSeek;
+            lavaTrack.IsStream = isStream;
+            lavaTrack.Source = source;
+
+            return lavaTrack;
+        }
+
         /// <summary>
         /// 
         /// </summary>
