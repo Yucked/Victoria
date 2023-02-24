@@ -402,7 +402,7 @@ namespace Victoria.Node {
 
                         var lavaTrack = default(TLavaTrack);
                         if (root.TryGetProperty("track", out var trackElement)) {
-                            lavaTrack = (TLavaTrack)TrackDecoder.Decode($"{trackElement}");
+                            lavaTrack = TrackDecoder.Decode($"{trackElement}", player.Track);
                         }
 
                         var type = $"{root.GetProperty("type")}";
