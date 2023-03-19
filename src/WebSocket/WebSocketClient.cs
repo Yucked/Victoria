@@ -195,23 +195,27 @@ namespace Victoria.WebSocket {
         private async Task ReceiveAsync() {
             try {
                 var buffer = new byte[_webSocketConfiguration.BufferSize];
-                var finalBuffer = default(byte[]);
                 var offset = 0;
+
                 do {
-                    var receiveResult = await _webSocket.ReceiveAsync(buffer, _connectionTokenSource.Token);
-                    if (!receiveResult.EndOfMessage) {
-                        finalBuffer = new byte[_webSocketConfiguration.BufferSize * 2];
-                        buffer.CopyTo(finalBuffer, offset);
-                        offset += receiveResult.Count;
-                        buffer = new byte[_webSocketConfiguration.BufferSize];
-                        continue;
+                    var chunk = new byte[_webSocketConfiguration.BufferSize];
+                    var receiveResult = await _webSocket.ReceiveAsync(chunk, _connectionTokenSource.Token);
+
+                    if (offset == buffer.Length) {
+                        var tempBuffer = new byte[buffer.Length * 2];
+                        buffer.CopyTo(tempBuffer, 0);
+                        buffer = tempBuffer;
                     }
+
+                    chunk.CopyTo(buffer, offset);
+                    offset += chunk.Length;
+
+                    if (!receiveResult.EndOfMessage) continue;
 
                     switch (receiveResult.MessageType) {
                         case WebSocketMessageType.Text:
-                            await OnDataAsync.Invoke(new DataEventArgs((finalBuffer ?? buffer).RemoveTrailingNulls()));
+                            await OnDataAsync.Invoke(new DataEventArgs(buffer.RemoveTrailingNulls()));
 
-                            finalBuffer = default;
                             buffer = new byte[_webSocketConfiguration.BufferSize];
                             offset = 0;
                             break;
