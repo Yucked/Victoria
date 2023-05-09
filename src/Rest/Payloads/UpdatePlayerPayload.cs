@@ -1,12 +1,12 @@
 using System.Text.Json.Serialization;
 using Victoria.Interfaces;
 
-namespace Victoria.Rest.Requests;
+namespace Victoria.Rest.Payloads;
 
 /// <summary>
 /// 
 /// </summary>
-public readonly record struct UpdatePlayerRequest(
+public readonly record struct UpdatePlayerPayload(
     [property: JsonPropertyName("encodedTrack")]
     string EncodedTrack,
     [property: JsonPropertyName("identifier")]
