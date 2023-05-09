@@ -5,7 +5,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Victoria.Interfaces;
-using Victoria.Rest.Requests;
+using Victoria.Rest.Lavalink;
+using Victoria.Rest.Payloads;
 using Victoria.Rest.Route;
 using Victoria.Rest.Search;
 using Victoria.WebSocket.EventArgs;
@@ -81,19 +82,19 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <param name="sessionId"></param>
     /// <param name="guildId"></param>
     /// <param name="replaceTrack"></param>
-    /// <param name="updateRequest"></param>
+    /// <param name="updatePayload"></param>
     /// <returns></returns>
     public async Task<TLavaPlayer> UpdatePlayerAsync(string sessionId,
                                                      ulong guildId,
                                                      bool replaceTrack,
-                                                     UpdatePlayerRequest updateRequest) {
+                                                     UpdatePlayerPayload updatePayload) {
         ArgumentNullException.ThrowIfNull(sessionId);
         ArgumentNullException.ThrowIfNull(guildId);
         ArgumentNullException.ThrowIfNull(replaceTrack);
-        ArgumentNullException.ThrowIfNull(updateRequest);
+        ArgumentNullException.ThrowIfNull(updatePayload);
         var responseMessage = await _httpClient.PatchAsync(
             $"/sessions/{sessionId}/players/{guildId}?noReplace={replaceTrack}",
-            new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(updateRequest)));
+            new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(updatePayload)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -123,20 +124,20 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// 
     /// </summary>
     /// <param name="sessionId"></param>
-    /// <param name="sessionRequest"></param>
+    /// <param name="sessionPayload"></param>
     /// <returns></returns>
-    public async Task<UpdateSessionRequest> UpdateSessionAsync(string sessionId,
-                                                               UpdateSessionRequest sessionRequest) {
+    public async Task<UpdateSessionPayload> UpdateSessionAsync(string sessionId,
+                                                               UpdateSessionPayload sessionPayload) {
         ArgumentNullException.ThrowIfNull(sessionId);
-        ArgumentNullException.ThrowIfNull(sessionRequest);
+        ArgumentNullException.ThrowIfNull(sessionPayload);
         var responseMessage = await _httpClient.PatchAsync($"/sessions/{sessionId}/",
-            new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(sessionRequest)));
+            new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(sessionPayload)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
         }
 
-        return await JsonSerializer.DeserializeAsync<UpdateSessionRequest>(stream);
+        return await JsonSerializer.DeserializeAsync<UpdateSessionPayload>(stream);
     }
 
     /// <summary>
@@ -191,7 +192,15 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    public async Task GetLavalinkInfoAsync() { }
+    public async Task<LavalinkInfo> GetLavalinkInfoAsync() {
+        var responseMessage = await _httpClient.GetAsync($"/v3/info");
+        await using var stream = await responseMessage.Content.ReadAsStreamAsync();
+        if (!responseMessage.IsSuccessStatusCode) {
+            throw new RestException(stream);
+        }
+
+        return await JsonSerializer.DeserializeAsync<LavalinkInfo>(stream);
+    }
 
     /// <summary>
     /// 
@@ -230,14 +239,21 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     }
 
     /// <summary>
-    /// /
+    /// 
     /// </summary>
-    public async Task UnmarkFailedAddressAsync() { }
+    /// <param name="address"></param>
+    public async Task UnmarkFailedAddressAsync(string address) {
+        ArgumentNullException.ThrowIfNull(address);
+        await _httpClient.PostAsync($"/routeplanner/free/address",
+            new StringContent(address));
+    }
 
     /// <summary>
     /// 
     /// </summary>
-    public async Task UnmarkAllFailedAddressAsync() { }
+    public async Task UnmarkAllFailedAddressAsync() {
+        await _httpClient.PostAsync($"/routeplanner/free/all", default);
+    }
 
     public ValueTask DisposeAsync() {
         throw new NotImplementedException();
