@@ -205,7 +205,7 @@ namespace Victoria {
             }
 
             if (Count - index < count) {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
 
             var tempIndex = 0;
