@@ -38,7 +38,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         _configuration = configuration;
 
         _httpClient.DefaultRequestHeaders.Add("Authorization", _configuration.Authorization);
-        _httpClient.BaseAddress = new Uri($"{configuration.HttpEndpoint}/v4");
+        _httpClient.BaseAddress = new Uri($"{configuration.HttpEndpoint}/v3");
     }
 
     /// <summary>
