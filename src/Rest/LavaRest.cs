@@ -235,7 +235,13 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// </summary>
     /// <returns></returns>
     public async Task<RouteStatus> GetRoutePlannerStatusAsync() {
-        return default;
+        var responseMessage = await _httpClient.GetAsync($"/routeplanner/status");
+        await using var stream = await responseMessage.Content.ReadAsStreamAsync();
+        if (!responseMessage.IsSuccessStatusCode) {
+            throw new RestException(stream);
+        }
+
+        return await JsonSerializer.DeserializeAsync<RouteStatus>(stream);
     }
 
     /// <summary>
