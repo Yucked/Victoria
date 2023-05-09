@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Text.Json;
 
 namespace Victoria.Rest;
 
@@ -10,25 +12,44 @@ public class RestException : Exception {
     /// <summary>
     /// The timestamp of the error in milliseconds since the epoch
     /// </summary>
-    public int Timestamp { get; init; }
-    
+    public int Timestamp { get; }
+
     /// <summary>
     /// The HTTP status code
     /// </summary>
-    public int Status { get; init; }
-    
+    public int Status { get; }
+
     /// <summary>
     /// The HTTP status code message
     /// </summary>
-    public string Error { get; init; }
-    
+    public string Error { get; }
+
     /// <summary>
     /// The stack trace of the error when trace=true as query param has been sent
     /// </summary>
-    public string Trace { get; init; }
-    
+    public string Trace { get; }
+
+    /// <summary>
+    /// Error message
+    /// </summary>
+    public override string Message { get; }
+
     /// <summary>
     /// The request path
     /// </summary>
-    public string Path { get; init; }
+    public string Path { get; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="stream"></param>
+    internal RestException(Stream stream) {
+        var root = JsonDocument.Parse(stream).RootElement;
+        Timestamp = root.GetProperty("timestamp").GetInt32();
+        Status = root.GetProperty("status").GetInt32();
+        Error = root.GetProperty("error").GetString();
+        Trace = root.GetProperty("trace").GetString();
+        Message = root.GetProperty("message").GetString();
+        Path = root.GetProperty("path").GetString();
+    }
 }
