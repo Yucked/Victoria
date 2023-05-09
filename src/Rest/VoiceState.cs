@@ -5,11 +5,11 @@ namespace Victoria.Rest;
 /// <summary>
 /// 
 /// </summary>
-/// <param name="Token"></param>
-/// <param name="Endpoint"></param>
-/// <param name="SessionId"></param>
-/// <param name="IsConnected"></param>
-/// <param name="Ping"></param>
+/// <param name="Token">Discord voice token to authenticate with</param>
+/// <param name="Endpoint">Discord voice endpoint to connect to</param>
+/// <param name="SessionId">Discord voice session id to authenticate with</param>
+/// <param name="IsConnected">Whether the player is connected</param>
+/// <param name="Ping">Roundtrip latency in milliseconds to the voice gateway (-1 if not connected).</param>
 public readonly record struct VoiceState(
     [property: JsonPropertyName("token")]
     string Token,
