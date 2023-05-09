@@ -87,8 +87,10 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                                                      ulong guildId,
                                                      bool replaceTrack,
                                                      UpdatePlayerRequest updateRequest) {
+        ArgumentNullException.ThrowIfNull(sessionId);
         ArgumentNullException.ThrowIfNull(guildId);
         ArgumentNullException.ThrowIfNull(replaceTrack);
+        ArgumentNullException.ThrowIfNull(updateRequest);
         var responseMessage = await _httpClient.PatchAsync(
             $"/sessions/{sessionId}/players/{guildId}?noReplace={replaceTrack}",
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(updateRequest)));
