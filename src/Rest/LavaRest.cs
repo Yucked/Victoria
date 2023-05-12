@@ -22,7 +22,6 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     where TLavaTrack : ILavaTrack
     where TLavaPlayer : ILavaPlayer<TLavaTrack> {
     private readonly HttpClient _httpClient;
-    private readonly Configuration _configuration;
     private readonly ILogger<LavaRest<TLavaPlayer, TLavaTrack>> _logger;
 
     /// <summary>
@@ -36,9 +35,8 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                     ILogger<LavaRest<TLavaPlayer, TLavaTrack>> logger) {
         _logger = logger;
         _httpClient = httpClient;
-        _configuration = configuration;
 
-        _httpClient.DefaultRequestHeaders.Add("Authorization", _configuration.Authorization);
+        _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
         _httpClient.BaseAddress = new Uri($"{configuration.HttpEndpoint}/v3");
     }
 
