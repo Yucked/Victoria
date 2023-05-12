@@ -3,10 +3,13 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Victoria.Enums;
 using Victoria.Interfaces;
 using Victoria.WebSocket.EventArgs;
 using Victoria.WebSocket.Internal;
 using Victoria.WebSocket.Internal.EventArgs;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Victoria.WebSocket;
 
@@ -31,27 +34,27 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    public event Func<PlayerUpdateEventArg<TLavaPlayer, TLavaTrack>, Task> OnPlayerUpdate;
+    public event Func<PlayerUpdateEventArg, Task> OnPlayerUpdate;
 
     /// <summary>
     /// 
     /// </summary>
-    public event Func<TrackStartEventArg<TLavaPlayer, TLavaTrack>, Task> OnTrackStart;
+    public event Func<TrackStartEventArg, Task> OnTrackStart;
 
     /// <summary>
     /// 
     /// </summary>
-    public event Func<TrackEndEventArg<TLavaPlayer, TLavaTrack>, Task> OnTrackEnd;
+    public event Func<TrackEndEventArg, Task> OnTrackEnd;
 
     /// <summary>
     /// 
     /// </summary>
-    public event Func<TrackExceptionEventArg<TLavaPlayer, TLavaTrack>, Task> OnTrackException;
+    public event Func<TrackExceptionEventArg, Task> OnTrackException;
 
     /// <summary>
     /// 
     /// </summary>
-    public event Func<TrackStuckEventArg<TLavaPlayer, TLavaTrack>, Task> OnTrackStuck;
+    public event Func<TrackStuckEventArg, Task> OnTrackStuck;
 
     /// <summary>
     /// 
@@ -172,12 +175,17 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         }
 
         _logger.LogDebug("{data}", JsonSerializer.Serialize(arg.Data));
-        var document = JsonDocument.Parse(arg.Data).RootElement;
 
         try {
+            var document = JsonDocument.Parse(arg.Data).RootElement;
+            var guildId = document.TryGetProperty("guildId", out var idElement)
+                ? ulong.Parse(idElement.GetString()!)
+                : 0;
             switch (document.TryGetProperty("op", out var element) ? default : $"{element}") {
                 case "ready":
                     if (OnReady == null) {
+                        _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
+                            nameof(OnReady));
                         return;
                     }
 
@@ -189,19 +197,110 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                 case "stats":
                     if (OnStats == null) {
+                        _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
+                            nameof(OnStats));
                         return;
                     }
 
                     await OnStats.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
                     break;
 
-                case "playerUpdate": {
-                    break;
-                }
+                case "playerUpdate":
+                    var state = document.GetProperty("state");
+                    if (OnPlayerUpdate == null) {
+                        _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
+                            nameof(OnPlayerUpdate));
+                        return;
+                    }
 
-                case "event": {
+                    await OnPlayerUpdate.Invoke(new PlayerUpdateEventArg {
+                        GuildId = guildId,
+                        Time = DateTimeOffset.FromUnixTimeMilliseconds(state.GetProperty("time").GetInt32()),
+                        Position = TimeSpan.FromMilliseconds(state.GetProperty("position").GetInt32()),
+                        IsConnected = state.GetProperty("connected").GetBoolean(),
+                        Ping = state.GetProperty("ping").GetInt64()
+                    });
                     break;
-                }
+
+                case "event":
+                    switch (document.GetProperty("type").GetString()) {
+                        case "TrackStartEvent":
+                            if (OnTrackStart == null) {
+                                _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
+                                    nameof(OnTrackStart));
+                                return;
+                            }
+
+                            await OnTrackStart.Invoke(new TrackStartEventArg {
+                                GuildId = guildId,
+                                EncodedTrack = document.GetProperty("encodedTrack").GetString()
+                            });
+                            break;
+
+                        case "TrackEndEvent":
+                            if (OnTrackEnd == null) {
+                                _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
+                                    nameof(OnTrackEnd));
+                                return;
+                            }
+
+                            await OnTrackEnd.Invoke(new TrackEndEventArg {
+                                GuildId = guildId,
+                                EncodedTrack = document.GetProperty("encodedTrack").GetString(),
+                                Reason = document.GetProperty("reason").Deserialize<TrackEndReason>()
+                            });
+                            break;
+
+                        case "TrackExceptionEvent":
+                            if (OnTrackException == null) {
+                                _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
+                                    nameof(OnTrackException));
+                                return;
+                            }
+
+                            await OnTrackException.Invoke(new TrackExceptionEventArg {
+                                GuildId = guildId,
+                                EncodedTrack = document.GetProperty("encodedTrack").GetString(),
+                                Exception = document.GetProperty("exception").Deserialize<TrackException>()
+                            });
+                            break;
+
+                        case "TrackStuckEvent":
+                            if (OnTrackStuck == null) {
+                                _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
+                                    nameof(OnTrackStuck));
+                                return;
+                            }
+
+                            await OnTrackStuck.Invoke(new TrackStuckEventArg {
+                                GuildId = guildId,
+                                EncodedTrack = document.GetProperty("EncodedTrack").GetString(),
+                                Threshold = document.GetProperty("thresholdMs").GetInt64()
+                            });
+                            break;
+
+                        case "WebSocketClosedEvent":
+                            if (OnWebSocketClosed == null) {
+                                _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
+                                    nameof(OnWebSocketClosed));
+                                return;
+                            }
+
+                            await OnWebSocketClosed.Invoke(new WebSocketClosedEventArg {
+                                GuildId = guildId,
+                                ByRemote = document.GetProperty("byRemote").GetBoolean(),
+                                Code = document.GetProperty("code").GetInt32(),
+                                Reason = document.GetProperty("reason").GetString()
+                            });
+                            break;
+
+                        default:
+                            _logger.LogError("Unknown event encountered {}. Please open an issue.",
+                                document.GetProperty("type"));
+                            break;
+                    }
+
+                    break;
 
                 default: {
                     _logger.LogCritical("Unknown OP code encountered, please check lavalink implementation.");
@@ -210,7 +309,9 @@ public class LavaSocket<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             }
         }
         catch (Exception exception) {
-            _logger.LogError("{message} {exception}", exception.Message, exception);
+            _logger.LogError(exception is JsonReaderException
+                ? "Please increase buffer size in configuration."
+                : $"{exception.Message} {exception}");
         }
     }
 }
