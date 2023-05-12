@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Victoria.Enums;
 using Victoria.Rest;
 using Victoria.Rest.Filters;
 
@@ -50,13 +49,8 @@ namespace Victoria.Interfaces {
         /// 
         /// </summary>
         [JsonPropertyName("voice")]
-        VoiceState State { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        PlayerState PlayerState { get; }
-
+        VoiceState VoiceState { get; }
+        
         /// <summary>
         /// 
         /// </summary>
