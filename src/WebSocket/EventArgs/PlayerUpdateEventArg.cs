@@ -1,23 +1,23 @@
 using System;
-using Victoria.Interfaces;
 
 namespace Victoria.WebSocket.EventArgs;
 
-public class PlayerUpdateEventArg<TLavaPlayer, TLavaTrack>
-    where TLavaTrack : ILavaTrack
-    where TLavaPlayer : ILavaPlayer<TLavaTrack> {
+/// <summary>
+/// 
+/// </summary>
+public struct PlayerUpdateEventArg {
     /// <summary>
-    /// 
+    /// Guild id of the player
     /// </summary>
-    public TLavaPlayer Player { get; internal init; }
+    public ulong GuildId { get; internal init; }
 
     /// <summary>
-    /// 
+    /// Unix timestamp in milliseconds
     /// </summary>
-    public TLavaTrack Track { get; internal init; }
+    public DateTimeOffset Time { get; internal init; }
 
     /// <summary>
-    /// 
+    /// The position of the track in milliseconds
     /// </summary>
     public TimeSpan Position { get; internal init; }
 

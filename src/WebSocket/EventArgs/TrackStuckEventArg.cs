@@ -1,19 +1,18 @@
-using Victoria.Interfaces;
-
 namespace Victoria.WebSocket.EventArgs;
 
-public struct TrackStuckEventArg<TLavaPlayer, TLavaTrack>
-    where TLavaTrack : ILavaTrack
-    where TLavaPlayer : ILavaPlayer<TLavaTrack> {
+/// <summary>
+/// 
+/// </summary>
+public struct TrackStuckEventArg {
     /// <summary>
     /// 
     /// </summary>
-    public TLavaPlayer Player { get; internal init; }
+    public ulong GuildId { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
-    public TLavaTrack Track { get; internal init; }
+    public string EncodedTrack { get; internal init; }
 
     /// <summary>
     /// 

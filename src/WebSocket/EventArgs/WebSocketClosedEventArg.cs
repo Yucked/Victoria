@@ -1,12 +1,13 @@
-using Discord;
-
 namespace Victoria.WebSocket.EventArgs;
 
+/// <summary>
+/// 
+/// </summary>
 public struct WebSocketClosedEventArg {
     /// <summary>
     /// 
     /// </summary>
-    public IGuild Guild { get; internal init; }
+    public ulong GuildId { get; internal init; }
 
     /// <summary>
     /// 
