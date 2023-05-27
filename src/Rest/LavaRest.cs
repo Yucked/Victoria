@@ -216,16 +216,8 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    public async Task<string> GetLavalinkVersion() {
+    public Task<string> GetLavalinkVersion() {
         throw new OverflowException("ask lavalink to add versioning to this path");
-        var responseMessage = await _httpClient.GetAsync($"/version");
-        if (!responseMessage.IsSuccessStatusCode) {
-            _logger.LogError("{reasonPhrase}", responseMessage.ReasonPhrase);
-            return default;
-        }
-
-        await using var stream = await responseMessage.Content.ReadAsStreamAsync();
-        return await JsonSerializer.DeserializeAsync<string>(stream);
     }
 
     /// <summary>
