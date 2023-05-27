@@ -17,7 +17,7 @@ public enum TrackEndReason : byte {
 
     /// <summary>
     ///     The track was stopped due to the player being stopped by either calling
-    ///     <see cref="LavaPlayer.StopAsync" /> or <see cref="LavaPlayer.PlayAsync" />.
+    ///     <see cref="ILavaPlayer.StopAsync" /> or <see cref="LavaPlayer.PlayAsync" />.
     /// </summary>
     Stopped = (byte)'S',
 
