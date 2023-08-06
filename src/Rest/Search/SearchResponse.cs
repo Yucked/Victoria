@@ -10,25 +10,25 @@ namespace Victoria.Rest.Search {
         /// <summary>
         /// 
         /// </summary>
-        [JsonPropertyName("loadType"), JsonInclude]
-        public SearchStatus Status { get; private set; }
+        [JsonPropertyName("loadType"), JsonConverter(typeof(JsonStringEnumConverter))]
+        public SearchStatus Status { get; }
 
         /// <summary>
         /// 
         /// </summary>
-        [JsonPropertyName("playlistInfo"), JsonInclude]
-        public SearchPlaylist Playlist { get; private set; }
+        [JsonPropertyName("playlistInfo")]
+        public SearchPlaylist Playlist { get; }
 
         /// <summary>
         /// 
         /// </summary>
-        [JsonPropertyName("exception"), JsonInclude]
-        public SearchException Exception { get; private set; }
+        [JsonPropertyName("exception")]
+        public SearchException Exception { get; }
 
         /// <summary>
         /// 
         /// </summary>
-        [JsonPropertyName("tracks"), JsonInclude]
-        public IReadOnlyCollection<object> Tracks { get; private set; }
+        [JsonPropertyName("tracks")]
+        public IReadOnlyCollection<object> Tracks { get; }
     }
 }
