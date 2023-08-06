@@ -13,6 +13,13 @@ using Victoria.WebSocket.EventArgs;
 
 namespace Victoria.Rest;
 
+/// <inheritdoc />
+public class LavaRest : LavaRest<LavaPlayer, LavaTrack> {
+    /// <inheritdoc />
+    public LavaRest(HttpClient httpClient, Configuration configuration, ILogger<LavaRest> logger)
+        : base(httpClient, configuration, logger) { }
+}
+
 /// <summary>
 /// 
 /// </summary>
@@ -21,6 +28,7 @@ namespace Victoria.Rest;
 public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     where TLavaTrack : ILavaTrack
     where TLavaPlayer : ILavaPlayer<TLavaTrack> {
+    private readonly string _version;
     private readonly HttpClient _httpClient;
     private readonly ILogger<LavaRest<TLavaPlayer, TLavaTrack>> _logger;
 
@@ -36,8 +44,9 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         _logger = logger;
         _httpClient = httpClient;
 
+        _version = $"v{configuration.Version}";
         _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
-        _httpClient.BaseAddress = new Uri($"{configuration.HttpEndpoint}/v3");
+        _httpClient.BaseAddress = new Uri($"{configuration.HttpEndpoint}");
     }
 
     /// <summary>
@@ -47,7 +56,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<IReadOnlyCollection<TLavaPlayer>> GetPlayersAsync(string sessionId) {
         ArgumentNullException.ThrowIfNull(sessionId);
-        var responseMessage = await _httpClient.GetAsync($"/sessions/{sessionId}/players");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{sessionId}/players");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -65,7 +74,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     public async Task<TLavaPlayer> GetPlayerAsync(string sessionId, ulong guildId) {
         ArgumentNullException.ThrowIfNull(sessionId);
         ArgumentNullException.ThrowIfNull(guildId);
-        var responseMessage = await _httpClient.GetAsync($"/sessions/{sessionId}/players/{guildId}");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{sessionId}/players/{guildId}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -91,7 +100,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(replaceTrack);
         ArgumentNullException.ThrowIfNull(updatePayload);
         var responseMessage = await _httpClient.PatchAsync(
-            $"/sessions/{sessionId}/players/{guildId}?noReplace={replaceTrack}",
+            $"/{_version}/sessions/{sessionId}/players/{guildId}?noReplace={replaceTrack}",
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(updatePayload)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
@@ -109,7 +118,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     public async Task DestroyPlayerAsync(string sessionId, ulong guildId) {
         ArgumentNullException.ThrowIfNull(sessionId);
         ArgumentNullException.ThrowIfNull(guildId);
-        var responseMessage = await _httpClient.GetAsync($"/sessions/{sessionId}/players/{guildId}");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{sessionId}/players/{guildId}");
         if (!responseMessage.IsSuccessStatusCode) {
             await using var stream = await responseMessage.Content.ReadAsStreamAsync();
             throw new RestException(stream);
@@ -128,7 +137,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                                                                UpdateSessionPayload sessionPayload) {
         ArgumentNullException.ThrowIfNull(sessionId);
         ArgumentNullException.ThrowIfNull(sessionPayload);
-        var responseMessage = await _httpClient.PatchAsync($"/sessions/{sessionId}/",
+        var responseMessage = await _httpClient.PatchAsync($"/{_version}/sessions/{sessionId}/",
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(sessionPayload)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
@@ -145,7 +154,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<SearchResponse> LoadTrackAsync(string identifier) {
         ArgumentNullException.ThrowIfNull(identifier);
-        var responseMessage = await _httpClient.GetAsync($"/loadtracks?identifier={identifier}");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/loadtracks?identifier={identifier}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -161,7 +170,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<TLavaTrack> DecodeTrackAsync(string trackHash) {
         ArgumentNullException.ThrowIfNull(trackHash);
-        var responseMessage = await _httpClient.GetAsync($"/decodetrack?encodedTrack={trackHash}");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/decodetrack?encodedTrack={trackHash}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -177,7 +186,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<IReadOnlyCollection<TLavaTrack>> DecodeTracksAsync(params string[] tracksHashes) {
         ArgumentNullException.ThrowIfNull(tracksHashes);
-        var responseMessage = await _httpClient.PostAsync($"/decodetrack",
+        var responseMessage = await _httpClient.PostAsync($"/{_version}/decodetrack",
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(tracksHashes)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
@@ -191,7 +200,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// 
     /// </summary>
     public async Task<LavalinkInfo> GetLavalinkInfoAsync() {
-        var responseMessage = await _httpClient.GetAsync($"/v3/info");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/info");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -204,7 +213,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// 
     /// </summary>
     public async Task<StatsEventArg> GetLavalinkStatsAsync() {
-        var responseMessage = await _httpClient.GetAsync($"/stats");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/stats");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -216,8 +225,14 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    public Task<string> GetLavalinkVersion() {
-        throw new OverflowException("ask lavalink to add versioning to this path");
+    public async Task<string> GetLavalinkVersion() {
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/routeplanner/status");
+        await using var stream = await responseMessage.Content.ReadAsStreamAsync();
+        if (!responseMessage.IsSuccessStatusCode) {
+            throw new RestException(stream);
+        }
+
+        return await responseMessage.Content.ReadAsStringAsync();
     }
 
     /// <summary>
@@ -225,7 +240,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// </summary>
     /// <returns></returns>
     public async Task<RouteStatus> GetRoutePlannerStatusAsync() {
-        var responseMessage = await _httpClient.GetAsync($"/routeplanner/status");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/routeplanner/status");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -240,7 +255,7 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <param name="address"></param>
     public async Task UnmarkFailedAddressAsync(string address) {
         ArgumentNullException.ThrowIfNull(address);
-        await _httpClient.PostAsync($"/routeplanner/free/address",
+        await _httpClient.PostAsync($"/{_version}/routeplanner/free/address",
             new StringContent(address));
     }
 
@@ -248,10 +263,12 @@ public class LavaRest<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// 
     /// </summary>
     public async Task UnmarkAllFailedAddressAsync() {
-        await _httpClient.PostAsync($"/routeplanner/free/all", default);
+        await _httpClient.PostAsync($"/{_version}/routeplanner/free/all", default);
     }
 
+    /// <inheritdoc />
     public ValueTask DisposeAsync() {
-        throw new NotImplementedException();
+        _httpClient.Dispose();
+        return ValueTask.CompletedTask;
     }
 }
