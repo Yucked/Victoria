@@ -10,6 +10,11 @@ public record Configuration {
     /// <summary>
     /// 
     /// </summary>
+    public int Version { get; init; } = 3;
+
+    /// <summary>
+    /// 
+    /// </summary>
     public string Hostname { get; init; } = "127.0.0.1";
 
     /// <summary>
