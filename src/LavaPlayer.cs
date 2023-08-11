@@ -82,9 +82,4 @@ public class LavaPlayer : ILavaPlayer<LavaTrack> {
     public async ValueTask EqualizeAsync(params EqualizerBand[] equalizerBands) {
         throw new NotImplementedException();
     }
-
-    /// <inheritdoc />
-    public async ValueTask DisposeAsync() {
-        throw new NotImplementedException();
-    }
 }

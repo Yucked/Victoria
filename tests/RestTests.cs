@@ -13,14 +13,14 @@ public class RestTests {
     [DataRow("ytsearch:The Weeknd Valeria")]
     [DataTestMethod]
     public async Task SearchAsync(string search) {
-        var searchResponse = await Globals.Rest.LoadTrackAsync(search);
+        var searchResponse = await Globals.Node.LoadTrackAsync(search);
         Assert.IsNotNull(searchResponse);
         Assert.IsNull(searchResponse.Exception.Message);
     }
 
     [TestMethod]
     public async Task VerfiyVersionAsync() {
-        var version = await Globals.Rest.GetLavalinkVersion();
+        var version = await Globals.Node.GetLavalinkVersion();
         Assert.IsNotNull(version);
     }
 }
