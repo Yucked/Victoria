@@ -52,7 +52,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
     private readonly Configuration _configuration;
     private readonly ConcurrentQueue<byte[]> _messageQueue;
     private CancellationTokenSource _connectionTokenSource;
-    private WebSocket _webSocket;
+    private ClientWebSocket _webSocket;
     private int _reconnectAttempts;
     private int _reconnectDelay;
 
@@ -65,7 +65,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
     public WebSocketClient(Configuration configuration) {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        Host = new Uri($"{_configuration.SocketEndpoint}/v4/websocket");
+        Host = new Uri($"{configuration.SocketEndpoint}/v{configuration.Version}/websocket");
         _configuration = configuration;
         _webSocket = new ClientWebSocket();
         _messageQueue = new ConcurrentQueue<byte[]>();
@@ -87,7 +87,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
             throw new ArgumentNullException(nameof(value));
         }
 
-        (_webSocket as ClientWebSocket).Options.SetRequestHeader(key, value);
+        _webSocket.Options.SetRequestHeader(key, value);
     }
 
     /// <summary>
@@ -100,6 +100,22 @@ public sealed class WebSocketClient : IAsyncDisposable {
                 $"WebSocket is already in open state. Current state: {_webSocket.State}");
         }
 
+        try {
+            await _webSocket
+                .ConnectAsync(Host, CancellationToken.None)
+                .ContinueWith(VerifyConnectionAsync);
+        }
+        catch (Exception exception) {
+            if (exception is not ObjectDisposedException) {
+                return;
+            }
+
+            ResetWebSocket();
+            await ReconnectAsync();
+        }
+
+        return;
+
         async Task VerifyConnectionAsync(Task task) {
             if (task.Exception != null) {
                 await OnErrorAsync.Invoke(new ErrorEventArgs(task.Exception));
@@ -111,20 +127,6 @@ public sealed class WebSocketClient : IAsyncDisposable {
             _reconnectAttempts = 0;
             _connectionTokenSource = new CancellationTokenSource();
             await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync(), SendAsync());
-        }
-
-        try {
-            await (_webSocket as ClientWebSocket)
-                .ConnectAsync(Host, CancellationToken.None)
-                .ContinueWith(VerifyConnectionAsync);
-        }
-        catch (Exception exception) {
-            if (exception is not ObjectDisposedException) {
-                return;
-            }
-
-            ResetWebSocket();
-            await ReconnectAsync();
         }
     }
 
@@ -184,6 +186,10 @@ public sealed class WebSocketClient : IAsyncDisposable {
                         await DisconnectAsync();
                         await ReconnectAsync();
                         break;
+
+                    case WebSocketMessageType.Binary:
+                    default:
+                        break;
                 }
             } while (_webSocket.State == WebSocketState.Open &&
                      !_connectionTokenSource.IsCancellationRequested);
@@ -232,7 +238,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
     }
 
     private void ResetWebSocket() {
-        var options = (_webSocket as ClientWebSocket).Options;
+        var options = _webSocket.Options;
         var headerCollection = options.GetType()
                 .GetProperty("RequestHeaders", BindingFlags.Instance | BindingFlags.NonPublic)
                 .GetValue(options, null)
@@ -240,7 +246,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
 
         _webSocket = new ClientWebSocket();
         foreach (var key in headerCollection.Keys) {
-            (_webSocket as ClientWebSocket).Options.SetRequestHeader($"{key}", headerCollection.Get($"{key}"));
+            _webSocket.Options.SetRequestHeader($"{key}", headerCollection.Get($"{key}"));
         }
     }
 

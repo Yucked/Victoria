@@ -13,7 +13,7 @@ namespace Victoria.Interfaces {
     /// 
     /// </summary>
     /// <typeparam name="TLavaTrack"></typeparam>
-    public interface ILavaPlayer<TLavaTrack> : IAsyncDisposable
+    public interface ILavaPlayer<TLavaTrack>
         where TLavaTrack : ILavaTrack {
         /// <summary>
         /// 
@@ -50,7 +50,7 @@ namespace Victoria.Interfaces {
         /// </summary>
         [JsonPropertyName("voice")]
         VoiceState VoiceState { get; }
-        
+
         /// <summary>
         /// 
         /// </summary>

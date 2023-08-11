@@ -1,20 +1,21 @@
 using System;
 using System.Net.Http;
+using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Victoria.Rest;
 
 namespace Victoria.Tests;
 
 public static class Globals {
-    public static IServiceProvider Provider
+    public static readonly IServiceProvider Provider
         = new ServiceCollection()
             .AddSingleton<HttpClient>()
-            .AddSingleton<LavaRest>()
+            .AddSingleton<LavaNode<LavaPlayer, LavaTrack>>()
             .AddSingleton<Configuration>()
+            .AddSingleton<BaseSocketClient, DiscordSocketClient>()
             .AddLogging(x => x.SetMinimumLevel(LogLevel.Trace))
             .BuildServiceProvider();
 
-    public static LavaRest Rest
-        = Provider.GetRequiredService<LavaRest>();
+    public static LavaNode<LavaPlayer, LavaTrack> Node
+        = Provider.GetRequiredService<LavaNode<LavaPlayer, LavaTrack>>();
 }

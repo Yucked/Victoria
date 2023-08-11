@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -147,11 +148,59 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="sessionId"></param>
+    /// <param name="voiceChannel"></param>
+    /// <param name="textChannel"></param>
     /// <returns></returns>
-    public async Task<IReadOnlyCollection<TLavaPlayer>> GetPlayersAsync(string sessionId) {
-        ArgumentNullException.ThrowIfNull(sessionId);
-        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{sessionId}/players");
+    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    public async Task<TLavaPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default) {
+        if (!IsConnected) {
+            throw new InvalidOperationException(
+                $"You must call {nameof(ConnectAsync)} before joining a voice channel.");
+        }
+
+        ArgumentNullException.ThrowIfNull(voiceChannel);
+        var player = await GetPlayerAsync(voiceChannel.GuildId);
+        if (player != null) {
+            return player;
+        }
+
+        await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true)
+            .ConfigureAwait(false);
+
+        // TODO: How to handle new players?
+        player = (TLavaPlayer)Activator
+            .CreateInstance(typeof(TLavaPlayer), _webSocketClient, voiceChannel, textChannel);
+        return player;
+    }
+
+    /// <summary>
+    ///     Leaves the specified channel only if <typeparamref name="TLavaPlayer" /> is connected to it.
+    /// </summary>
+    /// <param name="voiceChannel">An instance of <see cref="IVoiceChannel" />.</param>
+    /// <exception cref="InvalidOperationException">Throws if client isn't connected.</exception>
+    public async Task LeaveAsync(IVoiceChannel voiceChannel) {
+        if (!IsConnected) {
+            throw new InvalidOperationException("Can't execute this operation when websocket isn't connected.");
+        }
+
+        ArgumentNullException.ThrowIfNull(voiceChannel);
+        var player = await GetPlayerAsync(voiceChannel.GuildId);
+        if (player == null) {
+            return;
+        }
+
+        await voiceChannel.DisconnectAsync()
+            .ConfigureAwait(false);
+        await DestroyPlayerAsync(voiceChannel.GuildId);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public async Task<IReadOnlyCollection<TLavaPlayer>> GetPlayersAsync() {
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{SessionId}/players");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -163,13 +212,12 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="sessionId"></param>
     /// <param name="guildId"></param>
     /// <returns></returns>
-    public async Task<TLavaPlayer> GetPlayerAsync(string sessionId, ulong guildId) {
-        ArgumentNullException.ThrowIfNull(sessionId);
+    public async Task<TLavaPlayer> GetPlayerAsync(ulong guildId) {
         ArgumentNullException.ThrowIfNull(guildId);
-        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{sessionId}/players/{guildId}");
+
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{SessionId}/players/{guildId}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
             throw new RestException(stream);
@@ -181,21 +229,19 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="sessionId"></param>
     /// <param name="guildId"></param>
     /// <param name="replaceTrack"></param>
     /// <param name="updatePayload"></param>
     /// <returns></returns>
-    public async Task<TLavaPlayer> UpdatePlayerAsync(string sessionId,
-                                                     ulong guildId,
-                                                     bool replaceTrack,
-                                                     UpdatePlayerPayload updatePayload) {
-        ArgumentNullException.ThrowIfNull(sessionId);
+    public async Task<TLavaPlayer> UpdatePlayerAsync(
+        ulong guildId,
+        bool replaceTrack,
+        UpdatePlayerPayload updatePayload) {
         ArgumentNullException.ThrowIfNull(guildId);
         ArgumentNullException.ThrowIfNull(replaceTrack);
         ArgumentNullException.ThrowIfNull(updatePayload);
         var responseMessage = await _httpClient.PatchAsync(
-            $"/{_version}/sessions/{sessionId}/players/{guildId}?noReplace={replaceTrack}",
+            $"/{_version}/sessions/{SessionId}/players/{guildId}?noReplace={replaceTrack}",
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(updatePayload)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
@@ -208,12 +254,10 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="sessionId"></param>
     /// <param name="guildId"></param>
-    public async Task DestroyPlayerAsync(string sessionId, ulong guildId) {
-        ArgumentNullException.ThrowIfNull(sessionId);
+    public async Task DestroyPlayerAsync(ulong guildId) {
         ArgumentNullException.ThrowIfNull(guildId);
-        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{sessionId}/players/{guildId}");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{SessionId}/players/{guildId}");
         if (!responseMessage.IsSuccessStatusCode) {
             await using var stream = await responseMessage.Content.ReadAsStreamAsync();
             throw new RestException(stream);
@@ -225,14 +269,12 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="sessionId"></param>
     /// <param name="sessionPayload"></param>
     /// <returns></returns>
-    public async Task<UpdateSessionPayload> UpdateSessionAsync(string sessionId,
-                                                               UpdateSessionPayload sessionPayload) {
-        ArgumentNullException.ThrowIfNull(sessionId);
+    public async Task<UpdateSessionPayload> UpdateSessionAsync(
+        UpdateSessionPayload sessionPayload) {
         ArgumentNullException.ThrowIfNull(sessionPayload);
-        var responseMessage = await _httpClient.PatchAsync($"/{_version}/sessions/{sessionId}/",
+        var responseMessage = await _httpClient.PatchAsync($"/{_version}/sessions/{SessionId}/",
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(sessionPayload)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         if (!responseMessage.IsSuccessStatusCode) {
