@@ -52,9 +52,7 @@ namespace Victoria {
         /// <param name="value"></param>
         /// <exception cref="ArgumentNullException"></exception>
         public void Enqueue(T value) {
-            if (value == null) {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(value);
 
             lock (_list) {
                 _list.AddLast(value);
@@ -114,9 +112,7 @@ namespace Victoria {
         /// <param name="value"></param>
         /// <exception cref="ArgumentNullException"></exception>
         public void Remove(T value) {
-            if (value == null) {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(value);
 
             lock (_list) {
                 _list.Remove(value);
@@ -144,7 +140,7 @@ namespace Victoria {
                 var shadow = new T[_list.Count];
                 var i = 0;
                 for (var node = _list.First; !(node is null); node = node.Next) {
-                    var j = Extensions.Random.Next(i + 1);
+                    var j = Random.Shared.Next(i + 1);
                     if (i != j) {
                         shadow[i] = shadow[j];
                     }
@@ -196,17 +192,9 @@ namespace Victoria {
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public ICollection<T> RemoveRange(int index, int count) {
-            if (index < 0) {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
-
-            if (count < 0) {
-                throw new ArgumentOutOfRangeException(nameof(count));
-            }
-
-            if (Count - index < count) {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
+            ArgumentOutOfRangeException.ThrowIfNegative(count);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(count, Count - index);
 
             var tempIndex = 0;
             var removed = new T[count];
