@@ -8,8 +8,6 @@ namespace Victoria {
     /// 
     /// </summary>
     public static class Extensions {
-        internal static readonly Random Random = new();
-
         /// <summary>
         /// 
         /// </summary>
@@ -21,13 +19,8 @@ namespace Victoria {
         /// <exception cref="NullReferenceException"></exception>
         /// <exception cref="HttpRequestException"></exception>
         public static async Task<T> ReadAsJsonAsync<T>(this HttpClient httpClient, HttpRequestMessage requestMessage) {
-            if (httpClient == null) {
-                throw new ArgumentNullException(nameof(httpClient));
-            }
-
-            if (requestMessage == null) {
-                throw new ArgumentNullException(nameof(requestMessage));
-            }
+            ArgumentNullException.ThrowIfNull(httpClient);
+            ArgumentNullException.ThrowIfNull(requestMessage);
 
             if (requestMessage.RequestUri == null) {
                 throw new NullReferenceException(nameof(requestMessage.RequestUri));
