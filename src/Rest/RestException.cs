@@ -43,13 +43,27 @@ public class RestException : Exception {
     /// 
     /// </summary>
     /// <param name="stream"></param>
-    internal RestException(Stream stream) {
+    private RestException(Stream stream) {
         var root = JsonDocument.Parse(stream).RootElement;
         Timestamp = root.GetProperty("timestamp").GetInt32();
         Status = root.GetProperty("status").GetInt32();
         Error = root.GetProperty("error").GetString();
         Trace = root.GetProperty("trace").GetString();
-        Message = root.GetProperty("message").GetString();
+        Message = root.GetProperty("message").GetString()!;
         Path = root.GetProperty("path").GetString();
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="isSuccessStatusCode"></param>
+    /// <param name="stream"></param>
+    /// <exception cref="RestException"></exception>
+    public static void ThrowIfNot200(bool isSuccessStatusCode, Stream stream) {
+        if (!isSuccessStatusCode) {
+            return;
+        }
+
+        throw new RestException(stream);
     }
 }
