@@ -10,7 +10,7 @@ public record Configuration {
     /// <summary>
     /// 
     /// </summary>
-    public int Version { get; init; } = 3;
+    public int Version { get; init; } = 4;
 
     /// <summary>
     /// 
