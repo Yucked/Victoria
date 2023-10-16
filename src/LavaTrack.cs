@@ -1,40 +1,95 @@
 using System;
-using Victoria.Interfaces;
+using System.Text.Json.Serialization;
 
 namespace Victoria;
 
-/// <inheritdoc />
-public class LavaTrack : ILavaTrack {
-    /// <inheritdoc />
-    public string Hash { get; }
+/// <summary>
+/// 
+/// </summary>
+public class LavaTrack {
+    /// <summary>
+    /// 
+    /// </summary>
+    public string Hash { get; internal set; }
 
-    /// <inheritdoc />
-    public string Id { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("identifier"), JsonInclude]
+    public string Id { get; private init; }
 
-    /// <inheritdoc />
-    public string Title { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("title"), JsonInclude]
+    public string Title { get; private init; }
 
-    /// <inheritdoc />
-    public string Author { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("author"), JsonInclude]
+    public string Author { get; private init; }
 
-    /// <inheritdoc />
-    public string Url { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("uri"), JsonInclude]
+    public string Url { get; private init; }
 
-    /// <inheritdoc />
-    public TimeSpan Position { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public TimeSpan Position
+        => IntPosition == 0
+            ? TimeSpan.Zero
+            : TimeSpan.Parse($"{IntPosition}");
 
-    /// <inheritdoc />
-    public TimeSpan Duration { get; }
+    [JsonPropertyName("position"), JsonInclude]
+    private int IntPosition { get; set; }
 
-    /// <inheritdoc />
-    public bool IsSeekable { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public TimeSpan Duration
+        => Length == 0
+            ? TimeSpan.Zero
+            : TimeSpan.Parse($"{Length}");
 
-    /// <inheritdoc />
-    public bool IsLiveStream { get; }
+    [JsonPropertyName("length"), JsonInclude]
+    private int Length { get; set; }
 
-    /// <inheritdoc />
-    public string Artwork { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("isSeekable"), JsonInclude]
+    public bool IsSeekable { get; private init; }
 
-    /// <inheritdoc />
-    public string ISRC { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("isStream"), JsonInclude]
+    public bool IsLiveStream { get; private init; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("artworkUrl"), JsonInclude]
+    public string Artwork { get; private init; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("isrc"), JsonInclude]
+    public string ISRC { get; private init; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonPropertyName("sourceName"), JsonInclude]
+    public string SourceName { get; private init; }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    public object PluginInfo { get; internal set; }
 }
