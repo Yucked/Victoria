@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using Victoria.Interfaces;
 
 namespace Victoria.Rest.Payloads;
 
@@ -20,7 +19,7 @@ public readonly record struct UpdatePlayerPayload(
     [property: JsonPropertyName("paused")]
     int IsPaused,
     [property: JsonPropertyName("filters")]
-    IFilters Filters,
+    Filters.Filters Filters,
     [property: JsonPropertyName("voice")]
     VoiceState VoiceState
 );
