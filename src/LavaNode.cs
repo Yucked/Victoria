@@ -8,7 +8,6 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Victoria.Enums;
-using Victoria.Interfaces;
 using Victoria.Rest;
 using Victoria.Rest.Lavalink;
 using Victoria.Rest.Payloads;
@@ -23,8 +22,8 @@ namespace Victoria;
 
 /// <inheritdoc />
 public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
-    where TLavaTrack : ILavaTrack
-    where TLavaPlayer : ILavaPlayer<TLavaTrack> {
+    where TLavaTrack : LavaTrack
+    where TLavaPlayer : LavaPlayer<TLavaTrack> {
     /// <summary>
     /// 
     /// </summary>
@@ -279,7 +278,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         var responseMessage = await _httpClient.GetAsync($"/{_version}/loadtracks?identifier={identifier}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
-        return await JsonSerializer.DeserializeAsync<SearchResponse>(stream);
+        return new SearchResponse(await JsonDocument.ParseAsync(stream));
     }
 
     /// <summary>

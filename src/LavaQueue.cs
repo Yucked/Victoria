@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Victoria.Interfaces;
 
 namespace Victoria {
     /// <summary>
@@ -10,7 +9,7 @@ namespace Victoria {
     /// <typeparam name="T"></typeparam>
     // ReSharper disable once ClassNeverInstantiated.Global
     public class LavaQueue<T> : IEnumerable<T>
-        where T : ILavaTrack {
+        where T : LavaTrack {
         private readonly LinkedList<T> _list;
 
         /// <summary>

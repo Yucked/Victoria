@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using Victoria.Interfaces;
 
 namespace Victoria.Rest.Lavalink;
 
@@ -29,5 +28,5 @@ public readonly record struct LavalinkInfo(
     [property: JsonPropertyName("sourceManagers")]
     IEnumerable<string> SourceManagers,
     [property: JsonPropertyName("filters")]
-    IEnumerable<IFilters> Filters,
+    IEnumerable<Filters.Filters> Filters,
     [property: JsonPropertyName("plugins")] IEnumerable<LavalinkPlugin> Plugins);
