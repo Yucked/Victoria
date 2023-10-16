@@ -88,17 +88,35 @@ public static class LavaPlayerExtensions {
     /// <summary>
     /// 
     /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
-    public static async ValueTask PauseAsync() {
-        throw new NotImplementedException();
+    /// <param name="lavaPlayer"></param>
+    /// <param name="lavaNode"></param>
+    /// <typeparam name="TLavaPlayer"></typeparam>
+    /// <typeparam name="TLavaTrack"></typeparam>
+    public static async ValueTask PauseAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
+                                                                      LavaNode<TLavaPlayer, TLavaTrack> lavaNode)
+        where TLavaTrack : LavaTrack
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
+        await lavaNode.UpdatePlayerAsync(
+            lavaPlayer.GuildId,
+            updatePayload: new UpdatePlayerPayload(
+                IsPaused: true));
     }
 
     /// <summary>
     /// 
     /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
-    public static async ValueTask ResumeAsync() {
-        throw new NotImplementedException();
+    /// <param name="lavaPlayer"></param>
+    /// <param name="lavaNode"></param>
+    /// <typeparam name="TLavaPlayer"></typeparam>
+    /// <typeparam name="TLavaTrack"></typeparam>
+    public static async ValueTask ResumeAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
+                                                                       LavaNode<TLavaPlayer, TLavaTrack> lavaNode)
+        where TLavaTrack : LavaTrack
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
+        await lavaNode.UpdatePlayerAsync(
+            lavaPlayer.GuildId,
+            updatePayload: new UpdatePlayerPayload(
+                IsPaused: false));
     }
 
     /// <summary>
@@ -108,33 +126,64 @@ public static class LavaPlayerExtensions {
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
     public static async ValueTask<(LavaTrack Skipped, LavaTrack Current)> SkipAsync(TimeSpan? skipAfter = default) {
-        throw new NotImplementedException();
+        // TODO: Depends on queue
+        return default;
     }
 
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="lavaPlayer"></param>
+    /// <param name="lavaNode"></param>
     /// <param name="seekPosition"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public static async ValueTask SeekAsync(TimeSpan seekPosition) {
-        throw new NotImplementedException();
+    /// <typeparam name="TLavaPlayer"></typeparam>
+    /// <typeparam name="TLavaTrack"></typeparam>
+    public static async ValueTask SeekAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
+                                                                     LavaNode<TLavaPlayer, TLavaTrack> lavaNode,
+                                                                     TimeSpan seekPosition)
+        where TLavaTrack : LavaTrack
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
+        await lavaNode.UpdatePlayerAsync(
+            lavaPlayer.GuildId,
+            updatePayload: new UpdatePlayerPayload(Position: seekPosition.Milliseconds));
     }
 
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="lavaPlayer"></param>
+    /// <param name="lavaNode"></param>
     /// <param name="volume"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public static async ValueTask SetVolumeAsync(int volume) {
-        throw new NotImplementedException();
+    /// <typeparam name="TLavaPlayer"></typeparam>
+    /// <typeparam name="TLavaTrack"></typeparam>
+    public static async ValueTask SetVolumeAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
+                                                                          LavaNode<TLavaPlayer, TLavaTrack> lavaNode,
+                                                                          int volume)
+        where TLavaTrack : LavaTrack
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
+        await lavaNode.UpdatePlayerAsync(
+            lavaPlayer.GuildId,
+            updatePayload: new UpdatePlayerPayload(Volume: volume));
     }
 
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="lavaPlayer"></param>
+    /// <param name="lavaNode"></param>
     /// <param name="equalizerBands"></param>
+    /// <typeparam name="TLavaPlayer"></typeparam>
+    /// <typeparam name="TLavaTrack"></typeparam>
     /// <exception cref="NotImplementedException"></exception>
-    public static async ValueTask EqualizeAsync(params EqualizerBand[] equalizerBands) {
-        throw new NotImplementedException();
+    public static async ValueTask EqualizeAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
+                                                                         LavaNode<TLavaPlayer, TLavaTrack> lavaNode,
+                                                                         params EqualizerBand[] equalizerBands)
+        where TLavaTrack : LavaTrack
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
+        await lavaNode.UpdatePlayerAsync(
+            lavaPlayer.GuildId,
+            updatePayload: new UpdatePlayerPayload(Filters: new Filters {
+                Bands = equalizerBands
+            }));
     }
 }
