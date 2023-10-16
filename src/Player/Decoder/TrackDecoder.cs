@@ -16,10 +16,11 @@ namespace Victoria.Player.Decoder {
         ///     Decodes the hash for the specified track.
         /// </summary>
         /// <param name="trackHash">Track's hash.</param>
+        /// <param name="track">LavaTrack</param>
         /// <returns>
         ///     <see cref="LavaTrack" />
         /// </returns>
-        public static LavaTrack Decode(string trackHash) {
+        public static TLavaTrack Decode<TLavaTrack>(string trackHash, TLavaTrack track) where TLavaTrack : LavaTrack {
             Span<byte> hashBuffer = stackalloc byte[trackHash.Length];
             Encoding.ASCII.GetBytes(trackHash, hashBuffer);
             Base64.DecodeFromUtf8InPlace(hashBuffer, out var bytesWritten);
@@ -33,8 +34,8 @@ namespace Victoria.Player.Decoder {
                 ? javaReader.Read<sbyte>()
                 : 1;
 
-            var track = new LavaTrack(
-                trackHash,
+            return LavaTrack.Initialize(track,
+                hash: trackHash,
                 title: javaReader.ReadString(),
                 author: javaReader.ReadString(),
                 duration: javaReader.Read<long>(),
@@ -46,8 +47,6 @@ namespace Victoria.Player.Decoder {
                 position: default,
                 canSeek: true,
                 source: default);
-
-            return track;
         }
 
         /// <summary>
