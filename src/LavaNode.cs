@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
@@ -80,6 +81,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     private readonly HttpClient _httpClient;
     private readonly WebSocketClient _webSocketClient;
     private readonly ILogger<LavaNode<TLavaPlayer, TLavaTrack>> _logger;
+    private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
 
     /// <summary>
     /// 
@@ -90,9 +92,12 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     public LavaNode(BaseSocketClient baseSocketClient,
                     Configuration configuration,
                     ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger) {
-        _baseSocketClient = baseSocketClient;
         _configuration = configuration;
         _logger = logger;
+
+        _baseSocketClient = baseSocketClient;
+        _baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdatedAsync;
+        _baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
 
         _webSocketClient = new WebSocketClient(configuration);
         _webSocketClient.OnOpenAsync += OnOpenAsync;
@@ -105,6 +110,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         _httpClient = new HttpClient();
         _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
         _httpClient.BaseAddress = new Uri($"{configuration.HttpEndpoint}");
+
+        _voiceStates = new();
     }
 
     /// <summary>
@@ -166,10 +173,6 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
         await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true)
             .ConfigureAwait(false);
-
-        // TODO: How to handle new players?
-        player = (TLavaPlayer)Activator
-            .CreateInstance(typeof(TLavaPlayer), _webSocketClient, voiceChannel, textChannel);
         return player;
     }
 
@@ -546,5 +549,30 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                 ? "Please increase buffer size in configuration."
                 : $"{exception.Message} {exception}");
         }
+    }
+
+    private Task OnUserVoiceStateUpdatedAsync(SocketUser user,
+                                              SocketVoiceState currentState,
+                                              SocketVoiceState pastState) {
+        if (_baseSocketClient.CurrentUser?.Id != user.Id) {
+            return Task.CompletedTask;
+        }
+
+        _voiceStates.AddOrUpdate(
+            (currentState.VoiceChannel ?? pastState.VoiceChannel).Guild.Id,
+            new VoiceState(null, null,
+                currentState.VoiceSessionId ?? pastState.VoiceSessionId), (_, _) => default);
+        return Task.CompletedTask;
+    }
+
+    private Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer) {
+        if (!_voiceStates.TryGetValue(voiceServer.Guild.Id, out var voiceState)) {
+            return Task.CompletedTask;
+        }
+
+        _voiceStates.AddOrUpdate(voiceServer.Guild.Id,
+            new VoiceState(voiceServer.Token, voiceServer.Endpoint, voiceState.SessionId),
+            (_, _) => voiceState);
+        return Task.CompletedTask;
     }
 }
