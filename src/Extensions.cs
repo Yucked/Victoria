@@ -37,5 +37,9 @@ namespace Victoria {
             var deserialized = await JsonSerializer.DeserializeAsync<T>(stream);
             return deserialized;
         }
+
+        internal static T AsEnum<T>(this JsonElement element) where T : struct {
+            return Enum.Parse<T>(element.GetString()!, true);
+        }
     }
 }
