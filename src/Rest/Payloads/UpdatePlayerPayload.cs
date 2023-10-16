@@ -7,19 +7,19 @@ namespace Victoria.Rest.Payloads;
 /// </summary>
 public readonly record struct UpdatePlayerPayload(
     [property: JsonPropertyName("encodedTrack")]
-    string EncodedTrack,
+    string EncodedTrack = default,
     [property: JsonPropertyName("identifier")]
-    string Identifier,
+    string Identifier = default,
     [property: JsonPropertyName("position")]
-    int Position,
+    int Position = default,
     [property: JsonPropertyName("endTime")]
-    int EndTime,
+    int EndTime = default,
     [property: JsonPropertyName("volume")]
-    int Volume,
+    int Volume = default,
     [property: JsonPropertyName("paused")]
-    int IsPaused,
+    bool IsPaused = default,
     [property: JsonPropertyName("filters")]
-    Filters.Filters Filters,
+    Filters.Filters Filters = default,
     [property: JsonPropertyName("voice")]
-    VoiceState VoiceState
+    VoiceState VoiceState = default
 );
