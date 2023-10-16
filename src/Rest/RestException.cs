@@ -60,7 +60,7 @@ public class RestException : Exception {
     /// <param name="stream"></param>
     /// <exception cref="RestException"></exception>
     public static void ThrowIfNot200(bool isSuccessStatusCode, Stream stream) {
-        if (!isSuccessStatusCode) {
+        if (isSuccessStatusCode) {
             return;
         }
 
