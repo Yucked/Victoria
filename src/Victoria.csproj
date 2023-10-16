@@ -25,8 +25,4 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Rest\Filters" />
-	</ItemGroup>
 </Project>
