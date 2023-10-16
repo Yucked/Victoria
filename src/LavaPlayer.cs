@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 using Victoria.Rest;
 using Victoria.Rest.Filters;
 
@@ -15,136 +13,46 @@ public class LavaPlayer<TLavaTrack>
     /// <summary>
     /// 
     /// </summary>
-    public ulong GuildId { get; }
+    [JsonPropertyName("guildId"), JsonInclude]
+    public ulong GuildId { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
+    /// TODO: API doesn't return it this way
+    [JsonPropertyName("guildId"), JsonInclude]
     public LavaTrack Track { get; }
 
     /// <summary>
     /// 
     /// </summary>
-    public int Volume { get; }
+    [JsonPropertyName("volume"), JsonInclude]
+    public int Volume { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
-    public bool IsPaused { get; }
+    [JsonPropertyName("paused"), JsonInclude]
+    public bool IsPaused { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
+    [JsonPropertyName("filters"), JsonInclude]
     public Filters Filters { get; }
 
     /// <summary>
     /// 
     /// </summary>
+    [JsonPropertyName("voice"), JsonInclude]
     public VoiceState VoiceState { get; }
 
     /// <summary>
     /// 
     /// </summary>
-    public ulong VoiceChannelId { get; }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public IReadOnlyCollection<EqualizerBand> Bands { get; }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public LavaQueue<LavaTrack> Queue { get; }
-
-    internal LavaPlayer() { }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="lavaTrack"></param>
-    /// <param name="noReplace"></param>
-    /// <param name="volume"></param>
-    /// <param name="shouldPause"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask PlayAsync(LavaTrack lavaTrack, bool noReplace = true, int volume = default,
-                                     bool shouldPause = false) {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="lavaTrack"></param>
-    /// <param name="startTime"></param>
-    /// <param name="stopTime"></param>
-    /// <param name="noReplace"></param>
-    /// <param name="volume"></param>
-    /// <param name="shouldPause"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask PlayAsync(LavaTrack lavaTrack, TimeSpan startTime, TimeSpan stopTime, bool noReplace = true,
-                                     int volume = default, bool shouldPause = false) {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask StopAsync() {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask PauseAsync() {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask ResumeAsync() {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="skipAfter"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask<(LavaTrack Skipped, LavaTrack Current)> SkipAsync(TimeSpan? skipAfter = default) {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="seekPosition"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask SeekAsync(TimeSpan seekPosition) {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="volume"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask SetVolumeAsync(int volume) {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="equalizerBands"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public async ValueTask EqualizeAsync(params EqualizerBand[] equalizerBands) {
-        throw new NotImplementedException();
-    }
+    /// TODO: How to handle queue?
+    public LavaQueue<TLavaTrack> Queue { get; }
+    
+    // TODO: Need property for player state
+    // https://github.com/lavalink-devs/Lavalink/blob/master/IMPLEMENTATION.md#player-state
 }
