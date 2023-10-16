@@ -173,6 +173,14 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
         await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true)
             .ConfigureAwait(false);
+
+        if (!_voiceStates.TryGetValue(voiceChannel.GuildId, out var voiceState)) {
+            _logger.LogError("Failed to get voice state for guild {}", voiceChannel.GuildId);
+            return null;
+        }
+
+        player = await UpdatePlayerAsync(voiceChannel.GuildId,
+            updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
         return player;
     }
 
@@ -231,8 +239,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<TLavaPlayer> UpdatePlayerAsync(
         ulong guildId,
-        bool replaceTrack,
-        UpdatePlayerPayload updatePayload) {
+        bool replaceTrack = false,
+        UpdatePlayerPayload updatePayload = default) {
         ArgumentNullException.ThrowIfNull(guildId);
         ArgumentNullException.ThrowIfNull(replaceTrack);
         ArgumentNullException.ThrowIfNull(updatePayload);
