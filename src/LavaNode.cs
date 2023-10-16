@@ -578,9 +578,12 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             return Task.CompletedTask;
         }
 
+        var state = new VoiceState(voiceServer.Token, voiceServer.Endpoint, voiceState.SessionId);
         _voiceStates.AddOrUpdate(voiceServer.Guild.Id,
-            new VoiceState(voiceServer.Token, voiceServer.Endpoint, voiceState.SessionId),
+            state,
             (_, _) => voiceState);
-        return Task.CompletedTask;
+
+        return UpdatePlayerAsync(voiceServer.Guild.Id,
+            updatePayload: new UpdatePlayerPayload(VoiceState: state));
     }
 }
