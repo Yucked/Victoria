@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Discord;
@@ -89,7 +90,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <param name="baseSocketClient"></param>
     /// <param name="configuration"></param>
     /// <param name="logger"></param>
-    public LavaNode(BaseSocketClient baseSocketClient,
+    public LavaNode(DiscordSocketClient baseSocketClient,
                     Configuration configuration,
                     ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger) {
         _configuration = configuration;
@@ -166,7 +167,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         }
 
         ArgumentNullException.ThrowIfNull(voiceChannel);
-        var player = await GetPlayerAsync(voiceChannel.GuildId);
+        var player = await this.TryGetPlayerAsync(voiceChannel.GuildId);
         if (player != null) {
             return player;
         }
@@ -195,7 +196,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         }
 
         ArgumentNullException.ThrowIfNull(voiceChannel);
-        var player = await GetPlayerAsync(voiceChannel.GuildId);
+        var player = await this.TryGetPlayerAsync(voiceChannel.GuildId);
         if (player == null) {
             return;
         }
@@ -246,7 +247,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(updatePayload);
         var responseMessage = await _httpClient.PatchAsync(
             $"/{_version}/sessions/{SessionId}/players/{guildId}?noReplace={replaceTrack}",
-            new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(updatePayload)));
+            new StringContent(JsonSerializer.Serialize(updatePayload)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<TLavaPlayer>(stream);
@@ -418,22 +419,22 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             return;
         }
 
-        _logger.LogDebug("{data}", JsonSerializer.Serialize(arg.Data));
+        _logger.LogDebug("{data}", Encoding.UTF8.GetString(arg.Data));
 
         try {
             var document = JsonDocument.Parse(arg.Data).RootElement;
             var guildId = document.TryGetProperty("guildId", out var idElement)
                 ? ulong.Parse(idElement.GetString()!)
                 : 0;
-            switch (document.TryGetProperty("op", out var element) ? default : $"{element}") {
+            switch (document.GetProperty("op").GetString()) {
                 case "ready":
+                    SessionId = $"{document.GetProperty("sessionId")}";
                     if (OnReady == null) {
                         _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
                             nameof(OnReady));
                         return;
                     }
 
-                    SessionId = $"{document.GetProperty("sessionId")}";
                     await OnReady.Invoke(new ReadyEventArg(
                         document.GetProperty("resumed").GetBoolean(),
                         SessionId));
@@ -547,7 +548,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                     break;
 
                 default: {
-                    _logger.LogCritical("Unknown OP code encountered, please check lavalink implementation.");
+                    _logger.LogCritical("Unknown OP code encountered {}, please check lavalink implementation.",
+                        document.GetProperty("op"));
                     break;
                 }
             }
@@ -568,8 +570,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
         _voiceStates.AddOrUpdate(
             (currentState.VoiceChannel ?? pastState.VoiceChannel).Guild.Id,
-            new VoiceState(null, null,
-                currentState.VoiceSessionId ?? pastState.VoiceSessionId), (_, _) => default);
+            new VoiceState(null, null, currentState.VoiceSessionId ?? pastState.VoiceSessionId),
+            (_, _) => default);
         return Task.CompletedTask;
     }
 
