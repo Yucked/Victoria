@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Victoria {
     /// <summary>
@@ -36,6 +37,74 @@ namespace Victoria {
 
             var deserialized = await JsonSerializer.DeserializeAsync<T>(stream);
             return deserialized;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serviceCollection"></param>
+        /// <typeparam name="TLavaNode"></typeparam>
+        /// <typeparam name="TLavaPlayer"></typeparam>
+        /// <typeparam name="TLavaTrack"></typeparam>
+        /// <returns></returns>
+        public static IServiceCollection AddLavaNode<TLavaNode, TLavaPlayer, TLavaTrack>
+            (this IServiceCollection serviceCollection)
+            where TLavaNode : LavaNode<TLavaPlayer, TLavaTrack>
+            where TLavaPlayer : LavaPlayer<TLavaTrack>
+            where TLavaTrack : LavaTrack {
+            serviceCollection.AddSingleton<Configuration>();
+            serviceCollection.AddSingleton<TLavaNode>();
+            return serviceCollection;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serviceCollection"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddLavaNode(this ServiceCollection serviceCollection) {
+            return AddLavaNode<
+                LavaNode<LavaPlayer<LavaTrack>, LavaTrack>,
+                LavaPlayer<LavaTrack>,
+                LavaTrack>(serviceCollection);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        /// <typeparam name="TLavaNode"></typeparam>
+        /// <typeparam name="TLavaPlayer"></typeparam>
+        /// <typeparam name="TLavaTrack"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static Task UseLavaNodeAsync<TLavaNode, TLavaPlayer, TLavaTrack>
+            (this IServiceProvider serviceProvider)
+            where TLavaNode : LavaNode<TLavaPlayer, TLavaTrack>
+            where TLavaPlayer : LavaPlayer<TLavaTrack>
+            where TLavaTrack : LavaTrack {
+            if (serviceProvider.GetService(typeof(TLavaNode)) is not LavaNode<TLavaPlayer, TLavaTrack> lavaNode) {
+                throw new NullReferenceException(nameof(TLavaNode));
+            }
+
+            if (lavaNode.IsConnected) {
+                throw new InvalidOperationException("A connection is already established with Lavalink.");
+            }
+
+            return lavaNode.ConnectAsync();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        /// <returns></returns>
+        public static Task UseLavaNodeAsync(this IServiceProvider serviceProvider) {
+            return UseLavaNodeAsync<
+                LavaNode<LavaPlayer<LavaTrack>, LavaTrack>,
+                LavaPlayer<LavaTrack>,
+                LavaTrack>(serviceProvider);
         }
 
         internal static T AsEnum<T>(this JsonElement element) where T : struct {
