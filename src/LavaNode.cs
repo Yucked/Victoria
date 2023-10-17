@@ -568,10 +568,21 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             return Task.CompletedTask;
         }
 
-        _voiceStates.AddOrUpdate(
-            (currentState.VoiceChannel ?? pastState.VoiceChannel).Guild.Id,
-            new VoiceState(null, null, currentState.VoiceSessionId ?? pastState.VoiceSessionId),
-            (_, _) => default);
+        var guildId = (currentState.VoiceChannel ?? pastState.VoiceChannel).Guild.Id;
+        var sessionId = currentState.VoiceSessionId ?? pastState.VoiceSessionId;
+
+        if (!_voiceStates.TryGetValue(guildId, out var voiceState)) {
+            voiceState = new VoiceState(null, null, sessionId);
+        }
+
+        voiceState.SessionId = sessionId;
+        _voiceStates.AddOrUpdate(guildId, voiceState, (_, _) => default);
+
+        if (!string.IsNullOrWhiteSpace(voiceState.Token)) {
+            return UpdatePlayerAsync(guildId,
+                updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
+        }
+
         return Task.CompletedTask;
     }
 
