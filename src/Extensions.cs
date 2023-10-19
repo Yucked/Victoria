@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +12,10 @@ namespace Victoria {
     /// 
     /// </summary>
     public static class Extensions {
+        private static readonly JsonSerializerOptions Options = new() {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+        };
+
         /// <summary>
         /// 
         /// </summary>
@@ -109,6 +116,10 @@ namespace Victoria {
 
         internal static T AsEnum<T>(this JsonElement element) where T : struct {
             return Enum.Parse<T>(element.GetString()!, true);
+        }
+
+        internal static JsonContent AsContent<T>(this T value) {
+            return JsonContent.Create(value, new MediaTypeHeaderValue("application/json"), Options);
         }
     }
 }
