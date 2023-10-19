@@ -247,7 +247,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(updatePayload);
         var responseMessage = await _httpClient.PatchAsync(
             $"/{_version}/sessions/{SessionId}/players/{guildId}?noReplace={replaceTrack}",
-            new StringContent(JsonSerializer.Serialize(updatePayload)));
+            updatePayload.AsContent());
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<TLavaPlayer>(stream);
@@ -591,12 +591,16 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             return Task.CompletedTask;
         }
 
-        var state = new VoiceState(voiceServer.Token, voiceServer.Endpoint, voiceState.SessionId);
+        voiceState = new VoiceState(voiceServer.Token, voiceServer.Endpoint, voiceState.SessionId);
         _voiceStates.AddOrUpdate(voiceServer.Guild.Id,
-            state,
-            (_, _) => voiceState);
+            voiceState,
+            (_, _) => default);
 
-        return UpdatePlayerAsync(voiceServer.Guild.Id,
-            updatePayload: new UpdatePlayerPayload(VoiceState: state));
+        if (!string.IsNullOrWhiteSpace(voiceState.SessionId)) {
+            return UpdatePlayerAsync(voiceServer.Guild.Id,
+                updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
+        }
+
+        return Task.CompletedTask;
     }
 }
