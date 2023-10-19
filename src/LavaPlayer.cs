@@ -13,14 +13,14 @@ public class LavaPlayer<TLavaTrack>
     /// <summary>
     /// 
     /// </summary>
-    [JsonPropertyName("guildId"), JsonInclude]
+    [JsonPropertyName("guildId"), JsonInclude, JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
     public ulong GuildId { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     /// TODO: API doesn't return it this way
-    [JsonPropertyName("guildId"), JsonInclude]
+    //[JsonPropertyName("guildId"), JsonInclude]
     public LavaTrack Track { get; }
 
     /// <summary>
