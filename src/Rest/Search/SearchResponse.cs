@@ -46,15 +46,48 @@ namespace Victoria.Rest.Search {
                 return;
             }
 
-            Tracks = dataElement.EnumerateArray()
-                .AsParallel()
-                .Select(x => {
-                    var track = x.GetProperty("info").Deserialize<LavaTrack>();
-                    track.Hash = x.GetProperty("encoded").GetString();
-                    track.PluginInfo = x.GetProperty("pluginInfo");
-                    return track;
-                })
-                .ToList();
+            string encoded = null;
+            LavaTrack track = null;
+            object pluginInfo = null;
+
+            foreach (var property in dataElement.EnumerateObject()) {
+                switch (property.Name) {
+                    case "encoded":
+                        encoded = property.Value.GetString();
+                        break;
+
+                    // playlist?
+                    case "info":
+                        switch (Type) {
+                            case SearchType.Track:
+                                track = property.Value.Deserialize<LavaTrack>();
+                                break;
+                            case SearchType.Playlist:
+                                Tracks = property.Value
+                                    .EnumerateArray()
+                                    .Select(x => {
+                                        var track = x.GetProperty("info").Deserialize<LavaTrack>();
+                                        track.Hash = x.GetProperty("encoded").GetString();
+                                        track.PluginInfo = x.GetProperty("pluginInfo");
+                                        return track;
+                                    })
+                                    .ToList();
+                                break;
+                        }
+
+                        break;
+
+                    case "pluginInfo":
+                        pluginInfo = property.Value;
+                        break;
+                }
+            }
+
+            if (track != null) {
+                track.Hash = encoded;
+                track.PluginInfo = pluginInfo;
+                Tracks = [track];
+            }
         }
     }
 }
