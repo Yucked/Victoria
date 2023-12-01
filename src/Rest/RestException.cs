@@ -45,12 +45,18 @@ public class RestException : Exception {
     /// <param name="stream"></param>
     private RestException(Stream stream) {
         var root = JsonDocument.Parse(stream).RootElement;
-        Timestamp = root.GetProperty("timestamp").GetInt32();
+        var timestamp = root.GetProperty("timestamp").GetUInt64();
         Status = root.GetProperty("status").GetInt32();
         Error = root.GetProperty("error").GetString();
-        Trace = root.GetProperty("trace").GetString();
+
+        //Trace = root.GetProperty("trace").GetString();
         Message = root.GetProperty("message").GetString()!;
         Path = root.GetProperty("path").GetString();
+    }
+
+    /// <inheritdoc />
+    public override string ToString() {
+        return $"{Error}: {Message}\n{Path}\n{Status}\n{DateTimeOffset.FromUnixTimeMilliseconds(Timestamp)}";
     }
 
     /// <summary>
