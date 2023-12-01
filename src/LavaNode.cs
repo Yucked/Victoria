@@ -168,7 +168,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
         ArgumentNullException.ThrowIfNull(voiceChannel);
         var player = await this.TryGetPlayerAsync(voiceChannel.GuildId);
-        if (player != null) {
+        var user = await voiceChannel.GetUserAsync(_baseSocketClient.CurrentUser.Id);
+        if (player != null && user != null) {
             return player;
         }
 
