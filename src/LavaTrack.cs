@@ -16,33 +16,36 @@ public class LavaTrack {
     /// 
     /// </summary>
     [JsonPropertyName("identifier"), JsonInclude]
-    public string Id { get; private init; }
+    public string Id { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     [JsonPropertyName("title"), JsonInclude]
-    public string Title { get; private init; }
+    public string Title { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     [JsonPropertyName("author"), JsonInclude]
-    public string Author { get; private init; }
+    public string Author { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     [JsonPropertyName("uri"), JsonInclude]
-    public string Url { get; private init; }
+    public string Url { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     public TimeSpan Position
-        => IntPosition == 0
+    {
+        get => IntPosition == 0
             ? TimeSpan.Zero
             : TimeSpan.Parse($"{IntPosition}");
+        set => IntPosition = value.Milliseconds;
+    }
 
     [JsonPropertyName("position"), JsonInclude]
     private int IntPosition { get; set; }
@@ -51,9 +54,12 @@ public class LavaTrack {
     /// 
     /// </summary>
     public TimeSpan Duration
-        => Length == 0
+    {
+        get => Length == 0
             ? TimeSpan.Zero
             : TimeSpan.Parse($"{Length}");
+        set => Length = value.Milliseconds;
+    }
 
     [JsonPropertyName("length"), JsonInclude]
     private int Length { get; set; }
@@ -62,32 +68,32 @@ public class LavaTrack {
     /// 
     /// </summary>
     [JsonPropertyName("isSeekable"), JsonInclude]
-    public bool IsSeekable { get; private init; }
+    public bool IsSeekable { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     [JsonPropertyName("isStream"), JsonInclude]
-    public bool IsLiveStream { get; private init; }
+    public bool IsLiveStream { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     [JsonPropertyName("artworkUrl"), JsonInclude]
-    public string Artwork { get; private init; }
+    public string Artwork { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     [JsonPropertyName("isrc"), JsonInclude]
-    public string ISRC { get; private init; }
+    public string ISRC { get; internal init; }
 
     /// <summary>
     /// 
     /// </summary>
     [JsonPropertyName("sourceName"), JsonInclude]
-    public string SourceName { get; private init; }
-    
+    public string SourceName { get; internal init; }
+
     /// <summary>
     /// 
     /// </summary>
