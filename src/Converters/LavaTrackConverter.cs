@@ -21,50 +21,71 @@ internal sealed class LavaTrackConverter : JsonConverter<LavaTrack> {
         bool isSeekable = false,
              isLiveStream = false;
 
-        while (reader.Read()) {
-            if (reader.TokenType is not (JsonTokenType.StartObject and JsonTokenType.EndObject)) {
-                continue;
-            }
+        try
+        {
+            while (reader.Read())
+            {
+                if (reader.TokenType is not (JsonTokenType.StartObject and JsonTokenType.EndObject))
+                {
+                    continue;
+                }
 
-            if (reader.TokenType == JsonTokenType.PropertyName
-                && reader.ValueTextEquals("encoded")
-                && reader.Read()) {
-                hash = reader.GetString();
-            }
+                if (reader.TokenType == JsonTokenType.PropertyName
+                    && reader.ValueTextEquals("encoded")
+                    && reader.Read())
+                {
+                    hash = reader.GetString();
+                }
 
-            if (IsProp(ref reader, "identifier")) {
-                id = reader.GetString();
+                if (IsProp(ref reader, "identifier"))
+                {
+                    id = reader.GetString();
+                }
+                else if (IsProp(ref reader, "title"))
+                {
+                    title = reader.GetString();
+                }
+                else if (IsProp(ref reader, "author"))
+                {
+                    author = reader.GetString();
+                }
+                else if (IsProp(ref reader, "uri"))
+                {
+                    url = reader.GetString();
+                }
+                else if (IsProp(ref reader, "sourceName"))
+                {
+                    source = reader.GetString();
+                }
+                else if (IsProp(ref reader, "artworkUrl"))
+                {
+                    artworkUrl = reader.GetString();
+                }
+                else if (IsProp(ref reader, "isrc"))
+                {
+                    isrc = reader.GetString();
+                }
+                else if (IsProp(ref reader, "isSeekable"))
+                {
+                    isSeekable = reader.GetBoolean();
+                }
+                else if (IsProp(ref reader, "isStream"))
+                {
+                    isLiveStream = reader.GetBoolean();
+                }
+                else if (IsProp(ref reader, "length"))
+                {
+                    length = reader.GetInt64();
+                }
+                else if (IsProp(ref reader, "position"))
+                {
+                    position = reader.GetInt64();
+                }
             }
-            else if (IsProp(ref reader, "title")) {
-                title = reader.GetString();
-            }
-            else if (IsProp(ref reader, "author")) {
-                author = reader.GetString();
-            }
-            else if (IsProp(ref reader, "uri")) {
-                url = reader.GetString();
-            }
-            else if (IsProp(ref reader, "sourceName")) {
-                source = reader.GetString();
-            }
-            else if (IsProp(ref reader, "artworkUrl")) {
-                artworkUrl = reader.GetString();
-            }
-            else if (IsProp(ref reader, "isrc")) {
-                isrc = reader.GetString();
-            }
-            else if (IsProp(ref reader, "isSeekable")) {
-                isSeekable = reader.GetBoolean();
-            }
-            else if (IsProp(ref reader, "isStream")) {
-                isLiveStream = reader.GetBoolean();
-            }
-            else if (IsProp(ref reader, "length")) {
-                length = reader.GetInt64();
-            }
-            else if (IsProp(ref reader, "position")) {
-                position = reader.GetInt64();
-            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
         }
 
         var lavaTrack = new LavaTrack {
