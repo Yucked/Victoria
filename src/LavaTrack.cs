@@ -34,7 +34,7 @@ public class LavaTrack {
     /// 
     /// </summary>
     [JsonPropertyName("uri"), JsonInclude]
-    public string Url { get; internal init; }
+    public string Uri { get; internal init; }
 
     /// <summary>
     /// 
