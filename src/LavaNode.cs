@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -491,7 +492,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                             await OnTrackEnd.Invoke(new TrackEndEventArg {
                                 GuildId = guildId,
                                 EncodedTrack = document.GetProperty("track").GetProperty("encoded").GetString(),
-                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString())
+                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString(), true)
                             });
                             break;
 
@@ -534,7 +535,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                                 GuildId = guildId,
                                 ByRemote = document.GetProperty("byRemote").GetBoolean(),
                                 Code = document.GetProperty("code").GetInt32(),
-                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString())
+                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString(), true)
                             });
                             break;
 

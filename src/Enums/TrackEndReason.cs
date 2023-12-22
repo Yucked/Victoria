@@ -18,7 +18,7 @@ public enum TrackEndReason
 
     /// <summary>
     ///     The track was stopped due to the player being stopped by either calling
-    ///     <see cref="ILavaPlayer.StopAsync" /> or <see cref="LavaPlayer.PlayAsync" />.
+    ///     <see cref="LavaPlayer.StopAsync" /> or <see cref="LavaPlayer.PlayAsync" />.
     /// </summary>
     Stopped,
 
