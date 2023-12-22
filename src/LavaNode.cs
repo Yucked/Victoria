@@ -426,6 +426,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             var guildId = document.TryGetProperty("guildId", out var idElement)
                 ? ulong.Parse(idElement.GetString()!)
                 : 0;
+
             switch (document.GetProperty("op").GetString()) {
                 case "ready":
                     SessionId = $"{document.GetProperty("sessionId")}";
@@ -468,6 +469,9 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                     break;
 
                 case "event":
+
+                    var encodedTrack = document.GetProperty("track").GetProperty("encoded").GetString();
+
                     switch (document.GetProperty("type").GetString()) {
                         case "TrackStartEvent":
                             if (OnTrackStart == null) {
@@ -478,7 +482,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackStart.Invoke(new TrackStartEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = document.GetProperty("track").GetProperty("encoded").GetString()
+                                EncodedTrack = encodedTrack
                             });
                             break;
 
@@ -491,7 +495,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackEnd.Invoke(new TrackEndEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = document.GetProperty("track").GetProperty("encoded").GetString(),
+                                EncodedTrack = encodedTrack,
                                 Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString(), true)
                             });
                             break;
@@ -505,7 +509,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackException.Invoke(new TrackExceptionEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = document.GetProperty("track").GetProperty("encoded").GetString(),
+                                EncodedTrack = encodedTrack,
                                 Exception = document.GetProperty("exception").Deserialize<TrackException>()
                             });
                             break;
@@ -519,7 +523,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackStuck.Invoke(new TrackStuckEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = document.GetProperty("track").GetProperty("encoded").GetString(),
+                                EncodedTrack = encodedTrack,
                                 Threshold = document.GetProperty("thresholdMs").GetInt64()
                             });
                             break;
@@ -554,13 +558,9 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                 }
             }
         }
-        catch (JsonException jsonException)
-        {
-            _logger.LogError(jsonException, $"There was a problem parsing JSON! You may need to increase the buffer size in Configuration.  Error Message: {jsonException.Message}");
-        }
         catch (Exception exception)
         {
-            _logger.LogError($"{exception.Message} {exception}");
+            _logger.LogError(exception is JsonException ? $"There was a problem parsing JSON! You may need to increase the buffer size in Configuration.  Error Message: {exception.Message}" : $"{exception.Message} {exception}");
         }
     }
 
