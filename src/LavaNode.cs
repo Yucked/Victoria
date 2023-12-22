@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using Victoria.Enums;
 using Victoria.Rest;
 using Victoria.Rest.Lavalink;
 using Victoria.Rest.Payloads;
@@ -490,7 +491,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                             await OnTrackEnd.Invoke(new TrackEndEventArg {
                                 GuildId = guildId,
                                 EncodedTrack = document.GetProperty("track").GetProperty("encoded").GetString(),
-                                Reason = document.GetProperty("reason").GetString()
+                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString())
                             });
                             break;
 
@@ -533,7 +534,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                                 GuildId = guildId,
                                 ByRemote = document.GetProperty("byRemote").GetBoolean(),
                                 Code = document.GetProperty("code").GetInt32(),
-                                Reason = document.GetProperty("reason").GetString()
+                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString())
                             });
                             break;
 
