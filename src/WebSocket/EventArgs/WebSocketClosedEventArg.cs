@@ -1,3 +1,5 @@
+using Victoria.Enums;
+
 namespace Victoria.WebSocket.EventArgs;
 
 /// <summary>
@@ -17,7 +19,7 @@ public struct WebSocketClosedEventArg {
     /// <summary>
     /// 
     /// </summary>
-    public string Reason { get; internal init; }
+    public TrackEndReason Reason { get; internal init; }
 
     /// <summary>
     /// 
