@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -8,7 +9,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Victoria.Enums;
 using Victoria.Rest;
 using Victoria.Rest.Lavalink;
@@ -18,7 +18,6 @@ using Victoria.Rest.Search;
 using Victoria.WebSocket.EventArgs;
 using Victoria.WebSocket.Internal;
 using Victoria.WebSocket.Internal.EventArgs;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Victoria;
 
@@ -427,6 +426,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             var guildId = document.TryGetProperty("guildId", out var idElement)
                 ? ulong.Parse(idElement.GetString()!)
                 : 0;
+
             switch (document.GetProperty("op").GetString()) {
                 case "ready":
                     SessionId = $"{document.GetProperty("sessionId")}";
@@ -469,6 +469,9 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                     break;
 
                 case "event":
+
+                    var encodedTrack = document.GetProperty("track").GetProperty("encoded").GetString();
+
                     switch (document.GetProperty("type").GetString()) {
                         case "TrackStartEvent":
                             if (OnTrackStart == null) {
@@ -479,7 +482,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackStart.Invoke(new TrackStartEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = document.GetProperty("encodedTrack").GetString()
+                                EncodedTrack = encodedTrack
                             });
                             break;
 
@@ -492,8 +495,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackEnd.Invoke(new TrackEndEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = document.GetProperty("encodedTrack").GetString(),
-                                Reason = document.GetProperty("reason").Deserialize<TrackEndReason>()
+                                EncodedTrack = encodedTrack,
+                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString(), true)
                             });
                             break;
 
@@ -506,7 +509,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackException.Invoke(new TrackExceptionEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = document.GetProperty("encodedTrack").GetString(),
+                                EncodedTrack = encodedTrack,
                                 Exception = document.GetProperty("exception").Deserialize<TrackException>()
                             });
                             break;
@@ -520,7 +523,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackStuck.Invoke(new TrackStuckEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = document.GetProperty("EncodedTrack").GetString(),
+                                EncodedTrack = encodedTrack,
                                 Threshold = document.GetProperty("thresholdMs").GetInt64()
                             });
                             break;
@@ -536,7 +539,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                                 GuildId = guildId,
                                 ByRemote = document.GetProperty("byRemote").GetBoolean(),
                                 Code = document.GetProperty("code").GetInt32(),
-                                Reason = document.GetProperty("reason").GetString()
+                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString(), true)
                             });
                             break;
 
@@ -555,10 +558,9 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                 }
             }
         }
-        catch (Exception exception) {
-            _logger.LogError(exception is JsonReaderException
-                ? "Please increase buffer size in configuration."
-                : $"{exception.Message} {exception}");
+        catch (Exception exception)
+        {
+            _logger.LogError(exception is JsonException ? $"There was a problem parsing JSON! You may need to increase the buffer size in Configuration.  Error Message: {exception.Message}" : $"{exception.Message} {exception}");
         }
     }
 

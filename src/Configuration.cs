@@ -61,7 +61,7 @@ public record Configuration {
         = new() {
             ReconnectAttempts = 10,
             ReconnectDelay = 3000,
-            BufferSize = 512
+            BufferSize = 2048
         };
 
     internal string SocketEndpoint
