@@ -259,7 +259,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <param name="guildId"></param>
     public async Task DestroyPlayerAsync(ulong guildId) {
         ArgumentNullException.ThrowIfNull(guildId);
-        var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{SessionId}/players/{guildId}");
+        var responseMessage = await _httpClient.DeleteAsync($"/{_version}/sessions/{SessionId}/players/{guildId}");
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode,
             await responseMessage.Content.ReadAsStreamAsync());
         _logger.LogInformation("Player for guild {guildId} has been destroyed.", guildId);
