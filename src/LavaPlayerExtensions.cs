@@ -76,13 +76,18 @@ public static class LavaPlayerExtensions {
     /// </summary>
     /// <exception cref="NotImplementedException"></exception>
     public static async ValueTask StopAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
-                                                                     LavaNode<TLavaPlayer, TLavaTrack> lavaNode)
+                                                                     LavaNode<TLavaPlayer, TLavaTrack> lavaNode,
+                                                                     TLavaTrack lavaTrack,
+                                                                     bool noReplace = false,
+                                                                     bool shouldPause = true)
         where TLavaTrack : LavaTrack
         where TLavaPlayer : LavaPlayer<TLavaTrack> {
         await lavaNode.UpdatePlayerAsync(
             lavaPlayer.GuildId,
+            noReplace,
             updatePayload: new UpdatePlayerPayload(
-                EncodedTrack: null));
+                EncodedTrack: lavaTrack.Hash,
+                IsPaused: shouldPause));
     }
 
     /// <summary>
@@ -105,17 +110,23 @@ public static class LavaPlayerExtensions {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="lavaPlayer"></param>
-    /// <param name="lavaNode"></param>
     /// <typeparam name="TLavaPlayer"></typeparam>
     /// <typeparam name="TLavaTrack"></typeparam>
+    /// <param name="lavaPlayer"></param>
+    /// <param name="lavaNode"></param>
+    /// <param name="noReplace"></param>
+    /// <returns></returns>
     public static async ValueTask ResumeAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
-                                                                       LavaNode<TLavaPlayer, TLavaTrack> lavaNode)
+                                                                       LavaNode<TLavaPlayer, TLavaTrack> lavaNode,
+                                                                       TLavaTrack lavaTrack,
+                                                                       bool noReplace = false)
         where TLavaTrack : LavaTrack
         where TLavaPlayer : LavaPlayer<TLavaTrack> {
         await lavaNode.UpdatePlayerAsync(
             lavaPlayer.GuildId,
+            noReplace,
             updatePayload: new UpdatePlayerPayload(
+                EncodedTrack: lavaTrack.Hash,
                 IsPaused: false));
     }
 
