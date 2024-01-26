@@ -86,7 +86,7 @@ public static class LavaPlayerExtensions {
             lavaPlayer.GuildId,
             noReplace,
             updatePayload: new UpdatePlayerPayload(
-                EncodedTrack: lavaTrack.Hash,
+                EncodedTrack: lavaTrack == null ? null : lavaTrack.Hash,
                 IsPaused: shouldPause));
     }
 
