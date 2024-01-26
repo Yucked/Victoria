@@ -118,13 +118,12 @@ public static class LavaPlayerExtensions {
     /// <returns></returns>
     public static async ValueTask ResumeAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
                                                                        LavaNode<TLavaPlayer, TLavaTrack> lavaNode,
-                                                                       TLavaTrack lavaTrack,
-                                                                       bool noReplace = false)
+                                                                       TLavaTrack lavaTrack)
         where TLavaTrack : LavaTrack
-        where TLavaPlayer : LavaPlayer<TLavaTrack> {
+        where TLavaPlayer : LavaPlayer<TLavaTrack>
+    {
         await lavaNode.UpdatePlayerAsync(
             lavaPlayer.GuildId,
-            noReplace,
             updatePayload: new UpdatePlayerPayload(
                 EncodedTrack: lavaTrack.Hash,
                 IsPaused: false));
