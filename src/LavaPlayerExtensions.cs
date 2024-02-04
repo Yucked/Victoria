@@ -12,6 +12,11 @@ public static class LavaPlayerExtensions {
     /// <summary>
     /// 
     /// </summary>
+    public static LavaQueue<LavaTrack> Queue { get; } = new();
+
+    /// <summary>
+    /// 
+    /// </summary>
     /// <param name="lavaPlayer"></param>
     /// <param name="lavaNode"></param>
     /// <param name="lavaTrack"></param>
@@ -86,7 +91,7 @@ public static class LavaPlayerExtensions {
             lavaPlayer.GuildId,
             noReplace,
             updatePayload: new UpdatePlayerPayload(
-                EncodedTrack: lavaTrack == null ? null : lavaTrack.Hash,
+                EncodedTrack: lavaTrack?.Hash,
                 IsPaused: shouldPause));
     }
 
@@ -114,14 +119,13 @@ public static class LavaPlayerExtensions {
     /// <typeparam name="TLavaTrack"></typeparam>
     /// <param name="lavaPlayer"></param>
     /// <param name="lavaNode"></param>
-    /// <param name="noReplace"></param>
+    /// <param name="lavaTrack"></param>
     /// <returns></returns>
     public static async ValueTask ResumeAsync<TLavaPlayer, TLavaTrack>(this LavaPlayer<TLavaTrack> lavaPlayer,
                                                                        LavaNode<TLavaPlayer, TLavaTrack> lavaNode,
                                                                        TLavaTrack lavaTrack)
         where TLavaTrack : LavaTrack
-        where TLavaPlayer : LavaPlayer<TLavaTrack>
-    {
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
         await lavaNode.UpdatePlayerAsync(
             lavaPlayer.GuildId,
             updatePayload: new UpdatePlayerPayload(
@@ -132,12 +136,26 @@ public static class LavaPlayerExtensions {
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="lavaNode"></param>
     /// <param name="skipAfter"></param>
+    /// <param name="lavaPlayer"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public static async ValueTask<(LavaTrack Skipped, LavaTrack Current)> SkipAsync(TimeSpan? skipAfter = default) {
-        // TODO: Depends on queue
-        return default;
+    public static async ValueTask<(TLavaTrack Skipped, TLavaTrack Current)> SkipAsync<TLavaPlayer, TLavaTrack>(
+        this LavaPlayer<TLavaTrack> lavaPlayer,
+        LavaNode<TLavaPlayer, TLavaTrack> lavaNode,
+        TimeSpan? skipAfter = default)
+        where TLavaTrack : LavaTrack
+        where TLavaPlayer : LavaPlayer<TLavaTrack> {
+        if (!Queue.TryDequeue(out var lavaTrack)) {
+            throw new InvalidOperationException("There aren't any more tracks in the Vueue.");
+        }
+
+        var skippedTrack = lavaPlayer.Track as TLavaTrack;
+        await Task.Delay(skipAfter ?? TimeSpan.Zero);
+        await PlayAsync(lavaPlayer, lavaNode, (TLavaTrack)lavaTrack);
+
+        return (skippedTrack, (TLavaTrack)lavaTrack);
     }
 
     /// <summary>
