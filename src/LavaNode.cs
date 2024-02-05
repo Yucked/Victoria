@@ -10,6 +10,7 @@ using System.Web;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using Victoria.Converters;
 using Victoria.Enums;
 using Victoria.Rest;
 using Victoria.Rest.Lavalink;
@@ -299,12 +300,12 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// </summary>
     /// <param name="trackHash"></param>
     /// <returns></returns>
-    public async Task<DecodedLavaTrack> DecodeTrackAsync(string trackHash) {
+    public async Task<TLavaTrack> DecodeTrackAsync(string trackHash) {
         ArgumentNullException.ThrowIfNull(trackHash);
         var responseMessage = await _httpClient.GetAsync($"/{_version}/decodetrack?encodedTrack={HttpUtility.UrlEncode(trackHash)}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
-        return await JsonSerializer.DeserializeAsync<DecodedLavaTrack>(stream);
+        return await JsonSerializer.DeserializeAsync<TLavaTrack>(stream, new JsonSerializerOptions() { Converters = { new LavaTrackConverter() }});
     }
 
     /// <summary>
@@ -312,13 +313,13 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// </summary>
     /// <param name="tracksHashes"></param>
     /// <returns></returns>
-    public async Task<IReadOnlyCollection<DecodedLavaTrack>> DecodeTracksAsync(params string[] tracksHashes) {
+    public async Task<IReadOnlyCollection<TLavaTrack>> DecodeTracksAsync(params string[] tracksHashes) {
         ArgumentNullException.ThrowIfNull(tracksHashes);
         var responseMessage = await _httpClient.PostAsync($"/{_version}/decodetracks",
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(tracksHashes)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
-        return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<DecodedLavaTrack>>(stream);
+        return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<TLavaTrack>>(stream, new JsonSerializerOptions() { Converters = { new LavaTrackListConverter() }});
     }
 
     /// <summary>
