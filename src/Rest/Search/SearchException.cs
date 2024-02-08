@@ -17,5 +17,11 @@ namespace Victoria.Rest.Search {
         /// </summary>
         [JsonPropertyName("severity"), JsonInclude]
         public string Severity { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [JsonPropertyName("cause"), JsonInclude]
+        public string Cause { get; private set; }
     }
 }

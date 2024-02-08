@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Victoria.Converters;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 namespace Victoria.Rest.Search {
@@ -9,6 +10,13 @@ namespace Victoria.Rest.Search {
     /// 
     /// </summary>
     public sealed class SearchResponse {
+        private static readonly JsonSerializerOptions TrackConverterOptions = new()
+        {
+            Converters = {
+            new LavaTrackConverter(),
+            new LavaTrackListConverter(),
+        }
+        };
         /// <summary>
         /// 
         /// </summary>
@@ -34,59 +42,28 @@ namespace Victoria.Rest.Search {
 
         internal SearchResponse(JsonDocument document) {
             Type = document.RootElement.GetProperty("loadType").AsEnum<SearchType>();
-            if (document.RootElement.TryGetProperty("playlistInfo", out var playlistElement)) {
-                Playlist = playlistElement.Deserialize<SearchPlaylist>();
-            }
 
-            if (document.RootElement.TryGetProperty("exception", out var exceptionElement)) {
-                Exception = exceptionElement.Deserialize<SearchException>();
-            }
-
-            if (!document.RootElement.TryGetProperty("data", out var dataElement)) {
+            if (!document.RootElement.TryGetProperty("data", out var dataElement))
+            {
                 return;
             }
 
-            string encoded = null;
-            LavaTrack track = null;
-            object pluginInfo = null;
-
-            foreach (var property in dataElement.EnumerateObject()) {
-                switch (property.Name) {
-                    case "encoded":
-                        encoded = property.Value.GetString();
-                        break;
-
-                    // playlist?
-                    case "info":
-                        switch (Type) {
-                            case SearchType.Track:
-                                track = property.Value.Deserialize<LavaTrack>();
-                                break;
-                            case SearchType.Playlist:
-                                Tracks = property.Value
-                                    .EnumerateArray()
-                                    .Select(x => {
-                                        var track = x.GetProperty("info").Deserialize<LavaTrack>();
-                                        track.Hash = x.GetProperty("encoded").GetString();
-                                        track.PluginInfo = x.GetProperty("pluginInfo");
-                                        return track;
-                                    })
-                                    .ToList();
-                                break;
-                        }
-
-                        break;
-
-                    case "pluginInfo":
-                        pluginInfo = property.Value;
-                        break;
-                }
-            }
-
-            if (track != null) {
-                track.Hash = encoded;
-                track.PluginInfo = pluginInfo;
-                Tracks = [track];
+            switch (Type)
+            {
+                case SearchType.Track:
+                    LavaTrack track = JsonSerializer.Deserialize<LavaTrack>(dataElement, TrackConverterOptions);
+                    Tracks = [track];
+                    break;
+                case SearchType.Playlist:
+                    Exception = JsonSerializer.Deserialize<SearchException>(dataElement.GetProperty("info"));
+                    Tracks = JsonSerializer.Deserialize<IReadOnlyCollection<LavaTrack>>(dataElement.GetProperty("tracks"), TrackConverterOptions);
+                    break;
+                case SearchType.Search:
+                    Tracks = JsonSerializer.Deserialize<IReadOnlyCollection<LavaTrack>>(dataElement, TrackConverterOptions);
+                    break;
+                case SearchType.Error:
+                    Exception = JsonSerializer.Deserialize<SearchException>(dataElement);
+                    break;
             }
         }
     }

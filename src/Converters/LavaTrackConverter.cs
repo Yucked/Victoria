@@ -10,9 +10,11 @@ internal sealed class LavaTrackConverter : JsonConverter<LavaTrack> {
         {
             trackDocument.RootElement.TryGetProperty("encoded", out JsonElement trackHashElement);
             trackDocument.RootElement.TryGetProperty("info", out JsonElement trackElement);
+            trackDocument.RootElement.TryGetProperty("pluginInfo", out JsonElement trackPluginInfoElement);
 
             LavaTrack track = JsonSerializer.Deserialize<LavaTrack>(trackElement);
             track.Hash = trackHashElement.ToString();
+            track.PluginInfo = trackPluginInfoElement.ToString();
 
             return track;
         }
