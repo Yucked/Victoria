@@ -15,7 +15,7 @@ internal sealed class LavaTrackListConverter : JsonConverter<IReadOnlyCollection
             List<LavaTrack> trackList = new List<LavaTrack>();
             foreach (JsonElement element in trackDocument.RootElement.EnumerateArray())
             {
-                trackList.Add(JsonSerializer.Deserialize<LavaTrack>(element, new JsonSerializerOptions() { Converters = { new LavaTrackConverter() } }));
+                trackList.Add(JsonSerializer.Deserialize<LavaTrack>(element, Extensions.Options));
             }
 
             return new ReadOnlyCollection<LavaTrack>(trackList);
