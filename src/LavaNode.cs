@@ -85,6 +85,13 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     private readonly ILogger<LavaNode<TLavaPlayer, TLavaTrack>> _logger;
     private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
 
+    private static readonly JsonSerializerOptions TrackConverterOptions = new() {
+        Converters = {
+            new LavaTrackConverter(),
+            new LavaTrackListConverter(),
+        }
+    };
+
     /// <summary>
     /// 
     /// </summary>
@@ -305,7 +312,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         var responseMessage = await _httpClient.GetAsync($"/{_version}/decodetrack?encodedTrack={HttpUtility.UrlEncode(trackHash)}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
-        return await JsonSerializer.DeserializeAsync<TLavaTrack>(stream, new JsonSerializerOptions() { Converters = { new LavaTrackConverter() }});
+        return await JsonSerializer.DeserializeAsync<TLavaTrack>(stream, TrackConverterOptions);
     }
 
     /// <summary>
@@ -319,7 +326,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(tracksHashes)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
-        return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<TLavaTrack>>(stream, new JsonSerializerOptions() { Converters = { new LavaTrackListConverter() }});
+        return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<TLavaTrack>>(stream, TrackConverterOptions);
     }
 
     /// <summary>
