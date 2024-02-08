@@ -6,14 +6,19 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Victoria.Converters;
 
 namespace Victoria {
     /// <summary>
     /// 
     /// </summary>
     public static class Extensions {
-        private static readonly JsonSerializerOptions Options = new() {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+        internal static readonly JsonSerializerOptions Options = new() {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            Converters = {
+                new LavaTrackConverter(),
+                new LavaTrackListConverter(),
+            }
         };
 
         /// <summary>

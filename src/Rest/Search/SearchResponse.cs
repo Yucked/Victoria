@@ -10,13 +10,6 @@ namespace Victoria.Rest.Search {
     /// 
     /// </summary>
     public sealed class SearchResponse {
-        private static readonly JsonSerializerOptions TrackConverterOptions = new()
-        {
-            Converters = {
-            new LavaTrackConverter(),
-            new LavaTrackListConverter(),
-        }
-        };
         /// <summary>
         /// 
         /// </summary>
@@ -51,15 +44,15 @@ namespace Victoria.Rest.Search {
             switch (Type)
             {
                 case SearchType.Track:
-                    LavaTrack track = JsonSerializer.Deserialize<LavaTrack>(dataElement, TrackConverterOptions);
+                    LavaTrack track = JsonSerializer.Deserialize<LavaTrack>(dataElement, Extensions.Options);
                     Tracks = [track];
                     break;
                 case SearchType.Playlist:
                     Exception = JsonSerializer.Deserialize<SearchException>(dataElement.GetProperty("info"));
-                    Tracks = JsonSerializer.Deserialize<IReadOnlyCollection<LavaTrack>>(dataElement.GetProperty("tracks"), TrackConverterOptions);
+                    Tracks = JsonSerializer.Deserialize<IReadOnlyCollection<LavaTrack>>(dataElement.GetProperty("tracks"), Extensions.Options);
                     break;
                 case SearchType.Search:
-                    Tracks = JsonSerializer.Deserialize<IReadOnlyCollection<LavaTrack>>(dataElement, TrackConverterOptions);
+                    Tracks = JsonSerializer.Deserialize<IReadOnlyCollection<LavaTrack>>(dataElement, Extensions.Options);
                     break;
                 case SearchType.Error:
                     Exception = JsonSerializer.Deserialize<SearchException>(dataElement);
