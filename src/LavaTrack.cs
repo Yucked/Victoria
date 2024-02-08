@@ -43,8 +43,8 @@ public class LavaTrack {
     {
         get => IntPosition == 0
             ? TimeSpan.Zero
-            : TimeSpan.Parse($"{IntPosition}");
-        set => IntPosition = value.Milliseconds;
+            : TimeSpan.FromMilliseconds(IntPosition);
+        set => IntPosition = (int)value.TotalMilliseconds;
     }
 
     [JsonPropertyName("position"), JsonInclude]
@@ -57,8 +57,8 @@ public class LavaTrack {
     {
         get => Length == 0
             ? TimeSpan.Zero
-            : TimeSpan.Parse($"{Length}");
-        set => Length = value.Milliseconds;
+            : TimeSpan.FromMilliseconds(Length);
+        set => Length = (int)value.TotalMilliseconds;
     }
 
     [JsonPropertyName("length"), JsonInclude]

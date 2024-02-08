@@ -6,9 +6,11 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using Victoria.Converters;
 using Victoria.Enums;
 using Victoria.Rest;
 using Victoria.Rest.Lavalink;
@@ -82,6 +84,13 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     private readonly WebSocketClient _webSocketClient;
     private readonly ILogger<LavaNode<TLavaPlayer, TLavaTrack>> _logger;
     private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
+
+    private static readonly JsonSerializerOptions TrackConverterOptions = new() {
+        Converters = {
+            new LavaTrackConverter(),
+            new LavaTrackListConverter(),
+        }
+    };
 
     /// <summary>
     /// 
@@ -300,10 +309,10 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<TLavaTrack> DecodeTrackAsync(string trackHash) {
         ArgumentNullException.ThrowIfNull(trackHash);
-        var responseMessage = await _httpClient.GetAsync($"/{_version}/decodetrack?encodedTrack={trackHash}");
+        var responseMessage = await _httpClient.GetAsync($"/{_version}/decodetrack?encodedTrack={HttpUtility.UrlEncode(trackHash)}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
-        return await JsonSerializer.DeserializeAsync<TLavaTrack>(stream);
+        return await JsonSerializer.DeserializeAsync<TLavaTrack>(stream, TrackConverterOptions);
     }
 
     /// <summary>
@@ -313,11 +322,11 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<IReadOnlyCollection<TLavaTrack>> DecodeTracksAsync(params string[] tracksHashes) {
         ArgumentNullException.ThrowIfNull(tracksHashes);
-        var responseMessage = await _httpClient.PostAsync($"/{_version}/decodetrack",
+        var responseMessage = await _httpClient.PostAsync($"/{_version}/decodetracks",
             new ReadOnlyMemoryContent(JsonSerializer.SerializeToUtf8Bytes(tracksHashes)));
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
-        return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<TLavaTrack>>(stream);
+        return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<TLavaTrack>>(stream, TrackConverterOptions);
     }
 
     /// <summary>
