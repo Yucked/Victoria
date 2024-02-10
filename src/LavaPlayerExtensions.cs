@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Victoria.Rest.Filters;
 using Victoria.Rest.Payloads;
@@ -9,10 +11,16 @@ namespace Victoria;
 /// 
 /// </summary>
 public static class LavaPlayerExtensions {
+    internal static ConcurrentDictionary<ulong, LavaQueue<LavaTrack>> Queue { get; } = new();
+
     /// <summary>
     /// 
     /// </summary>
-    public static LavaQueue<LavaTrack> Queue { get; } = new();
+    /// <param name="player"></param>
+    /// <returns></returns>
+    public static LavaQueue<LavaTrack> GetQueue(this LavaPlayer<LavaTrack> player) {
+        return Queue.GetValueOrDefault(player.GuildId);
+    }
 
     /// <summary>
     /// 
@@ -147,7 +155,11 @@ public static class LavaPlayerExtensions {
         TimeSpan? skipAfter = default)
         where TLavaTrack : LavaTrack
         where TLavaPlayer : LavaPlayer<TLavaTrack> {
-        if (!Queue.TryDequeue(out var lavaTrack)) {
+        if (!Queue.TryGetValue(lavaPlayer.GuildId, out var queue)) {
+            return default;
+        }
+
+        if (!queue.TryDequeue(out var lavaTrack)) {
             throw new InvalidOperationException("There aren't any more tracks in the Vueue.");
         }
 
