@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -10,7 +9,6 @@ using System.Web;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
-using Victoria.Converters;
 using Victoria.Enums;
 using Victoria.Rest;
 using Victoria.Rest.Lavalink;
@@ -184,6 +182,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
         player = await UpdatePlayerAsync(voiceChannel.GuildId,
             updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
+        LavaPlayerExtensions.Queue.TryAdd(voiceChannel.GuildId, new LavaQueue<LavaTrack>());
         return player;
     }
 
@@ -302,7 +301,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<TLavaTrack> DecodeTrackAsync(string trackHash) {
         ArgumentNullException.ThrowIfNull(trackHash);
-        var responseMessage = await _httpClient.GetAsync($"/{_version}/decodetrack?encodedTrack={HttpUtility.UrlEncode(trackHash)}");
+        var responseMessage =
+            await _httpClient.GetAsync($"/{_version}/decodetrack?encodedTrack={HttpUtility.UrlEncode(trackHash)}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<TLavaTrack>(stream, Extensions.Options);
@@ -560,9 +560,10 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                 }
             }
         }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception is JsonException ? $"There was a problem parsing JSON! You may need to increase the buffer size in Configuration.  Error Message: {exception.Message}" : $"{exception.Message} {exception}");
+        catch (Exception exception) {
+            _logger.LogError(exception is JsonException
+                ? $"There was a problem parsing JSON! You may need to increase the buffer size in Configuration.  Error Message: {exception.Message}"
+                : $"{exception.Message} {exception}");
         }
     }
 
