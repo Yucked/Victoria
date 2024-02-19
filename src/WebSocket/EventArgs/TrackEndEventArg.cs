@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Victoria.Enums;
 
 namespace Victoria.WebSocket.EventArgs;
@@ -14,7 +15,7 @@ public struct TrackEndEventArg {
     /// <summary>
     /// 
     /// </summary>
-    public string EncodedTrack { get; internal init; }
+    public LavaTrack Track { get; internal init; }
 
     /// <summary>
     /// 

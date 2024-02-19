@@ -472,7 +472,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                 case "event":
 
-                    var encodedTrack = document.GetProperty("track").GetProperty("encoded").GetString();
+
+                    LavaTrack track = JsonSerializer.Deserialize<TLavaTrack>(document.GetProperty("track"), Extensions.Options);
 
                     switch (document.GetProperty("type").GetString()) {
                         case "TrackStartEvent":
@@ -484,7 +485,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackStart.Invoke(new TrackStartEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = encodedTrack
+                                Track = track
                             });
                             break;
 
@@ -497,7 +498,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackEnd.Invoke(new TrackEndEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = encodedTrack,
+                                Track = track,
                                 Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString(), true)
                             });
                             break;
@@ -511,7 +512,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackException.Invoke(new TrackExceptionEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = encodedTrack,
+                                Track = track,
                                 Exception = document.GetProperty("exception").Deserialize<TrackException>()
                             });
                             break;
@@ -525,7 +526,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
 
                             await OnTrackStuck.Invoke(new TrackStuckEventArg {
                                 GuildId = guildId,
-                                EncodedTrack = encodedTrack,
+                                Track = track,
                                 Threshold = document.GetProperty("thresholdMs").GetInt64()
                             });
                             break;
