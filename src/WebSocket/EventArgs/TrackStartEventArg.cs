@@ -12,5 +12,5 @@ public struct TrackStartEventArg {
     /// <summary>
     /// 
     /// </summary>
-    public string EncodedTrack { get; internal init; }
+    public LavaTrack Track { get; internal init; }
 }
