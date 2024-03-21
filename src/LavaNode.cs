@@ -583,7 +583,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         }
 
         voiceState.SessionId = sessionId;
-        _voiceStates.AddOrUpdate(guildId, voiceState, (_, _) => default);
+        _voiceStates.AddOrUpdate(guildId, voiceState, (_, _) => voiceState);
 
         if (!string.IsNullOrWhiteSpace(voiceState.Token)) {
             return UpdatePlayerAsync(guildId,
@@ -599,9 +599,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         }
 
         voiceState = new VoiceState(voiceServer.Token, voiceServer.Endpoint, voiceState.SessionId);
-        _voiceStates.AddOrUpdate(voiceServer.Guild.Id,
-            voiceState,
-            (_, _) => default);
+        _voiceStates.AddOrUpdate(voiceServer.Guild.Id, voiceState, (_, _) => voiceState);
 
         if (!string.IsNullOrWhiteSpace(voiceState.SessionId)) {
             return UpdatePlayerAsync(voiceServer.Guild.Id,
