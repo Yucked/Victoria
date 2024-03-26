@@ -569,8 +569,8 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     }
 
     private Task OnUserVoiceStateUpdatedAsync(SocketUser user,
-                                              SocketVoiceState currentState,
-                                              SocketVoiceState pastState) {
+                                              SocketVoiceState pastState,
+                                              SocketVoiceState currentState) {
         if (_baseSocketClient.CurrentUser?.Id != user.Id) {
             return Task.CompletedTask;
         }
@@ -585,7 +585,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         voiceState.SessionId = sessionId;
         _voiceStates.AddOrUpdate(guildId, voiceState, (_, _) => voiceState);
 
-        if (!string.IsNullOrWhiteSpace(voiceState.Token)) {
+        if (!string.IsNullOrWhiteSpace(voiceState.Token) && currentState.VoiceChannel is not null) {
             return UpdatePlayerAsync(guildId,
                 updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
         }
