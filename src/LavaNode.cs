@@ -345,7 +345,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    public async Task<string> GetLavalinkVersion() {
+    public async Task<string> GetLavalinkVersionAsync() {
         var responseMessage = await _httpClient.GetAsync($"/{_version}/routeplanner/status");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
