@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 using Victoria.Converters;
 using Victoria.Rest;
@@ -58,5 +59,6 @@ public class LavaPlayer<TLavaTrack>
     /// 
     /// </summary>
     /// TODO: How to handle queue?
+    [Obsolete("Use LavaPlayerExtensions.Queue or LavaPlayer#GetQueue on LavaPlayer instance")]
     public LavaQueue<TLavaTrack> Queue { get; }
 }

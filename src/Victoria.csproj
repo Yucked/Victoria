@@ -2,14 +2,15 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<Version>7.0</Version>
 		<Title>Victoria</Title>
-		<Authors>Yucked</Authors>
-		<Copyright>2018 - 2021 Yucked. All rights reserved.</Copyright>
+		<Authors>Yucked; Contributors</Authors>
+		<Copyright>2018 - 2024 Yucked. All rights reserved.</Copyright>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageTags>Lavalink, Wrapper, Discord, Discord.NET, Music, Yucked, Lavalink NET, Sharplink</PackageTags>
 		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
@@ -17,12 +18,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
+		<None Include="icon.png" Pack="true" Visible="false" PackagePath=""/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Discord.Net.WebSocket" Version="3.12.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
+		<PackageReference Include="Discord.Net.WebSocket" Version="3.12.0"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0"/>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1"/>
 	</ItemGroup>
 </Project>
