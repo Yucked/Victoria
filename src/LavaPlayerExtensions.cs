@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Victoria.Rest.Filters;
 using Victoria.Rest.Payloads;
@@ -12,16 +11,20 @@ namespace Victoria;
 /// </summary>
 public static class LavaPlayerExtensions {
     internal static ConcurrentDictionary<ulong, LavaQueue<LavaTrack>> Queue { get; } = new();
-
+    
     /// <summary>
     /// 
     /// </summary>
     /// <param name="player"></param>
     /// <returns></returns>
     public static LavaQueue<LavaTrack> GetQueue(this LavaPlayer<LavaTrack> player) {
-        return Queue.GetValueOrDefault(player.GuildId);
+        if (!Queue.ContainsKey(player.GuildId)) {
+            Queue.TryAdd(player.GuildId, new LavaQueue<LavaTrack>());
+        }
+        
+        return Queue[player.GuildId];
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -49,7 +52,7 @@ public static class LavaPlayerExtensions {
                 Volume: volume,
                 IsPaused: shouldPause));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -83,7 +86,7 @@ public static class LavaPlayerExtensions {
                 Position: startTime.Milliseconds,
                 EndTime: stopTime.Milliseconds));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -102,7 +105,7 @@ public static class LavaPlayerExtensions {
                 EncodedTrack: lavaTrack?.Hash,
                 IsPaused: shouldPause));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -119,7 +122,7 @@ public static class LavaPlayerExtensions {
             updatePayload: new UpdatePlayerPayload(
                 IsPaused: true));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -140,7 +143,7 @@ public static class LavaPlayerExtensions {
                 EncodedTrack: lavaTrack.Hash,
                 IsPaused: false));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -158,18 +161,18 @@ public static class LavaPlayerExtensions {
         if (!Queue.TryGetValue(lavaPlayer.GuildId, out var queue)) {
             return default;
         }
-
+        
         if (!queue.TryDequeue(out var lavaTrack)) {
             throw new InvalidOperationException("There aren't any more tracks in the Vueue.");
         }
-
+        
         var skippedTrack = lavaPlayer.Track as TLavaTrack;
         await Task.Delay(skipAfter ?? TimeSpan.Zero);
         await PlayAsync(lavaPlayer, lavaNode, (TLavaTrack)lavaTrack);
-
+        
         return (skippedTrack, (TLavaTrack)lavaTrack);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -187,7 +190,7 @@ public static class LavaPlayerExtensions {
             lavaPlayer.GuildId,
             updatePayload: new UpdatePlayerPayload(Position: seekPosition.Milliseconds));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -205,7 +208,7 @@ public static class LavaPlayerExtensions {
             lavaPlayer.GuildId,
             updatePayload: new UpdatePlayerPayload(Volume: volume));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
