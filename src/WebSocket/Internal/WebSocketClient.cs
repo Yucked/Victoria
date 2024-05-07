@@ -18,44 +18,44 @@ public sealed class WebSocketClient : IAsyncDisposable {
     /// 
     /// </summary>
     public event Func<Task> OnOpenAsync;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<CloseEventArgs, Task> OnCloseAsync;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<ErrorEventArgs, Task> OnErrorAsync;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<DataEventArgs, Task> OnDataAsync;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<RetryEventArgs, Task> OnRetryAsync;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public bool IsConnected { get; private set; }
-
+    
     /// <summary>
     /// 
     /// </summary>
     public Uri Host { get; }
-
+    
     private readonly Configuration _configuration;
     private readonly ConcurrentQueue<byte[]> _messageQueue;
     private CancellationTokenSource _connectionTokenSource;
     private ClientWebSocket _webSocket;
     private int _reconnectAttempts;
     private int _reconnectDelay;
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -64,14 +64,14 @@ public sealed class WebSocketClient : IAsyncDisposable {
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public WebSocketClient(Configuration configuration) {
         ArgumentNullException.ThrowIfNull(configuration);
-
+        
         Host = new Uri($"{configuration.SocketEndpoint}/v{configuration.Version}/websocket");
         _configuration = configuration;
         _webSocket = new ClientWebSocket();
         _messageQueue = new ConcurrentQueue<byte[]>();
         _connectionTokenSource = new CancellationTokenSource();
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -82,14 +82,14 @@ public sealed class WebSocketClient : IAsyncDisposable {
         if (string.IsNullOrWhiteSpace(key)) {
             throw new ArgumentNullException(nameof(key));
         }
-
+        
         if (string.IsNullOrWhiteSpace(value)) {
             throw new ArgumentNullException(nameof(value));
         }
-
+        
         _webSocket.Options.SetRequestHeader(key, value);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -99,7 +99,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
             throw new InvalidOperationException(
                 $"WebSocket is already in open state. Current state: {_webSocket.State}");
         }
-
+        
         try {
             await _webSocket
                 .ConnectAsync(Host, CancellationToken.None)
@@ -109,27 +109,28 @@ public sealed class WebSocketClient : IAsyncDisposable {
             if (exception is not ObjectDisposedException) {
                 return;
             }
-
+            
             ResetWebSocket();
             await ReconnectAsync();
         }
-
+        
         return;
-
+        
         async Task VerifyConnectionAsync(Task task) {
             if (task.Exception != null) {
                 await OnErrorAsync.Invoke(new ErrorEventArgs(task.Exception));
                 await ReconnectAsync();
                 return;
             }
-
+            
             IsConnected = true;
             _reconnectAttempts = 0;
+            _reconnectDelay = _configuration.SocketConfiguration.ReconnectDelay;
             _connectionTokenSource = new CancellationTokenSource();
             await Task.WhenAll(OnOpenAsync.Invoke(), ReceiveAsync(), SendAsync());
         }
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -142,7 +143,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
             throw new InvalidOperationException(
                 $"WebSocket is not in open state. Current state: {_webSocket.State}");
         }
-
+        
         try {
             await _webSocket.CloseAsync(closeStatus, closeReason, _connectionTokenSource.Token);
         }
@@ -155,7 +156,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
             await OnCloseAsync.Invoke(new CloseEventArgs());
         }
     }
-
+    
     private async Task ReceiveAsync() {
         try {
             var buffer = new byte[_configuration.SocketConfiguration.BufferSize];
@@ -170,23 +171,23 @@ public sealed class WebSocketClient : IAsyncDisposable {
                     buffer = new byte[_configuration.SocketConfiguration.BufferSize];
                     continue;
                 }
-
+                
                 switch (receiveResult.MessageType) {
                     case WebSocketMessageType.Text:
                         var array = finalBuffer ?? buffer;
                         Array.Resize(ref array, Array.FindLastIndex(array, b => b != 0) + 1);
                         await OnDataAsync.Invoke(new DataEventArgs(array));
-
+                        
                         finalBuffer = default;
                         buffer = new byte[_configuration.SocketConfiguration.BufferSize];
                         offset = 0;
                         break;
-
+                    
                     case WebSocketMessageType.Close:
                         await DisconnectAsync();
                         await ReconnectAsync();
                         break;
-
+                    
                     case WebSocketMessageType.Binary:
                     default:
                         break;
@@ -198,11 +199,13 @@ public sealed class WebSocketClient : IAsyncDisposable {
             if (exception is TaskCanceledException or OperationCanceledException or ObjectDisposedException) {
                 return;
             }
-
+            
             await OnErrorAsync.Invoke(new ErrorEventArgs(exception));
+            ResetWebSocket();
+            await ReconnectAsync();
         }
     }
-
+    
     private async Task SendAsync() {
         try {
             do {
@@ -210,7 +213,7 @@ public sealed class WebSocketClient : IAsyncDisposable {
                     await Task.Delay(500);
                     continue;
                 }
-
+                
                 await _webSocket.SendAsync(content, WebSocketMessageType.Text,
                     true, _connectionTokenSource.Token);
             } while (_webSocket.State == WebSocketState.Open &&
@@ -220,42 +223,42 @@ public sealed class WebSocketClient : IAsyncDisposable {
             await OnErrorAsync.Invoke(new ErrorEventArgs(exception));
         }
     }
-
+    
     private async Task ReconnectAsync() {
         if (_configuration.SocketConfiguration.ReconnectAttempts <= 0 ||
             _configuration.SocketConfiguration.ReconnectAttempts <= _reconnectAttempts) {
             await OnRetryAsync.Invoke(new RetryEventArgs(0, true));
             return;
         }
-
+        
         _connectionTokenSource.Cancel(false);
         _reconnectDelay += _configuration.SocketConfiguration.ReconnectDelay;
         _reconnectAttempts++;
-
+        
         await OnRetryAsync.Invoke(new RetryEventArgs(_reconnectAttempts, false));
         await Task.Delay(_reconnectDelay);
         await ConnectAsync();
     }
-
+    
     private void ResetWebSocket() {
         var options = _webSocket.Options;
         var headerCollection = options.GetType()
                 .GetProperty("RequestHeaders", BindingFlags.Instance | BindingFlags.NonPublic)
                 .GetValue(options, null)
             as WebHeaderCollection;
-
+        
         _webSocket = new ClientWebSocket();
         foreach (var key in headerCollection.Keys) {
             _webSocket.Options.SetRequestHeader($"{key}", headerCollection.Get($"{key}"));
         }
     }
-
+    
     /// <inheritdoc />
     public async ValueTask DisposeAsync() {
         if (IsConnected) {
             await DisconnectAsync();
         }
-
+        
         _connectionTokenSource?.Dispose();
         _webSocket.Dispose();
         _messageQueue.Clear();
