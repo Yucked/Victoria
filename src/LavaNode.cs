@@ -29,52 +29,52 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// 
     /// </summary>
     public event Func<ReadyEventArg, Task> OnReady;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<StatsEventArg, Task> OnStats;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<PlayerUpdateEventArg, Task> OnPlayerUpdate;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<TrackStartEventArg, Task> OnTrackStart;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<TrackEndEventArg, Task> OnTrackEnd;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<TrackExceptionEventArg, Task> OnTrackException;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<TrackStuckEventArg, Task> OnTrackStuck;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public event Func<WebSocketClosedEventArg, Task> OnWebSocketClosed;
-
+    
     /// <summary>
     /// 
     /// </summary>
     public string SessionId { get; internal set; }
-
+    
     /// <summary>
     /// 
     /// </summary>
     public bool IsConnected { get; internal set; }
-
+    
     private readonly string _version;
     private readonly BaseSocketClient _baseSocketClient;
     private readonly Configuration _configuration;
@@ -82,7 +82,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     private readonly WebSocketClient _webSocketClient;
     private readonly ILogger<LavaNode<TLavaPlayer, TLavaTrack>> _logger;
     private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -94,26 +94,26 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                     ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger) {
         _configuration = configuration;
         _logger = logger;
-
+        
         _baseSocketClient = baseSocketClient;
         _baseSocketClient.UserVoiceStateUpdated += OnUserVoiceStateUpdatedAsync;
         _baseSocketClient.VoiceServerUpdated += OnVoiceServerUpdatedAsync;
-
+        
         _webSocketClient = new WebSocketClient(configuration);
         _webSocketClient.OnOpenAsync += OnOpenAsync;
         _webSocketClient.OnErrorAsync += OnErrorAsync;
         _webSocketClient.OnCloseAsync += OnCloseAsync;
         _webSocketClient.OnDataAsync += OnDataAsync;
         _webSocketClient.OnRetryAsync += OnRetryAsync;
-
+        
         _version = $"v{configuration.Version}";
         _httpClient = new HttpClient();
         _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
         _httpClient.BaseAddress = new Uri($"{configuration.HttpEndpoint}");
-
+        
         _voiceStates = new();
     }
-
+    
     /// <summary>
     ///     Starts a WebSocket connection to the specified <see cref="Configuration.Hostname" />:<see cref="Configuration.Port" />
     ///     and hooks into <see cref="BaseSocketClient" /> events.
@@ -124,20 +124,20 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             throw new InvalidOperationException(
                 $"You must call {nameof(DisconnectAsync)} or {nameof(DisposeAsync)} before calling {nameof(ConnectAsync)}.");
         }
-
+        
         if (_baseSocketClient.CurrentUser == null || _baseSocketClient.CurrentUser.Id == 0) {
             throw new InvalidOperationException($"{nameof(_baseSocketClient)} is not in ready state.");
         }
-
+        
         _webSocketClient.AddHeader("Authorization", _configuration.Authorization);
         _webSocketClient.AddHeader("User-Id", $"{_baseSocketClient.CurrentUser.Id}");
         _webSocketClient.AddHeader("Client-Name",
             $"{nameof(Victoria)}/{typeof(Configuration).Assembly.GetName().Version}");
-
+        
         await _webSocketClient.ConnectAsync()
             .ConfigureAwait(false);
     }
-
+    
     /// <summary>
     ///     Disposes all players and closes websocket connection.
     /// </summary>
@@ -146,46 +146,45 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         if (!IsConnected) {
             throw new InvalidOperationException("Can't disconnect when client isn't connected.");
         }
-
+        
         await _webSocketClient.DisconnectAsync()
             .ConfigureAwait(false);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
     /// <param name="voiceChannel"></param>
-    /// <param name="textChannel"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     /// <exception cref="ArgumentNullException"></exception>
-    public async Task<TLavaPlayer> JoinAsync(IVoiceChannel voiceChannel, ITextChannel textChannel = default) {
+    public async Task<TLavaPlayer> JoinAsync(IVoiceChannel voiceChannel) {
         if (!IsConnected) {
             throw new InvalidOperationException(
                 $"You must call {nameof(ConnectAsync)} before joining a voice channel.");
         }
-
+        
         ArgumentNullException.ThrowIfNull(voiceChannel);
         var player = await this.TryGetPlayerAsync(voiceChannel.GuildId);
         var user = await voiceChannel.GetUserAsync(_baseSocketClient.CurrentUser.Id);
         if (player != null && user != null) {
             return player;
         }
-
+        
         await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true)
             .ConfigureAwait(false);
-
+        
         if (!_voiceStates.TryGetValue(voiceChannel.GuildId, out var voiceState)) {
-            _logger.LogError("Failed to get voice state for guild {}", voiceChannel.GuildId);
+            _logger.LogWarning("Failed to get voice state for guild {}. Most likely first join?", voiceChannel.GuildId);
             return null;
         }
-
+        
         player = await UpdatePlayerAsync(voiceChannel.GuildId,
             updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
         LavaPlayerExtensions.Queue.TryAdd(voiceChannel.GuildId, new LavaQueue<LavaTrack>());
         return player;
     }
-
+    
     /// <summary>
     ///     Leaves the specified channel only if <typeparamref name="TLavaPlayer" /> is connected to it.
     /// </summary>
@@ -195,18 +194,18 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         if (!IsConnected) {
             throw new InvalidOperationException("Can't execute this operation when websocket isn't connected.");
         }
-
+        
         ArgumentNullException.ThrowIfNull(voiceChannel);
         var player = await this.TryGetPlayerAsync(voiceChannel.GuildId);
         if (player == null) {
             return;
         }
-
+        
         await voiceChannel.DisconnectAsync()
             .ConfigureAwait(false);
         await DestroyPlayerAsync(voiceChannel.GuildId);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -217,7 +216,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<TLavaPlayer>>(stream);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -225,13 +224,13 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <returns></returns>
     public async Task<TLavaPlayer> GetPlayerAsync(ulong guildId) {
         ArgumentNullException.ThrowIfNull(guildId);
-
+        
         var responseMessage = await _httpClient.GetAsync($"/{_version}/sessions/{SessionId}/players/{guildId}");
         await using var stream = await responseMessage.Content.ReadAsStreamAsync();
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<TLavaPlayer>(stream);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -253,7 +252,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<TLavaPlayer>(stream);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -265,7 +264,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             await responseMessage.Content.ReadAsStreamAsync());
         _logger.LogInformation("Player for guild {guildId} has been destroyed.", guildId);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -280,7 +279,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<UpdateSessionPayload>(stream);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -293,7 +292,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return new SearchResponse(await JsonDocument.ParseAsync(stream));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -307,7 +306,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<TLavaTrack>(stream, Extensions.Options);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -321,7 +320,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<TLavaTrack>>(stream, Extensions.Options);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -331,7 +330,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<LavalinkInfo>(stream);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -341,7 +340,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<StatsEventArg>(stream);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -351,7 +350,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await responseMessage.Content.ReadAsStringAsync();
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -362,7 +361,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         RestException.ThrowIfNot200(responseMessage.IsSuccessStatusCode, stream);
         return await JsonSerializer.DeserializeAsync<RouteStatus>(stream);
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -372,63 +371,63 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         await _httpClient.PostAsync($"/{_version}/routeplanner/free/address",
             new StringContent(address));
     }
-
+    
     /// <summary>
     /// 
     /// </summary>
     public async Task UnmarkAllFailedAddressAsync() {
         await _httpClient.PostAsync($"/{_version}/routeplanner/free/all", default);
     }
-
+    
     /// <inheritdoc />
     public async ValueTask DisposeAsync() {
         await _webSocketClient.DisposeAsync()
             .ConfigureAwait(false);
         _httpClient.Dispose();
     }
-
+    
     private Task OnOpenAsync() {
         IsConnected = true;
-
+        
         // TODO: Handle resume?
         return Task.CompletedTask;
     }
-
+    
     private Task OnCloseAsync(CloseEventArgs arg) {
         IsConnected = false;
         _logger.LogWarning("WebSocket connection closed");
         return Task.CompletedTask;
     }
-
+    
     private Task OnErrorAsync(ErrorEventArgs arg) {
         _logger.LogError("{exception}, {message}", arg.Exception, arg.Message);
         return Task.CompletedTask;
     }
-
+    
     private Task OnRetryAsync(RetryEventArgs arg) {
         if (arg.IsLastRetry) {
             _logger.LogError("This was the last try in establishing connection with Lavalink");
             return Task.CompletedTask;
         }
-
+        
         _logger.LogWarning("Lavalink reconnect attempt #{attempts}", arg.Count);
         return Task.CompletedTask;
     }
-
+    
     private async Task OnDataAsync(DataEventArgs arg) {
         if (arg.Data.Length == 0) {
             _logger.LogWarning("Didn't receive any data from websocket");
             return;
         }
-
+        
         _logger.LogDebug("{data}", Encoding.UTF8.GetString(arg.Data));
-
+        
         try {
             var document = JsonDocument.Parse(arg.Data).RootElement;
             var guildId = document.TryGetProperty("guildId", out var idElement)
                 ? ulong.Parse(idElement.GetString()!)
                 : 0;
-
+            
             switch (document.GetProperty("op").GetString()) {
                 case "ready":
                     SessionId = $"{document.GetProperty("sessionId")}";
@@ -437,22 +436,22 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                             nameof(OnReady));
                         return;
                     }
-
+                    
                     await OnReady.Invoke(new ReadyEventArg(
                         document.GetProperty("resumed").GetBoolean(),
                         SessionId));
                     break;
-
+                
                 case "stats":
                     if (OnStats == null) {
                         _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
                             nameof(OnStats));
                         return;
                     }
-
+                    
                     await OnStats.Invoke(JsonSerializer.Deserialize<StatsEventArg>(arg.Data));
                     break;
-
+                
                 case "playerUpdate":
                     var state = document.GetProperty("state");
                     if (OnPlayerUpdate == null) {
@@ -460,21 +459,19 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                             nameof(OnPlayerUpdate));
                         return;
                     }
-
+                    
                     await OnPlayerUpdate.Invoke(new PlayerUpdateEventArg {
                         GuildId = guildId,
-                        Time = DateTimeOffset.FromUnixTimeMilliseconds(state.GetProperty("time").GetInt32()),
-                        Position = TimeSpan.FromMilliseconds(state.GetProperty("position").GetInt32()),
+                        Time = DateTimeOffset.FromUnixTimeMilliseconds(state.GetProperty("time").GetInt64()),
+                        Position = TimeSpan.FromMilliseconds(state.GetProperty("position").GetInt64()),
                         IsConnected = state.GetProperty("connected").GetBoolean(),
                         Ping = state.GetProperty("ping").GetInt64()
                     });
                     break;
-
+                
                 case "event":
-
-
-                    LavaTrack track = JsonSerializer.Deserialize<TLavaTrack>(document.GetProperty("track"), Extensions.Options);
-
+                    LavaTrack track = document.GetProperty("track").Deserialize<TLavaTrack>(Extensions.Options);
+                    
                     switch (document.GetProperty("type").GetString()) {
                         case "TrackStartEvent":
                             if (OnTrackStart == null) {
@@ -482,78 +479,78 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                                     nameof(OnTrackStart));
                                 return;
                             }
-
+                            
                             await OnTrackStart.Invoke(new TrackStartEventArg {
                                 GuildId = guildId,
                                 Track = track
                             });
                             break;
-
+                        
                         case "TrackEndEvent":
                             if (OnTrackEnd == null) {
                                 _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
                                     nameof(OnTrackEnd));
                                 return;
                             }
-
+                            
                             await OnTrackEnd.Invoke(new TrackEndEventArg {
                                 GuildId = guildId,
                                 Track = track,
-                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString(), true)
+                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString()!, true)
                             });
                             break;
-
+                        
                         case "TrackExceptionEvent":
                             if (OnTrackException == null) {
                                 _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
                                     nameof(OnTrackException));
                                 return;
                             }
-
+                            
                             await OnTrackException.Invoke(new TrackExceptionEventArg {
                                 GuildId = guildId,
                                 Track = track,
                                 Exception = document.GetProperty("exception").Deserialize<TrackException>()
                             });
                             break;
-
+                        
                         case "TrackStuckEvent":
                             if (OnTrackStuck == null) {
                                 _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
                                     nameof(OnTrackStuck));
                                 return;
                             }
-
+                            
                             await OnTrackStuck.Invoke(new TrackStuckEventArg {
                                 GuildId = guildId,
                                 Track = track,
                                 Threshold = document.GetProperty("thresholdMs").GetInt64()
                             });
                             break;
-
+                        
                         case "WebSocketClosedEvent":
                             if (OnWebSocketClosed == null) {
                                 _logger.LogDebug("Not firing {eventName} since it isn't subscribed.",
                                     nameof(OnWebSocketClosed));
                                 return;
                             }
-
+                            
                             await OnWebSocketClosed.Invoke(new WebSocketClosedEventArg {
                                 GuildId = guildId,
                                 ByRemote = document.GetProperty("byRemote").GetBoolean(),
                                 Code = document.GetProperty("code").GetInt32(),
-                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString(), true)
+                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString()!, true)
                             });
                             break;
-
+                        
                         default:
                             _logger.LogError("Unknown event encountered {}. Please open an issue.",
                                 document.GetProperty("type"));
                             break;
                     }
-
+                    
                     break;
-
+                
                 default: {
                     _logger.LogCritical("Unknown OP code encountered {}, please check lavalink implementation.",
                         document.GetProperty("op"));
@@ -567,45 +564,45 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                 : $"{exception.Message} {exception}");
         }
     }
-
+    
     private Task OnUserVoiceStateUpdatedAsync(SocketUser user,
                                               SocketVoiceState pastState,
                                               SocketVoiceState currentState) {
         if (_baseSocketClient.CurrentUser?.Id != user.Id) {
             return Task.CompletedTask;
         }
-
+        
         var guildId = (currentState.VoiceChannel ?? pastState.VoiceChannel).Guild.Id;
         var sessionId = currentState.VoiceSessionId ?? pastState.VoiceSessionId;
-
+        
         if (!_voiceStates.TryGetValue(guildId, out var voiceState)) {
             voiceState = new VoiceState(null, null, sessionId);
         }
-
+        
         voiceState.SessionId = sessionId;
         _voiceStates.AddOrUpdate(guildId, voiceState, (_, _) => voiceState);
-
+        
         if (!string.IsNullOrWhiteSpace(voiceState.Token) && currentState.VoiceChannel is not null) {
             return UpdatePlayerAsync(guildId,
                 updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
         }
-
+        
         return Task.CompletedTask;
     }
-
+    
     private Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer) {
         if (!_voiceStates.TryGetValue(voiceServer.Guild.Id, out var voiceState)) {
             return Task.CompletedTask;
         }
-
+        
         voiceState = new VoiceState(voiceServer.Token, voiceServer.Endpoint, voiceState.SessionId);
         _voiceStates.AddOrUpdate(voiceServer.Guild.Id, voiceState, (_, _) => voiceState);
-
+        
         if (!string.IsNullOrWhiteSpace(voiceState.SessionId)) {
             return UpdatePlayerAsync(voiceServer.Guild.Id,
                 updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
         }
-
+        
         return Task.CompletedTask;
     }
 }
