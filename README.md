@@ -29,7 +29,7 @@ Victoria 7.x rewrites focuses on Lavalink v4 support. Lavalink v4 introduces sev
 
 #### `💀 Modifications:`
 - `Vueue` is renamed to `LavaQueue`, this change my be reverted.
-- `LavaPlayer` no longer contains method for controlling the player.
+- `LavaPlayer` no longer contains any methods for controlling the player.
 - `RoutePlanner` has been merged with `LavaNode`.
 
 ### `Quick Start`
