@@ -1,0 +1,38 @@
+name: .NET
+
+on:
+  push:
+    branches: [ "v7" ]
+  pull_request:
+    branches: [ "v7" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+              
+    - name: Build & Release
+      run: dotnet build --configuration Release -o Output
+      
+    - name: NutGet Upload
+      if: success() && contains(github.event.head_commit.message, 'publish')
+      working-directory: Output
+      run: dotnet nuget push *.nupkg -k ${{ secrets.MAGIC }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      
+    - name: Discord WebHook
+      if: always()
+      shell: pwsh
+      env: 
+        GITHUB: ${{ toJson(github) }} 
+      run: |
+        wget https://raw.githubusercontent.com/Yucked/Scripy/master/Powershell/ActionSend.ps1
+        pwsh .\ActionSend.ps1 ${{ secrets.WEBHOOK }} ${{ job.status }}      
