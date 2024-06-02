@@ -22,6 +22,21 @@ using Victoria.WebSocket.Internal.EventArgs;
 namespace Victoria;
 
 /// <inheritdoc />
+public class LavaNode : LavaNode<LavaPlayer<LavaTrack>, LavaTrack> {
+    /// <inheritdoc />
+    public LavaNode(DiscordSocketClient discordSocketClient,
+                    Configuration configuration,
+                    ILogger<LavaNode<LavaPlayer<LavaTrack>, LavaTrack>> logger)
+        : base(discordSocketClient, configuration, logger) { }
+    
+    /// <inheritdoc />
+    public LavaNode(DiscordShardedClient discordShardedClient,
+                    Configuration configuration,
+                    ILogger<LavaNode<LavaPlayer<LavaTrack>, LavaTrack>> logger)
+        : base(discordShardedClient, configuration, logger) { }
+}
+
+/// <inheritdoc />
 public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     where TLavaTrack : LavaTrack
     where TLavaPlayer : LavaPlayer<TLavaTrack> {
@@ -83,15 +98,9 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     private readonly ILogger<LavaNode<TLavaPlayer, TLavaTrack>> _logger;
     private readonly ConcurrentDictionary<ulong, VoiceState> _voiceStates;
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="baseSocketClient"></param>
-    /// <param name="configuration"></param>
-    /// <param name="logger"></param>
-    public LavaNode(DiscordSocketClient baseSocketClient,
-                    Configuration configuration,
-                    ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger) {
+    private LavaNode(BaseSocketClient baseSocketClient,
+                     Configuration configuration,
+                     ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger) {
         _configuration = configuration;
         _logger = logger;
         
@@ -111,8 +120,30 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         _httpClient.DefaultRequestHeaders.Add("Authorization", configuration.Authorization);
         _httpClient.BaseAddress = new Uri($"{configuration.HttpEndpoint}");
         
-        _voiceStates = new();
+        _voiceStates = new ConcurrentDictionary<ulong, VoiceState>();
     }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="discordSocketClient"></param>
+    /// <param name="configuration"></param>
+    /// <param name="logger"></param>
+    public LavaNode(DiscordSocketClient discordSocketClient,
+                    Configuration configuration,
+                    ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger)
+        : this(discordSocketClient as BaseSocketClient, configuration, logger) { }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="discordShardedClient"></param>
+    /// <param name="configuration"></param>
+    /// <param name="logger"></param>
+    public LavaNode(DiscordShardedClient discordShardedClient,
+                    Configuration configuration,
+                    ILogger<LavaNode<TLavaPlayer, TLavaTrack>> logger)
+        : this(discordShardedClient as BaseSocketClient, configuration, logger) { }
     
     /// <summary>
     ///     Starts a WebSocket connection to the specified <see cref="Configuration.Hostname" />:<see cref="Configuration.Port" />
