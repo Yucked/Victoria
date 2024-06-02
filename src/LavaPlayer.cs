@@ -1,10 +1,12 @@
-using System;
 using System.Text.Json.Serialization;
 using Victoria.Converters;
 using Victoria.Rest;
 using Victoria.Rest.Filters;
 
 namespace Victoria;
+
+/// <inheritdoc />
+public class LavaPlayer : LavaPlayer<LavaTrack>;
 
 /// <summary>
 /// 
