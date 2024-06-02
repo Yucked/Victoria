@@ -20,7 +20,7 @@ namespace Victoria {
                 new LavaTrackListConverter(),
             }
         };
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -34,23 +34,23 @@ namespace Victoria {
         public static async Task<T> ReadAsJsonAsync<T>(this HttpClient httpClient, HttpRequestMessage requestMessage) {
             ArgumentNullException.ThrowIfNull(httpClient);
             ArgumentNullException.ThrowIfNull(requestMessage);
-
+            
             if (requestMessage.RequestUri == null) {
                 throw new NullReferenceException(nameof(requestMessage.RequestUri));
             }
-
+            
             using var responseMessage = await httpClient.SendAsync(requestMessage);
             if (!responseMessage.IsSuccessStatusCode) {
                 throw new HttpRequestException(responseMessage.ReasonPhrase);
             }
-
+            
             using var content = responseMessage.Content;
             await using var stream = await content.ReadAsStreamAsync();
-
+            
             var deserialized = await JsonSerializer.DeserializeAsync<T>(stream);
             return deserialized;
         }
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -68,19 +68,19 @@ namespace Victoria {
             serviceCollection.AddSingleton<TLavaNode>();
             return serviceCollection;
         }
-
+        
         /// <summary>
         /// 
         /// </summary>
         /// <param name="serviceCollection"></param>
         /// <returns></returns>
-        public static IServiceCollection AddLavaNode(this ServiceCollection serviceCollection) {
+        public static IServiceCollection AddLavaNode(this IServiceCollection serviceCollection) {
             return AddLavaNode<
                 LavaNode<LavaPlayer<LavaTrack>, LavaTrack>,
                 LavaPlayer<LavaTrack>,
                 LavaTrack>(serviceCollection);
         }
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -99,14 +99,14 @@ namespace Victoria {
             if (serviceProvider.GetService(typeof(TLavaNode)) is not LavaNode<TLavaPlayer, TLavaTrack> lavaNode) {
                 throw new NullReferenceException(nameof(TLavaNode));
             }
-
+            
             if (lavaNode.IsConnected) {
                 throw new InvalidOperationException("A connection is already established with Lavalink.");
             }
-
+            
             return lavaNode.ConnectAsync();
         }
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -118,11 +118,11 @@ namespace Victoria {
                 LavaPlayer<LavaTrack>,
                 LavaTrack>(serviceProvider);
         }
-
+        
         internal static T AsEnum<T>(this JsonElement element) where T : struct {
             return Enum.Parse<T>(element.GetString()!, true);
         }
-
+        
         internal static JsonContent AsContent<T>(this T value) {
             return JsonContent.Create(value, new MediaTypeHeaderValue("application/json"), Options);
         }

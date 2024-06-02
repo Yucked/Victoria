@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Victoria.Enums;
 
 namespace Victoria.WebSocket.EventArgs;
