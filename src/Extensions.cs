@@ -55,16 +55,21 @@ namespace Victoria {
         /// 
         /// </summary>
         /// <param name="serviceCollection"></param>
+        /// <param name="configuration"></param>
         /// <typeparam name="TLavaNode"></typeparam>
         /// <typeparam name="TLavaPlayer"></typeparam>
         /// <typeparam name="TLavaTrack"></typeparam>
         /// <returns></returns>
         public static IServiceCollection AddLavaNode<TLavaNode, TLavaPlayer, TLavaTrack>
-            (this IServiceCollection serviceCollection)
+            (this IServiceCollection serviceCollection, Action<Configuration> configuration)
             where TLavaNode : LavaNode<TLavaPlayer, TLavaTrack>
             where TLavaPlayer : LavaPlayer<TLavaTrack>
             where TLavaTrack : LavaTrack {
-            serviceCollection.AddSingleton<Configuration>();
+            
+            var config = new Configuration();
+            configuration?.Invoke(config);
+            
+            serviceCollection.AddSingleton(config);
             serviceCollection.AddSingleton<TLavaNode>();
             return serviceCollection;
         }
@@ -73,12 +78,14 @@ namespace Victoria {
         /// 
         /// </summary>
         /// <param name="serviceCollection"></param>
+        /// <param name="configuration"></param>
         /// <returns></returns>
-        public static IServiceCollection AddLavaNode(this IServiceCollection serviceCollection) {
+        public static IServiceCollection AddLavaNode(this IServiceCollection serviceCollection,
+                                                     Action<Configuration> configuration) {
             return AddLavaNode<
                 LavaNode<LavaPlayer<LavaTrack>, LavaTrack>,
                 LavaPlayer<LavaTrack>,
-                LavaTrack>(serviceCollection);
+                LavaTrack>(serviceCollection, configuration);
         }
         
         /// <summary>
