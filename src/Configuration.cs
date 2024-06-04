@@ -10,43 +10,43 @@ public record Configuration {
     /// <summary>
     /// 
     /// </summary>
-    public int Version { get; init; } = 4;
+    public int Version { get; set; } = 4;
 
     /// <summary>
     /// 
     /// </summary>
-    public string Hostname { get; init; } = "127.0.0.1";
+    public string Hostname { get; set; } = "127.0.0.1";
 
     /// <summary>
     /// 
     /// </summary>
-    public int Port { get; init; } = 2333;
+    public int Port { get; set; } = 2333;
 
     /// <summary>
     /// 
     /// </summary>
-    public bool IsSecure { get; init; } = false;
+    public bool IsSecure { get; set; } = false;
 
     /// <summary>
     /// 
     /// </summary>
-    public bool EnableResume { get; init; } = true;
+    public bool EnableResume { get; set; } = true;
 
     /// <summary>
     /// 
     /// </summary>
-    public string ResumeKey { get; init; } = "Victoria";
+    public string ResumeKey { get; set; } = "Victoria";
 
     /// <summary>
     /// 
     /// </summary>
-    public TimeSpan ResumeTimeout { get; init; }
+    public TimeSpan ResumeTimeout { get; set; }
         = TimeSpan.FromMinutes(10);
 
     /// <summary>
     /// 
     /// </summary>
-    public string Authorization { get; init; } = "youshallnotpass";
+    public string Authorization { get; set; } = "youshallnotpass";
 
     /// <summary>
     ///     Whether to enable self deaf for bot.
