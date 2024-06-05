@@ -61,11 +61,10 @@ namespace Victoria {
         /// <typeparam name="TLavaTrack"></typeparam>
         /// <returns></returns>
         public static IServiceCollection AddLavaNode<TLavaNode, TLavaPlayer, TLavaTrack>
-            (this IServiceCollection serviceCollection, Action<Configuration> configuration)
+            (this IServiceCollection serviceCollection, Action<Configuration> configuration = null)
             where TLavaNode : LavaNode<TLavaPlayer, TLavaTrack>
             where TLavaPlayer : LavaPlayer<TLavaTrack>
             where TLavaTrack : LavaTrack {
-            
             var config = new Configuration();
             configuration?.Invoke(config);
             
@@ -81,7 +80,7 @@ namespace Victoria {
         /// <param name="configuration"></param>
         /// <returns></returns>
         public static IServiceCollection AddLavaNode(this IServiceCollection serviceCollection,
-                                                     Action<Configuration> configuration) {
+                                                     Action<Configuration> configuration = null) {
             return AddLavaNode<
                 LavaNode<LavaPlayer<LavaTrack>, LavaTrack>,
                 LavaPlayer<LavaTrack>,
