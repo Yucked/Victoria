@@ -196,23 +196,16 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         }
         
         ArgumentNullException.ThrowIfNull(voiceChannel);
-        var player = await this.TryGetPlayerAsync(voiceChannel.GuildId);
+        
+        var player = await UpdatePlayerAsync(voiceChannel.GuildId);
         var user = await voiceChannel.GetUserAsync(_baseSocketClient.CurrentUser.Id);
-        if (player != null && user != null) {
+        if (user != null) {
             return player;
         }
         
-        await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true)
-            .ConfigureAwait(false);
-        
-        if (!_voiceStates.TryGetValue(voiceChannel.GuildId, out var voiceState)) {
-            _logger.LogWarning("Failed to get voice state for guild {}. Most likely first join?", voiceChannel.GuildId);
-            return null;
-        }
-        
-        player = await UpdatePlayerAsync(voiceChannel.GuildId,
-            updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
         LavaPlayerExtensions.Queue.TryAdd(voiceChannel.GuildId, new LavaQueue<LavaTrack>());
+        await voiceChannel.ConnectAsync(_configuration.SelfDeaf, false, true);
+        
         return player;
     }
     
@@ -227,11 +220,6 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         }
         
         ArgumentNullException.ThrowIfNull(voiceChannel);
-        var player = await this.TryGetPlayerAsync(voiceChannel.GuildId);
-        if (player == null) {
-            return;
-        }
-        
         await voiceChannel.DisconnectAsync()
             .ConfigureAwait(false);
         await DestroyPlayerAsync(voiceChannel.GuildId);
@@ -269,10 +257,9 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
     /// <param name="replaceTrack"></param>
     /// <param name="updatePayload"></param>
     /// <returns></returns>
-    public async Task<TLavaPlayer> UpdatePlayerAsync(
-        ulong guildId,
-        bool replaceTrack = false,
-        UpdatePlayerPayload updatePayload = default) {
+    public async Task<TLavaPlayer> UpdatePlayerAsync(ulong guildId,
+                                                     bool replaceTrack = false,
+                                                     UpdatePlayerPayload updatePayload = default) {
         ArgumentNullException.ThrowIfNull(guildId);
         ArgumentNullException.ThrowIfNull(replaceTrack);
         ArgumentNullException.ThrowIfNull(updatePayload);
@@ -501,7 +488,10 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                     break;
                 
                 case "event":
-                    LavaTrack track = document.GetProperty("track").Deserialize<TLavaTrack>(Extensions.Options);
+                    LavaTrack track = default;
+                    if (document.TryGetProperty("track", out var trackElement)) {
+                        track = trackElement.Deserialize<TLavaTrack>(Extensions.Options);
+                    }
                     
                     switch (document.GetProperty("type").GetString()) {
                         case "TrackStartEvent":
@@ -570,7 +560,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
                                 GuildId = guildId,
                                 ByRemote = document.GetProperty("byRemote").GetBoolean(),
                                 Code = document.GetProperty("code").GetInt32(),
-                                Reason = Enum.Parse<TrackEndReason>(document.GetProperty("reason").GetString()!, true)
+                                Reason = document.GetProperty("reason").GetString()!
                             });
                             break;
                         
@@ -596,44 +586,34 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         }
     }
     
-    private Task OnUserVoiceStateUpdatedAsync(SocketUser user,
-                                              SocketVoiceState pastState,
-                                              SocketVoiceState currentState) {
+    private async Task OnUserVoiceStateUpdatedAsync(SocketUser user,
+                                                    SocketVoiceState pastState,
+                                                    SocketVoiceState currentState) {
         if (_baseSocketClient.CurrentUser?.Id != user.Id) {
-            return Task.CompletedTask;
+            return;
         }
         
         var guildId = (currentState.VoiceChannel ?? pastState.VoiceChannel).Guild.Id;
-        var sessionId = currentState.VoiceSessionId ?? pastState.VoiceSessionId;
-        
-        if (!_voiceStates.TryGetValue(guildId, out var voiceState)) {
-            voiceState = new VoiceState(null, null, sessionId);
+        if (_voiceStates.TryGetValue(guildId, out var voiceState)) {
+            voiceState.SessionId = currentState.VoiceSessionId;
+            await UpdatePlayerAsync(guildId, updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
         }
         
-        voiceState.SessionId = sessionId;
-        _voiceStates.AddOrUpdate(guildId, voiceState, (_, _) => voiceState);
-        
-        if (!string.IsNullOrWhiteSpace(voiceState.Token) && currentState.VoiceChannel is not null) {
-            return UpdatePlayerAsync(guildId,
-                updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
-        }
-        
-        return Task.CompletedTask;
+        voiceState = new VoiceState(null, null, currentState.VoiceSessionId);
+        _voiceStates[guildId] = voiceState;
     }
     
     private Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer) {
         if (!_voiceStates.TryGetValue(voiceServer.Guild.Id, out var voiceState)) {
+            voiceState = new VoiceState(voiceServer.Token, voiceServer.Endpoint, string.Empty);
+            _voiceStates.TryAdd(voiceServer.Guild.Id, voiceState);
             return Task.CompletedTask;
         }
         
-        voiceState = new VoiceState(voiceServer.Token, voiceServer.Endpoint, voiceState.SessionId);
-        _voiceStates.AddOrUpdate(voiceServer.Guild.Id, voiceState, (_, _) => voiceState);
+        voiceState.Token = voiceServer.Token;
+        voiceState.Endpoint = voiceServer.Endpoint;
+        _voiceStates[voiceServer.Guild.Id] = voiceState;
         
-        if (!string.IsNullOrWhiteSpace(voiceState.SessionId)) {
-            return UpdatePlayerAsync(voiceServer.Guild.Id,
-                updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
-        }
-        
-        return Task.CompletedTask;
+        return UpdatePlayerAsync(voiceServer.Guild.Id, updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
     }
 }
