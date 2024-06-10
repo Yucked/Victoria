@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 namespace Victoria.Rest.Search {
@@ -17,5 +17,10 @@ namespace Victoria.Rest.Search {
         /// </summary>
         [JsonPropertyName("selectedTrack"), JsonInclude]
         public int SelectedTrack { get; private set; }
+
+        public SearchPlaylist(string name, int selectedTrack) {
+            Name = name;
+            SelectedTrack = selectedTrack;
+        }
     }
 }

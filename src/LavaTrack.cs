@@ -61,7 +61,9 @@ public class LavaTrack {
         set => Length = (int)value.TotalMilliseconds;
     }
 
-    [JsonPropertyName("length"), JsonInclude]
+    /// <summary>
+    /// 
+    /// </summary>
     private int Length { get; set; }
 
     /// <summary>
