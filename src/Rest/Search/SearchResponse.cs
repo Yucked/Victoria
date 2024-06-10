@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -45,10 +46,16 @@ namespace Victoria.Rest.Search {
                     break;
                 
                 case SearchType.Playlist:
-                    Exception = dataElement.GetProperty("info").Deserialize<SearchException>();
+                    var info = dataElement.GetProperty("info");
+                    Exception = info.Deserialize<SearchException>();
+
                     Tracks = dataElement
                         .GetProperty("tracks")
                         .Deserialize<IReadOnlyCollection<LavaTrack>>(Extensions.Options);
+
+                    Playlist = new SearchPlaylist(
+                        info.GetProperty("name").ToString(), 
+                        info.GetProperty("selectedTrack").GetInt32());
                     break;
                 
                 case SearchType.Search:
@@ -60,5 +67,6 @@ namespace Victoria.Rest.Search {
                     break;
             }
         }
+
     }
 }
