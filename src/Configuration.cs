@@ -55,12 +55,6 @@ public record Configuration {
         = true;
 
     /// <summary>
-    ///     Whether to preserve the queue of a guild after the bot has left the channel (note that the queue will only be preserved until lavalink is restarted).
-    /// </summary>
-    public bool PreserveQueue { get; set; }
-        = false;
-
-    /// <summary>
     /// 
     /// </summary>
     public WebSocketConfiguration SocketConfiguration { get; set; }
