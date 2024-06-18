@@ -222,6 +222,7 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(voiceChannel);
         await voiceChannel.DisconnectAsync()
             .ConfigureAwait(false);
+        LavaPlayerExtensions.Queue?.TryRemove(voiceChannel.GuildId, out _);
         await DestroyPlayerAsync(voiceChannel.GuildId);
     }
     

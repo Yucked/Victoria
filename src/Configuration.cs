@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Victoria.WebSocket.Internal;
 
 namespace Victoria;
