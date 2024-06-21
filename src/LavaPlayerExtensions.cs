@@ -188,7 +188,7 @@ public static class LavaPlayerExtensions {
         where TLavaPlayer : LavaPlayer<TLavaTrack> {
         await lavaNode.UpdatePlayerAsync(
             lavaPlayer.GuildId,
-            updatePayload: new UpdatePlayerPayload(Position: seekPosition.Milliseconds));
+            updatePayload: new UpdatePlayerPayload(Position: (int)seekPosition.TotalMilliseconds));
     }
     
     /// <summary>
