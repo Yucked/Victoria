@@ -17,4 +17,4 @@ public record struct VoiceState(
     [property: JsonPropertyName("sessionId")]
     string SessionId,
     [property: JsonPropertyName("channelId")]
-    string? ChannelId);
+    string ChannelId);
