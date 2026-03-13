@@ -1,3 +1,6 @@
+using Discord;
+using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,9 +9,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
-using Discord;
-using Discord.WebSocket;
-using Microsoft.Extensions.Logging;
 using Victoria.Enums;
 using Victoria.Rest;
 using Victoria.Rest.Lavalink;
@@ -600,13 +600,13 @@ public class LavaNode<TLavaPlayer, TLavaTrack> : IAsyncDisposable
             await UpdatePlayerAsync(guildId, updatePayload: new UpdatePlayerPayload(VoiceState: voiceState));
         }
         
-        voiceState = new VoiceState(null, null, currentState.VoiceSessionId);
+        voiceState = new VoiceState(null, null, currentState.VoiceSessionId, $"{currentState.VoiceChannel.Id}");
         _voiceStates[guildId] = voiceState;
     }
     
     private Task OnVoiceServerUpdatedAsync(SocketVoiceServer voiceServer) {
         if (!_voiceStates.TryGetValue(voiceServer.Guild.Id, out var voiceState)) {
-            voiceState = new VoiceState(voiceServer.Token, voiceServer.Endpoint, string.Empty);
+            voiceState = new VoiceState(voiceServer.Token, voiceServer.Endpoint, string.Empty, string.Empty);
             _voiceStates.TryAdd(voiceServer.Guild.Id, voiceState);
             return Task.CompletedTask;
         }
