@@ -168,7 +168,7 @@ public static class LavaPlayerExtensions {
         
         var skippedTrack = lavaPlayer.Track as TLavaTrack;
         await Task.Delay(skipAfter ?? TimeSpan.Zero);
-        await PlayAsync(lavaPlayer, lavaNode, (TLavaTrack)lavaTrack);
+        await PlayAsync(lavaPlayer, lavaNode, (TLavaTrack)lavaTrack, noReplace: false);
         
         return (skippedTrack, (TLavaTrack)lavaTrack);
     }
