@@ -15,7 +15,7 @@ internal sealed class LavaTrackConverter : JsonConverter<LavaTrack> {
 
         var track = trackElement.Deserialize<LavaTrack>();
 
-        track.Duration = int.TryParse($"{trackLength}", out var val) ? TimeSpan.FromMilliseconds(val) : TimeSpan.FromSeconds(-1);
+        track.Duration = trackLength.TryGetInt64(out var ms) ? TimeSpan.FromMilliseconds(ms) : TimeSpan.FromSeconds(-1);
         track.Hash = trackHashElement.ToString();
         track.PluginInfo = trackPluginInfoElement.ToString();
         

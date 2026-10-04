@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Net;
-using System.Reflection;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Victoria.WebSocket.Internal.EventArgs;
 
@@ -50,7 +49,8 @@ public sealed class WebSocketClient : IAsyncDisposable {
     public Uri Host { get; }
     
     private readonly Configuration _configuration;
-    private readonly ConcurrentQueue<byte[]> _messageQueue;
+    private readonly Dictionary<string, string> _headers;
+    private readonly Channel<byte[]> _messageChannel;
     private CancellationTokenSource _connectionTokenSource;
     private ClientWebSocket _webSocket;
     private int _reconnectAttempts;
@@ -68,7 +68,10 @@ public sealed class WebSocketClient : IAsyncDisposable {
         Host = new Uri($"{configuration.SocketEndpoint}/v{configuration.Version}/websocket");
         _configuration = configuration;
         _webSocket = new ClientWebSocket();
-        _messageQueue = new ConcurrentQueue<byte[]>();
+        _headers = new Dictionary<string, string>();
+        _messageChannel = Channel.CreateUnbounded<byte[]>(new UnboundedChannelOptions {
+            SingleReader = true
+        });
         _connectionTokenSource = new CancellationTokenSource();
     }
     
@@ -82,11 +85,12 @@ public sealed class WebSocketClient : IAsyncDisposable {
         if (string.IsNullOrWhiteSpace(key)) {
             throw new ArgumentNullException(nameof(key));
         }
-        
+
         if (string.IsNullOrWhiteSpace(value)) {
             throw new ArgumentNullException(nameof(value));
         }
-        
+
+        _headers[key] = value;
         _webSocket.Options.SetRequestHeader(key, value);
     }
     
@@ -175,7 +179,8 @@ public sealed class WebSocketClient : IAsyncDisposable {
                 switch (receiveResult.MessageType) {
                     case WebSocketMessageType.Text:
                         var array = finalBuffer ?? buffer;
-                        Array.Resize(ref array, Array.FindLastIndex(array, b => b != 0) + 1);
+                        var actualLength = finalBuffer != null ? offset : receiveResult.Count;
+                        Array.Resize(ref array, actualLength);
                         await OnDataAsync.Invoke(new DataEventArgs(array));
                         
                         finalBuffer = default;
@@ -208,18 +213,12 @@ public sealed class WebSocketClient : IAsyncDisposable {
     
     private async Task SendAsync() {
         try {
-            do {
-                if (!_messageQueue.TryDequeue(out var content)) {
-                    await Task.Delay(500);
-                    continue;
-                }
-                
+            await foreach (var content in _messageChannel.Reader.ReadAllAsync(_connectionTokenSource.Token)) {
                 await _webSocket.SendAsync(content, WebSocketMessageType.Text,
                     true, _connectionTokenSource.Token);
-            } while (_webSocket.State == WebSocketState.Open &&
-                     !_connectionTokenSource.IsCancellationRequested);
+            }
         }
-        catch (Exception exception) {
+        catch (Exception exception) when (exception is not OperationCanceledException) {
             await OnErrorAsync.Invoke(new ErrorEventArgs(exception));
         }
     }
@@ -241,15 +240,9 @@ public sealed class WebSocketClient : IAsyncDisposable {
     }
     
     private void ResetWebSocket() {
-        var options = _webSocket.Options;
-        var headerCollection = options.GetType()
-                .GetProperty("RequestHeaders", BindingFlags.Instance | BindingFlags.NonPublic)
-                .GetValue(options, null)
-            as WebHeaderCollection;
-        
         _webSocket = new ClientWebSocket();
-        foreach (var key in headerCollection.Keys) {
-            _webSocket.Options.SetRequestHeader($"{key}", headerCollection.Get($"{key}"));
+        foreach (var (key, value) in _headers) {
+            _webSocket.Options.SetRequestHeader(key, value);
         }
     }
     
@@ -258,9 +251,9 @@ public sealed class WebSocketClient : IAsyncDisposable {
         if (IsConnected) {
             await DisconnectAsync();
         }
-        
+
+        _messageChannel.Writer.TryComplete();
         _connectionTokenSource?.Dispose();
         _webSocket.Dispose();
-        _messageQueue.Clear();
     }
 }

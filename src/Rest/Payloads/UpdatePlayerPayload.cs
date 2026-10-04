@@ -11,9 +11,9 @@ public readonly record struct UpdatePlayerPayload(
     [property: JsonPropertyName("identifier")]
     string Identifier = default,
     [property: JsonPropertyName("position")]
-    int Position = default,
+    long Position = default,
     [property: JsonPropertyName("endTime")]
-    int EndTime = default,
+    long EndTime = default,
     [property: JsonPropertyName("volume")]
     int Volume = default,
     [property: JsonPropertyName("paused")]

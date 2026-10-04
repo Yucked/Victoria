@@ -59,7 +59,7 @@ namespace Victoria {
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -68,11 +68,6 @@ namespace Victoria {
                 if (_list.Count < 1) {
                     value = default;
                     return false;
-                }
-
-                if (_list.First == null) {
-                    value = default;
-                    return true;
                 }
 
                 var result = _list.First.Value;
@@ -156,11 +151,11 @@ namespace Victoria {
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        /// <exception cref="Exception"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public T RemoveAt(int index) {
             lock (_list) {
                 var currentNode = _list.First;
@@ -176,7 +171,7 @@ namespace Victoria {
                 }
 
                 if (currentNode == null) {
-                    throw new Exception("Node was null.");
+                    throw new InvalidOperationException($"No node found at index {index}.");
                 }
 
                 return currentNode.Value;
